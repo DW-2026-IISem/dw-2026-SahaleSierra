@@ -163,6 +163,9 @@ Para mantener un entorno organizado donde persistan los datos y configuraciones 
    # Password: Saludconecta123
    EOF
    ```
+   (se realizo correcion de variables mas adelante)
+   ![Creacion Motores: Motor de base de datos Mysql](imagenes/13_mysql_config.png)
+
 
 ---
 
@@ -239,6 +242,7 @@ Para mantener un entorno organizado donde persistan los datos y configuraciones 
    \du
    \l
    ```
+   ![Creacion Motores: PostgreSQL](imagenes/14_PostgreSQL_config.png)
 
 ---
 
@@ -289,6 +293,7 @@ Para mantener un entorno organizado donde persistan los datos y configuraciones 
    docker exec -it sqlserver-container /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'Saludconecta123'
    EOF
    ```
+   ![Creacion Motores: sqlserver](imagenes/16_MysqlServer_config.png)
 
 ---
 
@@ -327,6 +332,8 @@ Para mantener un entorno organizado donde persistan los datos y configuraciones 
    ORACLE_DATABASE=XE
    EOF
    ```
+   ![Creacion Motores: Oracle](imagenes/15_Oracle_config.png)
+   
 
 ### 7.2 Diagnóstico del error de permisos (`Permission denied`)
 Al levantar el contenedor con `docker compose up -d`, el estado indicaba reinicios constantes (`Restarting`). Al revisar los logs con `docker logs oracle-xe --tail 50`, se identificó el fallo de permisos:
