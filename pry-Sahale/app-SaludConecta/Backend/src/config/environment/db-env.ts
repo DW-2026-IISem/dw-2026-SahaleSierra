@@ -1,4 +1,4 @@
-import { DatabaseConfig, DatabaseDialect } from './env.interface';
+import { DatabaseConfig, DatabaseDialect } from './env.interface.js';
 
 export const DEFAULT_DB_PORTS: Record<DatabaseDialect, number> = {
   [DatabaseDialect.MySQL]: 3307,

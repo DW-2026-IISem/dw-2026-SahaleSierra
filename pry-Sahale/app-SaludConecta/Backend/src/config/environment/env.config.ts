@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
-import { resolveDialectCredentials } from './db-env';
-import { Environment } from './env.interface';
-import { validate } from './env.validation';
+import { resolveDialectCredentials } from './db-env.js';
+import { Environment } from './env.interface.js';
+import { validate } from './env.validation.js';
 
 export const ENV_CONFIG_NAME = 'environment';
 

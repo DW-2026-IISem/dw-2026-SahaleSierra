@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
-import { resolveDialectCredentials } from '../environment/db-env';
-import { DatabaseDialect } from '../environment/env.interface';
+import { resolveDialectCredentials } from '../environment/db-env.js';
+import { DatabaseDialect } from '../environment/env.interface.js';
 
 export const DATABASE_CONFIG_NAME = 'database';
 

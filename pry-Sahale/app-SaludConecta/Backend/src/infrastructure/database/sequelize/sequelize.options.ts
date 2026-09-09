@@ -1,6 +1,6 @@
 import { SequelizeOptions } from 'sequelize-typescript';
-import { resolveDialectCredentials } from '../../../config/environment/db-env';
-import { DatabaseDialect } from '../../../config/environment/env.interface';
+import { resolveDialectCredentials } from '../../../config/environment/db-env.js';
+import { DatabaseDialect } from '../../../config/environment/env.interface.js';
 
 export function getSequelizeOptions(
   dialect: DatabaseDialect,

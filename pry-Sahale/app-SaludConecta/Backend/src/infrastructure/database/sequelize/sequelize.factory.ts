@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
-import { DatabaseDialect } from '../../../config/environment/env.interface';
-import { getSequelizeOptions } from './sequelize.options';
+import { DatabaseDialect } from '../../../config/environment/env.interface.js';
+import { getSequelizeOptions } from './sequelize.options.js';
 
 
 export const ALL_MODELS = [

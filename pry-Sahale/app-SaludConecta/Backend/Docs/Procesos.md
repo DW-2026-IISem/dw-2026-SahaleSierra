@@ -90,3 +90,33 @@ chmod -R 755 ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/Backend$
 #### **5.2 — Tipos auxiliares de database config**
 
 ![](images/clipboard-3144200624.png)
+
+#### **5.3 — database.config.ts**
+
+![](images/clipboard-845239652.png)
+
+#### **5.4 — database.module.ts / providers**
+
+#### ![](images/clipboard-1729629101.png)
+
+#### **5.5 — database.providers.ts**
+
+![](images/clipboard-1281927516.png)
+
+#### **5.6 — Opciones Sequelize por dialecto**
+
+![](images/clipboard-2371518018.png)
+
+#### **5.7 — Factory Sequelize (sin modelos aún)**
+
+![](images/clipboard-2826245541.png)
+
+#### **5.8 — DatabaseSeederService (sin seeders aún)**
+
+![](images/clipboard-412396631.png)
+
+#### **5.9 — Módulo global Sequelize**
+
+![](images/clipboard-2365360281.png)
+
+#### **5.10 — Verificar conexión a BD**
