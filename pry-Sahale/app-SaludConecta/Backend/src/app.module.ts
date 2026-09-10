@@ -1,21 +1,28 @@
 import { Module } from '@nestjs/common';
-import { createObserveModule } from '@nestjs/observe';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
-
-export const { ObserveModule, ObserveInstrument } = createObserveModule();
+import { ConfigModule } from '@nestjs/config';
+import { envConfig } from './config/environment/env.config';
+import { appConfig } from './config/app/app.config';
+import { jwtConfig } from './config/jwt/jwt.config';
+import { LoggerModule } from './config/logger/logger.module';
+import { SequelizeDatabaseModule } from './infrastructure/database/sequelize/sequelize.module';
+import { SecurityModule } from './infrastructure/security/security.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // Distributed tracing, auto-correlated logs, request/job metrics, error
-    // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com
-    ObserveModule.forRoot({
-      appKey: 'YOUR_APP_KEY',
-      appSecret: 'YOUR_APP_SECRET',
-      serviceId: 'Backend',
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [envConfig, appConfig, jwtConfig],
+      envFilePath: '.env',
     }),
+    SequelizeDatabaseModule,
+    SecurityModule,
+    LoggerModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+  ],
 })
 export class AppModule {}
