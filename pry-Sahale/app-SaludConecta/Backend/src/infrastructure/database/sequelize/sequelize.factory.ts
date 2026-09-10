@@ -3,10 +3,12 @@ import { Sequelize } from 'sequelize-typescript';
 import { DatabaseDialect } from '../../../config/environment/env.interface.js';
 import { getSequelizeOptions } from './sequelize.options.js';
 
+import { ClientModel } from '../../../features/business/clients/infrastructure/persistence/models/client.model.js';
+
 const require = createRequire(import.meta.url);
 
 export const ALL_MODELS = [
-  // (aún sin modelos — se agregan por feature)
+  ClientModel,
 ];
 
 export async function createSequelizeInstance(
