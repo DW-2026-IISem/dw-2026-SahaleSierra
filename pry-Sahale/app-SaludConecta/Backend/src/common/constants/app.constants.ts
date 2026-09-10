@@ -1,2 +1,2 @@
-export const APP_NAME = 'backend_ia';
+export const APP_NAME = 'backend';
 export const GLOBAL_PREFIX = 'api';
