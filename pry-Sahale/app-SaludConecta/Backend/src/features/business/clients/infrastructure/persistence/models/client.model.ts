@@ -1,4 +1,3 @@
-import { createRequire } from 'node:module';
 import {
   AutoIncrement,
   Column,
@@ -12,7 +11,6 @@ import {
 } from 'sequelize-typescript';
 import { Status } from '../../../../../../common/enums/status.enum.js';
 
-const require = createRequire(import.meta.url);
 
 @Table({ tableName: 'clients' })
 export class ClientModel extends Model {
@@ -49,6 +47,6 @@ export class ClientModel extends Model {
   @UpdatedAt
   declare updatedAt: Date;
 
-  @HasMany(() => require('../../../../sales/infrastructure/persistence/models/sale.model.js').SaleModel)
-  declare sales: unknown[];
+  //@HasMany(() => require('../../../../sales/infrastructure/persistence/models/sale.model.js').SaleModel)
+  //declare sales: unknown[];
 }
