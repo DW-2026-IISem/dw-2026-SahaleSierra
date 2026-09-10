@@ -1,12 +1,8 @@
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-
 import {
   AutoIncrement,
   Column,
   CreatedAt,
   DataType,
-  HasMany,
   Model,
   PrimaryKey,
   Table,
@@ -40,10 +36,10 @@ export class ProductTypeModel extends Model {
   @UpdatedAt
   declare updatedAt: Date;
 
-  @HasMany(
-    () =>
-      require('../../../../products/infrastructure/persistence/models/product.model.js')
-        .ProductModel,
-  )
+  //@HasMany(
+  //() =>
+  //    require('../../../../products/infrastructure/persistence/models/product.model.js')
+  //      .ProductModel,
+  //)
   declare products: unknown[];
 }
