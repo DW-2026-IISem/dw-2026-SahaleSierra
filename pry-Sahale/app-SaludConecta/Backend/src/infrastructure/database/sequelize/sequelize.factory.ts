@@ -1,14 +1,16 @@
 import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+
 import { Sequelize } from 'sequelize-typescript';
 import { DatabaseDialect } from '../../../config/environment/env.interface.js';
 import { getSequelizeOptions } from './sequelize.options.js';
 
 import { ClientModel } from '../../../features/business/clients/infrastructure/persistence/models/client.model.js';
-
-const require = createRequire(import.meta.url);
+import { ProductTypeModel } from '../../../features/business/product-types/infrastructure/persistence/models/product-type.model.js';
 
 export const ALL_MODELS = [
   ClientModel,
+  ProductTypeModel,
 ];
 
 export async function createSequelizeInstance(
