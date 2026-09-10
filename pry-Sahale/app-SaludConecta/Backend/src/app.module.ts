@@ -6,6 +6,7 @@ import { jwtConfig } from './config/jwt/jwt.config.js';
 import { LoggerModule } from './config/logger/logger.module.js';
 import { SequelizeDatabaseModule } from './infrastructure/database/sequelize/sequelize.module.js';
 import { SecurityModule } from './infrastructure/security/security.module.js';
+import { BusinessModule } from './features/business/business.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -19,6 +20,7 @@ import { AppService } from './app.service.js';
     SequelizeDatabaseModule,
     SecurityModule,
     LoggerModule,
+    BusinessModule,
   ],
   controllers: [AppController],
   providers: [
