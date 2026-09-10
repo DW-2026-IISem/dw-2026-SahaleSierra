@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { PASSWORD_HASHER } from './hashing/password-hasher.interface';
-import { BcryptPasswordHasherService } from './hashing/bcrypt-password-hasher.service';
-import { TOKEN_SERVICE } from './tokens/token.interface';
-import { TokenService } from './tokens/token.service';
+import { PASSWORD_HASHER } from './hashing/password-hasher.interface.js';
+import { BcryptPasswordHasherService } from './hashing/bcrypt-password-hasher.service.js';
+import { TOKEN_SERVICE } from './tokens/token.interface.js';
+import { TokenService } from './tokens/token.service.js';
 
 @Global()
 @Module({

@@ -1,7 +1,9 @@
+import { createRequire } from 'node:module';
 import { Sequelize } from 'sequelize-typescript';
 import { DatabaseDialect } from '../../../config/environment/env.interface.js';
 import { getSequelizeOptions } from './sequelize.options.js';
 
+const require = createRequire(import.meta.url);
 
 export const ALL_MODELS = [
   // (aún sin modelos — se agregan por feature)

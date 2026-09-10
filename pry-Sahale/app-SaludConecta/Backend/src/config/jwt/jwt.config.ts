@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { JWT_CONFIG_NAME, JWT_DEFAULTS } from './jwt.constants';
+import { JWT_CONFIG_NAME, JWT_DEFAULTS } from './jwt.constants.js';
 
 export const jwtConfig = registerAs(JWT_CONFIG_NAME, () => ({
   secret: process.env.JWT_SECRET || '',

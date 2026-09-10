@@ -2,8 +2,8 @@ import {
   DEFAULT_LIMIT,
   DEFAULT_PAGE,
   MAX_LIMIT,
-} from '../constants/pagination.constants';
-import { PaginatedResult } from '../interfaces/pagination.interface';
+} from '../constants/pagination.constants.js';
+import { PaginatedResult } from '../interfaces/pagination.interface.js';
 
 export function normalizePagination(page?: number, limit?: number) {
   const safePage = !page || page < 1 ? DEFAULT_PAGE : page;

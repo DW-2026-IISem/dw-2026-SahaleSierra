@@ -5,7 +5,7 @@ import {
   SWAGGER_PATH,
   SWAGGER_TITLE,
   SWAGGER_VERSION,
-} from './swagger.constants';
+} from './swagger.constants.js';
 
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
