@@ -616,3 +616,25 @@ npm run start:dev
 #### **9.5 — features/business/products/domain/interfaces/product-repository.interface.ts**
 
 ![](images/clipboard-4027414773.png)
+
+#### **9.6 — features/business/products/domain/validators/product-price.validator.ts**
+
+![](images/clipboard-3557323066.png)
+
+#### **9.7 — features/business/products/domain/validators/product-stock.validator.ts**
+
+![](images/clipboard-4040912568.png)
+
+#### **9.8 — features/business/products/infrastructure/persistence/models/product.model.ts**
+
+![](images/clipboard-4148807266.png)
+
+#### **9.9 — features/business/products/infrastructure/persistence/repositories/product.repository.ts**
+
+![](images/clipboard-2832297757.png)
+
+#### **9.10 — features/business/products/infrastructure/persistence/migrations/create-products-table.migration.ts**
+
+![](images/clipboard-3990111203.png)
+
+#### **9.11 — features/business/products/infrastructure/persistence/seeders/products.seeder.ts**
