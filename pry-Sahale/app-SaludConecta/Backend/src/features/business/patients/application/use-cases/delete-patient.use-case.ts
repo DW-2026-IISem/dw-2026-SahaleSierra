@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PatientNotFoundException } from '../../domain/exceptions/patient-not-found.exception.js';
-import {
-  PATIENT_REPOSITORY,
-  PatientRepository,
-} from '../../domain/interfaces/patient-repository.interface.js';
+import { PATIENT_REPOSITORY } from '../../domain/interfaces/patient-repository.interface.js';
+import type { PatientRepository } from '../../domain/interfaces/patient-repository.interface.js';
 
 @Injectable()
 export class DeletePatientUseCase {

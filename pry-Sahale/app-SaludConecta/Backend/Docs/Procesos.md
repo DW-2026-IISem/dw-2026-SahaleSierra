@@ -363,278 +363,124 @@ npm run start:dev
 
 ![](images/clipboard-216055138.png)
 
-## **FASE 7 — `06_BUSINESS_CLIENTS`**
+## **FASE 7 — `06_BUSINESS_PATIENTS`**
 
-### **Objetivo de la fase:** Primera entidad de negocio. Orden lógico: dominio → infraestructura → aplicación → presentación → módulo → cableado → verificación.
+### **Objetivo de la fase:** Primera entidad de negocio real. Orden: dominio → infraestructura → aplicación → presentación → módulo → cableado → verificación.
 
-#### **7.1 — features/business/clients/domain/entities/client.entity.ts**
+#### **7.1 — Entidad de dominio**
 
-![](images/clipboard-2220485878.png)
+![](images/clipboard-3814066931.png)
 
-#### **7.2 — features/business/clients/domain/exceptions/client-email-already-exists.exception.ts**
+#### **7.2 — Excepción: documento duplicado**
 
-![](images/clipboard-3537001736.png)
+![](images/clipboard-3670536466.png)
 
-#### **7.3 — features/business/clients/domain/exceptions/client-not-found.exception.ts**
+#### **7.3 — Excepción: paciente no encontrado**
 
-![](images/clipboard-302008372.png)
+![](images/clipboard-14091350.png)
 
-#### **7.4 — features/business/clients/domain/interfaces/client-repository.interface.ts**
+#### **7.4 — Interfaz de repositorio**
 
-![](images/clipboard-3363818273.png)
+![](images/clipboard-10119738.png)
 
-#### **7.5 — features/business/clients/domain/validators/client-email.validator.ts**
+#### **7.5 — Validador de documento**
 
-![](images/clipboard-880237422.png)
+![](images/clipboard-2314033959.png)
 
-#### **7.6 — features/business/clients/domain/validators/client-phone.validator.ts**
+#### **7.6 — Validador de contacto**
 
-![](images/clipboard-3911739625.png)
+![](images/clipboard-1887235088.png)
 
-#### **7.7 — features/business/clients/infrastructure/persistence/models/client.model.ts**
+#### **7.7 — Modelo Sequelize**
 
-![](images/clipboard-3102815710.png)
+![](images/clipboard-391499701.png)
 
-#### **7.8 — features/business/clients/infrastructure/persistence/repositories/client.repository.ts**
+#### **7.8 — Repositorio de infraestructura**
 
-![](images/clipboard-2861019356.png)
+![](images/clipboard-1565099425.png)
 
-#### **7.9 — features/business/clients/infrastructure/persistence/migrations/create-clients-table.migration.ts**
+#### **7.9 — Migración**
 
-![](images/clipboard-3056823341.png)
+![](images/clipboard-3349638977.png)
 
-#### **7.10 — features/business/clients/infrastructure/persistence/seeders/clients.seeder.ts**
+#### **7.10 — Seeder**
 
-![](images/clipboard-2174992888.png)
+![](images/clipboard-2926836498.png)
 
-#### **7.11 — features/business/clients/application/dto/client-filter.dto.ts**
+#### **7.11 — DTO de filtro**
 
-![](images/clipboard-2582914929.png)
+![](images/clipboard-3371537884.png)
 
-#### **7.12 — features/business/clients/application/dto/client-response.dto.ts**
+#### **7.12 — DTO de respuesta**
 
-![](images/clipboard-4205555839.png)
+![](images/clipboard-944493718.png)
 
-#### **7.13 — features/business/clients/application/dto/create-client.dto.ts**
+#### **7.13 — DTO de creación**
 
-![](images/clipboard-3484330468.png)
+![](images/clipboard-543690936.png)
 
-#### **7.14 — features/business/clients/application/dto/update-client.dto.ts**
+#### **7.14 — DTO de actualización**
 
-![](images/clipboard-1055424161.png)
+![](images/clipboard-4077661074.png)
 
-#### **7.15 — features/business/clients/application/mappers/client.mapper.ts**
+#### **7.15 — Mapper**
 
-![](images/clipboard-2157641425.png)
+![](images/clipboard-3637310304.png)
 
-#### **7.16 — features/business/clients/application/use-cases/create-client.use-case.ts**
+#### **7.16 — Use-case: crear paciente**
 
-![](images/clipboard-2577045680.png)
+![](images/clipboard-1213359149.png)
 
-#### **7.17 — features/business/clients/application/use-cases/delete-client.use-case.ts**
+#### **7.17 — Use-case: eliminar paciente**
 
-![](images/clipboard-2457229257.png)
+![](images/clipboard-1154657984.png)
 
-#### **7.18 — features/business/clients/application/use-cases/get-client.use-case.ts**
+#### **7.18 — Use-case: obtener paciente**
 
-![](images/clipboard-1410425242.png)
+![](images/clipboard-582404623.png)
 
-#### **7.19 — features/business/clients/application/use-cases/list-clients.use-case.ts**
+#### **7.19 — Use-case: listar pacientes**
 
-![](images/clipboard-3460897563.png)
+![](images/clipboard-2659283141.png)
 
-#### **7.20 — features/business/clients/application/use-cases/update-client.use-case.ts**
+#### **7.20 — Use-case: actualizar paciente**
 
-![](images/clipboard-2454918945.png)
+![](images/clipboard-2625058706.png)
 
-#### **7.21 — features/business/clients/presentation/http/serializers/client.serializer.ts**
+#### **7.21 — Serializer**
 
-![](images/clipboard-3250501001.png)
+![](images/clipboard-845051458.png)
 
-#### **7.22 — features/business/clients/presentation/http/controllers/clients.controller.ts**
+#### **7.22 — Controller**
 
-![](images/clipboard-2731932738.png)
+![](images/clipboard-3815057823.png)
 
-#### **7.23 — features/business/clients/index.ts**
+#### **7.23 — Barrel `index.ts`**
 
-![](images/clipboard-2506912647.png)
+![](images/clipboard-3007966731.png)
 
-#### **7.24 — features/business/clients/clients.module.ts**
+#### **7.24 — Módulo `patients.module.ts`**
 
-![](images/clipboard-2910412662.png)
+![](images/clipboard-923850090.png)
 
-#### **7.25 — Actualizar sequelize.factory.ts (registrar modelos)**
+#### **7.25 — Registrar `PatientModel` en `sequelize.factory.ts`**
 
-![](images/clipboard-1778324790.png)
+![](images/clipboard-3683822868.png)
 
-#### **7.26 — Actualizar business.module.ts**
+#### **7.26 — Actualizar `business.module.ts`**
 
-![](images/clipboard-390877843.png)
+![](images/clipboard-2288402048.png)
 
-#### **7.27 — Actualizar database-seeder.service.ts**
+#### **7.27 — Actualizar `database-seeder.service.ts`**
 
-![](images/clipboard-2533578620.png)
+![](images/clipboard-2010156917.png)
 
-#### **7.28 — Actualizar app.module.ts**
+#### **7.28 — Actualizar `app.module.ts`**
 
-![](images/clipboard-2708200200.png)
+![](images/clipboard-2278087678.png)
 
-#### **7.29 — Verificar tabla física `clients` y API**
+#### **7.29 — Verificar tabla física `patients` y API**
 
-![![](images/clipboard-3331245167.png)](images/clipboard-2874231102.png)
+![](images/clipboard-133971602.png)
 
-## **FASE 8 — `07_BUSINESS_PRODUCT_TYPES`**
-
-### **Objetivo de la fase:** Catálogo de tipos de producto. Misma plantilla CA que Clients.
-
-#### **8.1 — features/business/product-types/domain/entities/product-type.entity.ts**
-
-![](images/clipboard-421001306.png)
-
-#### **8.2 — features/business/product-types/domain/exceptions/product-type-not-found.exception.ts**
-
-![](images/clipboard-80307120.png)
-
-#### **8.3 — features/business/product-types/domain/interfaces/product-type-repository.interface.ts**
-
-![](images/clipboard-4176874929.png)
-
-#### **8.4 — features/business/product-types/infrastructure/persistence/models/product-type.model.ts**
-
-![](images/clipboard-969803041.png)
-
-#### **8.5 — features/business/product-types/infrastructure/persistence/repositories/product-type.repository.ts**
-
-![](images/clipboard-861933875.png)
-
-#### **8.6 — features/business/product-types/infrastructure/persistence/migrations/create-product-types-table.migration.ts**
-
-![](images/clipboard-1719846007.png)
-
-#### **8.7 — features/business/product-types/infrastructure/persistence/seeders/product-types.seeder.ts**
-
-![](images/clipboard-1790769421.png)
-
-#### **8.8 — features/business/product-types/application/dto/create-product-type.dto.ts**
-
-![](images/clipboard-1745722523.png)
-
-#### **8.9 — features/business/product-types/application/dto/product-type-filter.dto.ts**
-
-![](images/clipboard-3362021108.png)
-
-#### **8.10 — features/business/product-types/application/dto/product-type-response.dto.ts**
-
-![](images/clipboard-624969661.png)
-
-#### **8.11 — features/business/product-types/application/dto/update-product-type.dto.ts**
-
-![](images/clipboard-1755429228.png)
-
-#### **8.12 — features/business/product-types/application/mappers/product-type.mapper.ts**
-
-![](images/clipboard-467627559.png)
-
-#### **8.13 — features/business/product-types/application/use-cases/create-product-type.use-case.ts**
-
-![](images/clipboard-3598397083.png)
-
-#### **8.14 — features/business/product-types/application/use-cases/delete-product-type.use-case.ts**
-
-![](images/clipboard-3979999255.png)
-
-#### **8.15 — features/business/product-types/application/use-cases/get-product-type.use-case.ts**
-
-![](images/clipboard-3089108288.png)
-
-#### **8.16 — features/business/product-types/application/use-cases/list-product-types.use-case.ts**
-
-![](images/clipboard-3024324777.png)
-
-#### **8.17 — features/business/product-types/application/use-cases/update-product-type.use-case.ts**
-
-![](images/clipboard-2414304991.png)
-
-#### **8.18 — features/business/product-types/presentation/http/serializers/product-type.serializer.ts**
-
-![](images/clipboard-219672590.png)
-
-#### **8.19 — features/business/product-types/presentation/http/controllers/product-types.controller.ts**
-
-![](images/clipboard-3374218548.png)
-
-#### **8.20 — features/business/product-types/index.ts**
-
-![](images/clipboard-119428718.png)
-
-#### **8.21 — features/business/product-types/product-types.module.ts**
-
-![](images/clipboard-2636580962.png)
-
-#### **8.22 — Actualizar sequelize.factory.ts (registrar modelos)**
-
-![](images/clipboard-3906800964.png)
-
-#### **8.23 — Actualizar business.module.ts**
-
-![](images/clipboard-728811100.png)
-
-#### **8.24 — Actualizar database-seeder.service.ts**
-
-![](images/clipboard-2736698246.png)
-
-#### **8.25 — Actualizar app.module.ts**
-
-![](images/clipboard-3055447753.png)
-
-#### **8.26 — Verificar tabla `product_types`**
-
-![](images/clipboard-2141019718.png)
-
-![](images/clipboard-212724280.png)
-
-## **FASE 9 — `08_BUSINESS_PRODUCTS`**
-
-### **Objetivo de la fase:** Productos dependen de ProductTypes (FK). El modelo usa `require()` lazy para evitar ciclos.
-
-#### **9.1 — features/business/products/domain/entities/product.entity.ts**
-
-![](images/clipboard-288992593.png)
-
-#### **9.2 — features/business/products/domain/exceptions/invalid-product-price.exception.ts**
-
-![](images/clipboard-1759195053.png)
-
-#### **9.3 — features/business/products/domain/exceptions/invalid-product-stock.exception.ts**
-
-![](images/clipboard-2934140948.png)
-
-#### **9.4 — features/business/products/domain/exceptions/product-not-found.exception.ts**
-
-![](images/clipboard-1684728337.png)
-
-#### **9.5 — features/business/products/domain/interfaces/product-repository.interface.ts**
-
-![](images/clipboard-4027414773.png)
-
-#### **9.6 — features/business/products/domain/validators/product-price.validator.ts**
-
-![](images/clipboard-3557323066.png)
-
-#### **9.7 — features/business/products/domain/validators/product-stock.validator.ts**
-
-![](images/clipboard-4040912568.png)
-
-#### **9.8 — features/business/products/infrastructure/persistence/models/product.model.ts**
-
-![](images/clipboard-4148807266.png)
-
-#### **9.9 — features/business/products/infrastructure/persistence/repositories/product.repository.ts**
-
-![](images/clipboard-2832297757.png)
-
-#### **9.10 — features/business/products/infrastructure/persistence/migrations/create-products-table.migration.ts**
-
-![](images/clipboard-3990111203.png)
-
-#### **9.11 — features/business/products/infrastructure/persistence/seeders/products.seeder.ts**
+![](images/clipboard-3976417620.png)

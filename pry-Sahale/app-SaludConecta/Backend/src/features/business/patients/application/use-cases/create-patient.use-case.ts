@@ -1,10 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Patient } from '../../domain/entities/patient.entity.js';
 import { PatientDocumentAlreadyExistsException } from '../../domain/exceptions/patient-document-already-exists.exception.js';
-import {
-  PATIENT_REPOSITORY,
-  PatientRepository,
-} from '../../domain/interfaces/patient-repository.interface.js';
+import { PATIENT_REPOSITORY } from '../../domain/interfaces/patient-repository.interface.js';
+import type { PatientRepository } from '../../domain/interfaces/patient-repository.interface.js';
 import { CreatePatientDto } from '../dto/create-patient.dto.js';
 
 @Injectable()

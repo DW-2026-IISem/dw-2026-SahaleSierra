@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Patient } from '../../domain/entities/patient.entity.js';
-import {
-  PATIENT_REPOSITORY,
+import type { Patient } from '../../domain/entities/patient.entity.js';
+import { PATIENT_REPOSITORY } from '../../domain/interfaces/patient-repository.interface.js';
+import type {
   PatientFilter,
   PatientRepository,
 } from '../../domain/interfaces/patient-repository.interface.js';
-import { PaginationParams } from '../../../../../common/interfaces/pagination.interface.js';
+import type { PaginationParams } from '../../../../../common/interfaces/pagination.interface.js';
 
 @Injectable()
 export class ListPatientsUseCase {
