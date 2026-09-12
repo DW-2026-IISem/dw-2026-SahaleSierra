@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Specialty } from '../../domain/entities/specialty.entity.js';
-import {
-  SPECIALTY_REPOSITORY,
+import type { Specialty } from '../../domain/entities/specialty.entity.js';
+import { SPECIALTY_REPOSITORY } from '../../domain/interfaces/specialty-repository.interface.js';
+import type {
   SpecialtyFilter,
   SpecialtyRepository,
 } from '../../domain/interfaces/specialty-repository.interface.js';
-import { PaginationParams } from '../../../../../common/interfaces/pagination.interface.js';
+import type { PaginationParams } from '../../../../../common/interfaces/pagination.interface.js';
 
 @Injectable()
 export class ListSpecialtiesUseCase {
