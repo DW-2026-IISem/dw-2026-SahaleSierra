@@ -48,3 +48,5 @@ export class EncounterMapper {
     };
   }
 }
+// NOTA: en Fase 16 el mapper ya existe; agregar `invoiceId: model.invoiceId` en toDomain,
+// `invoiceId: entity.invoiceId` en toPersistence y en toResponse.
