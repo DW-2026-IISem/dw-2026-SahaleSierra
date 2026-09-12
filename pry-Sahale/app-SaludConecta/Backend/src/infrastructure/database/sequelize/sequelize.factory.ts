@@ -9,6 +9,7 @@ import { DoctorSpecialtyModel } from '../../../features/business/doctor-specialt
 import { ServiceModel } from '../../../features/business/services/infrastructure/persistence/models/service.model.js';
 import { AgendaModel } from '../../../features/business/agendas/infrastructure/persistence/models/agenda.model.js';
 import { AppointmentModel } from '../../../features/business/appointments/infrastructure/persistence/models/appointment.model.js';
+import { AuthorizationModel } from '../../../features/business/authorizations/infrastructure/persistence/models/authorization.model.js';
 
 
 const require = createRequire(import.meta.url);
@@ -21,6 +22,7 @@ export const ALL_MODELS = [
     ServiceModel,
     AgendaModel,
     AppointmentModel,
+    AuthorizationModel,
 ];
 
 export async function createSequelizeInstance(
