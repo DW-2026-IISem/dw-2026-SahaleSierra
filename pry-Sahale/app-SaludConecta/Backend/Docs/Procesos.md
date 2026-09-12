@@ -906,3 +906,181 @@ npm run start:dev
 ![](images/clipboard-2461838265.png)
 
 ![](images/clipboard-3257488065.png)
+
+## **FASE 12 — `11_BUSINESS_AGENDAS`**
+
+### **Objetivo de la fase:** Agenda pertenece a un médico (`Medico 1:N Agenda`). Requiere que `DoctorModel` (Fase 9) ya exista. 
+
+#### **12.1 — Entidad de dominio**
+
+![](images/clipboard-1129044384.png)
+
+#### **12.2 — Excepción: agenda no encontrada**
+
+![](images/clipboard-1479283641.png)
+
+#### **12.3 — Interfaz de repositorio**
+
+![](images/clipboard-291919451.png)
+
+#### **12.4 — Modelo Sequelize (con FK a Doctor)**
+
+![](images/clipboard-2344709770.png)
+
+#### **12.5 — Repositorio de infraestructura**
+
+![](images/clipboard-3993194374.png)
+
+#### **12.6 — Migración (con FK a `doctors`)**
+
+![](images/clipboard-3963155581.png)
+
+#### **12.7 — Seeder (usa ids sembrados de Doctors)**
+
+![](images/clipboard-3155268584.png)
+
+#### **12.8 — DTO de filtro**
+
+![](images/clipboard-3603531602.png)
+
+#### **12.9 — DTO de respuesta**
+
+![](images/clipboard-3741761345.png)
+
+#### **12.10 — DTO de creación**
+
+![](images/clipboard-1809118509.png)
+
+#### **12.11 — DTO de actualización**
+
+![](images/clipboard-748315995.png)
+
+#### **12.12 — Mapper**
+
+![](images/clipboard-1423238478.png)
+
+#### **12.13 — Use-case: crear agenda**
+
+![](images/clipboard-3418384137.png)
+
+#### **12.14 — Use-case: eliminar agenda**
+
+![](images/clipboard-2542704223.png)
+
+#### **12.15 — Use-case: obtener agenda**
+
+![](images/clipboard-549562940.png)
+
+#### **12.16 — Use-case: listar agendas**
+
+![](images/clipboard-448049652.png)
+
+#### **12.17 — Use-case: actualizar agenda**
+
+![](images/clipboard-2889558332.png)
+
+#### **12.18 — Serializer**
+
+![](images/clipboard-884873707.png)
+
+#### **12.19 — Controller**
+
+![](images/clipboard-991127381.png)
+
+#### **12.20 — Barrel `index.ts`**
+
+![](images/clipboard-3861803298.png)
+
+#### **12.21 — Módulo `agendas.module.ts`**
+
+![](images/clipboard-3051750504.png)
+
+#### **12.22 — Registrar `AgendaModel` en `sequelize.factory.ts`**
+
+![](images/clipboard-937427398.png)
+
+#### **12.23 — Actualizar `business.module.ts`**
+
+![](images/clipboard-3537679315.png)
+
+#### **12.24 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-2912024320.png)
+
+#### **12.25 — Verificar tabla física `agendas` y API**
+
+![](images/clipboard-791417835.png)
+
+![](images/clipboard-2274054480.png)
+
+## **FASE 13 — `12_BUSINESS_APPOINTMENTS`**
+
+### **Objetivo de la fase:** Cita depende de Patient (Fase 7) y Agenda (Fase 12), ambas ya existentes. Maneja su propio ciclo de vida (`PROGRAMADA` → `ATENDIDA` / `CANCELADA` / `NO_ASISTIO`), distinto del campo `is_active` de catálogo. La transición a `ATENDIDA` la dispara el use-case de Encounters en la Fase 15 — aquí solo se define el método de dominio que lo permite.
+
+#### **13.1 — Enum de estado de cita**
+
+![](images/clipboard-1803979149.png)
+
+#### **13.2 — Entidad de dominio**
+
+![](images/clipboard-1063233348.png)
+
+#### **13.3 — Excepción: cita no encontrada**
+
+![](images/clipboard-1695671849.png)
+
+#### **13.4 — Excepción: transición de estado inválida**
+
+![](images/clipboard-2117785471.png)
+
+#### **13.5 — Interfaz de repositorio**
+
+![](images/clipboard-3644168166.png)
+
+#### **13.6 — Modelo Sequelize (con FK a Patient y Agenda)**
+
+![](images/clipboard-396727349.png)
+
+#### **13.7 — Repositorio de infraestructura**
+
+![](images/clipboard-2111728441.png)
+
+#### **13.8 — Migración (con FKs a `patients` y `agendas`)**
+
+![](images/clipboard-2041812576.png)
+
+#### **13.9 — Seeder (usa ids sembrados de Patients y Agendas)**
+
+![](images/clipboard-1865534403.png)
+
+#### **13.10 — DTO de filtro**
+
+![](images/clipboard-3502530214.png)
+
+#### **13.11 — DTO de respuesta**
+
+![](images/clipboard-2557497856.png)
+
+#### **13.12 — DTO de creación** 
+
+![](images/clipboard-1909847763.png)
+
+#### **13.13 — DTO de reprogramación**
+
+![](images/clipboard-617179983.png)
+
+#### **13.14 — Mapper**
+
+![](images/clipboard-169306829.png)
+
+#### **13.15 — Use-case: crear (agendar) cita**
+
+![](images/clipboard-1102745396.png)
+
+#### **13.16 — Use-case: reprogramar cita**
+
+![](images/clipboard-757867419.png)
+
+#### **13.17 — Use-case: cancelar cita**
+
+![](images/clipboard-698576034.png)
