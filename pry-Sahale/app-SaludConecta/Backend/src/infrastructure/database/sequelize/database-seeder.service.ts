@@ -10,3 +10,5 @@
 // await seedServices();
 // import { seedAgendas } from '../../../features/business/agendas/infrastructure/persistence/seeders/agendas.seeder.js';
 // await seedAgendas(); // ejecutar despues de seedDoctors()
+// import { seedAppointments } from '../../../features/business/appointments/infrastructure/persistence/seeders/appointments.seeder.js';
+// await seedAppointments(); // ejecutar despues de seedPatients() y seedAgendas()
