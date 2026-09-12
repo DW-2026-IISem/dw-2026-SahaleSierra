@@ -18,3 +18,5 @@
 // await seedClinicalRecords(); // ejecutar despues de seedPatients()
 // import { seedEncounters } from '../../../features/business/encounters/infrastructure/persistence/seeders/encounters.seeder.js';
 // await seedEncounters(); // ejecutar despues de seedAppointments(), seedServices() y seedClinicalRecords()
+// import { seedInvoices } from '../../../features/business/invoices/infrastructure/persistence/seeders/invoices.seeder.js';
+// await seedInvoices(); // ejecutar antes de seedEncounters() ya que encounters puede referenciar invoice_id
