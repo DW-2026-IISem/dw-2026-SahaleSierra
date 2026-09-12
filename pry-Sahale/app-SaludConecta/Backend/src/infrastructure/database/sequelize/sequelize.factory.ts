@@ -11,6 +11,7 @@ import { AgendaModel } from '../../../features/business/agendas/infrastructure/p
 import { AppointmentModel } from '../../../features/business/appointments/infrastructure/persistence/models/appointment.model.js';
 import { AuthorizationModel } from '../../../features/business/authorizations/infrastructure/persistence/models/authorization.model.js';
 import { ClinicalRecordModel } from '../../../features/business/clinical-records/infrastructure/persistence/models/clinical-record.model.js';
+import { EncounterModel } from '../../../features/business/encounters/infrastructure/persistence/models/encounter.model.js';
 
 
 const require = createRequire(import.meta.url);
@@ -25,6 +26,7 @@ export const ALL_MODELS = [
     AppointmentModel,
     AuthorizationModel,
     ClinicalRecordModel,
+    EncounterModel,
 ];
 
 export async function createSequelizeInstance(
