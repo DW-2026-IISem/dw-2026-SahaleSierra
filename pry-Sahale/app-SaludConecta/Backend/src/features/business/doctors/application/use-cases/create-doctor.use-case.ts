@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Doctor } from '../../domain/entities/doctor.entity.js';
-import {
-  DOCTOR_REPOSITORY,
-  DoctorRepository,
-} from '../../domain/interfaces/doctor-repository.interface.js';
+import { DOCTOR_REPOSITORY } from '../../domain/interfaces/doctor-repository.interface.js';
+import type { DoctorRepository } from '../../domain/interfaces/doctor-repository.interface.js';
 import { CreateDoctorDto } from '../dto/create-doctor.dto.js';
 
 @Injectable()

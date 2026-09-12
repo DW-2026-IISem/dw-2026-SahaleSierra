@@ -11,6 +11,7 @@ import { ApplicationException } from '../exceptions/application.exception.js';
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
+    console.error('Error real de la petición:', exception);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();

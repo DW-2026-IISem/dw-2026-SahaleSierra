@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { BusinessModule } from './features/business/business.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
+import { SequelizeDatabaseModule } from './infrastructure/database/sequelize/sequelize.module.js';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { AppService } from './app.service.js';
       envFilePath: '.env',
     }),
     BusinessModule,
+    SequelizeDatabaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

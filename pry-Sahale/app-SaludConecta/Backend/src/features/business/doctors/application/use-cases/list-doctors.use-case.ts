@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Doctor } from '../../domain/entities/doctor.entity.js';
-import {
-  DOCTOR_REPOSITORY,
+import type { Doctor } from '../../domain/entities/doctor.entity.js';
+import { DOCTOR_REPOSITORY } from '../../domain/interfaces/doctor-repository.interface.js';
+import type {
   DoctorFilter,
   DoctorRepository,
 } from '../../domain/interfaces/doctor-repository.interface.js';
-import { PaginationParams } from '../../../../../common/interfaces/pagination.interface.js';
+import type { PaginationParams } from '../../../../../common/interfaces/pagination.interface.js';
 
 @Injectable()
 export class ListDoctorsUseCase {

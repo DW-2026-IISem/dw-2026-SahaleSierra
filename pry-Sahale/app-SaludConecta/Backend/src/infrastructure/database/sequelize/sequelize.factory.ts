@@ -2,11 +2,15 @@ import { createRequire } from 'node:module';
 import { Sequelize } from 'sequelize-typescript';
 import { DatabaseDialect } from '../../../config/environment/env.interface.js';
 import { getSequelizeOptions } from './sequelize.options.js';
-
+import { PatientModel } from '../../../features/business/patients/infrastructure/persistence/models/patient.model.js';
+import { SpecialtyModel } from '../../../features/business/specialties/infrastructure/persistence/models/specialty.model.js';
+import { DoctorModel } from '../../../features/business/doctors/infrastructure/persistence/models/doctor.model.js';
 const require = createRequire(import.meta.url);
 
 export const ALL_MODELS = [
-  // (aún sin modelos — se agregan por feature)
+    PatientModel,
+    SpecialtyModel,
+    DoctorModel,
 ];
 
 export async function createSequelizeInstance(
