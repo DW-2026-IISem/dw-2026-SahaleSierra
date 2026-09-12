@@ -483,4 +483,74 @@ npm run start:dev
 
 ![](images/clipboard-133971602.png)
 
-![](images/clipboard-3976417620.png)
+## **FASE 8 — `07_BUSINESS_SPECIALTIES`**
+
+### **Objetivo de la fase:** Catálogo de especialidades médicas (`nombre`, `descripcion`, `is_active`), sin relaciones salientes propias — es referenciada por `DoctorSpecialties` en la Fase 10.
+
+#### **8.1 — Entidad de dominio**
+
+![](images/clipboard-4036040989.png)
+
+#### **8.2 — Excepción: especialidad no encontrada**
+
+![](images/clipboard-709219115.png)
+
+#### **8.3 — Excepción: nombre duplicado**
+
+![](images/clipboard-2374906236.png)
+
+#### **8.4 — Interfaz de repositorio**
+
+![](images/clipboard-4229316524.png)
+
+#### **8.5 — Modelo Sequelize**
+
+![](images/clipboard-3949817157.png)
+
+#### **8.6 — Repositorio de infraestructura**
+
+![](images/clipboard-1411980706.png)
+
+#### **8.7 — Migración**
+
+![](images/clipboard-3065602283.png)
+
+#### **8.8 — Seeder**
+
+![](images/clipboard-731655275.png)
+
+#### **8.9 — DTOs (filtro, respuesta, creación, actualización)**
+
+**Archivo:** `src/features/business/specialties/application/dto/specialty-filter.dto.ts`
+
+![](images/clipboard-1815061801.png)
+
+**Archivo:** `src/features/business/specialties/application/dto/specialty-response.dto.ts`
+
+![**Archivo:** `src/features/business/specialties/application/dto/create-specialty.dto.ts`](images/clipboard-3664023027.png)
+
+![](images/clipboard-1870699758.png)
+
+**Archivo:** `src/features/business/specialties/application/dto/update-specialty.dto.ts`
+
+![](images/clipboard-912986437.png)
+
+#### **8.10 — Mapper**
+
+![](images/clipboard-2846066935.png)
+
+#### **8.11 — Use-case: crear especialidad**
+
+![](images/clipboard-4239378455.png)
+
+#### **8.12 — Use-case: eliminar especialidad**
+
+![](images/clipboard-1625963837.png)
+
+#### **8.13 — Use-case: obtener especialidad**
+
+![](images/clipboard-2987961199.png)
+
+#### **8.14 — Use-case: listar especialidades**
+
+![](images/clipboard-204732368.png)
