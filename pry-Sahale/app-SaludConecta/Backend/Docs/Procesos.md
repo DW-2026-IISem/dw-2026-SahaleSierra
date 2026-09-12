@@ -1084,3 +1084,55 @@ npm run start:dev
 #### **13.17 — Use-case: cancelar cita**
 
 ![](images/clipboard-698576034.png)
+
+#### **13.18 — Use-case: obtener cita**
+
+![](images/clipboard-2772665900.png)
+
+#### **13.19 — Use-case: listar citas**
+
+![](images/clipboard-79024187.png)
+
+#### **13.20 — Use-case: eliminar cita**
+
+![](images/clipboard-53306192.png)
+
+#### **13.21 — Serializer**
+
+![](images/clipboard-496307131.png)
+
+#### **13.22 — Controller**
+
+![](images/clipboard-3027447132.png)
+
+#### **13.23 — Barrel `index.ts`**
+
+![](images/clipboard-26545522.png)
+
+#### **13.24 — Módulo `appointments.module.ts`**
+
+![](images/clipboard-1283885247.png)
+
+#### **13.25 — Registrar `AppointmentModel` en `sequelize.factory.ts`**
+
+![](images/clipboard-4006580122.png)
+
+#### **13.26 — Actualizar `business.module.ts`**
+
+![](images/clipboard-45299035.png)
+
+#### **13.27 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-1401342032.png)
+
+#### **13.28 — Verificar tabla física `appointments` y API**
+
+![![](images/clipboard-2307536974.png)](images/clipboard-1628073598.png)
+
+## **FASE 14 — `13_BUSINESS_AUTHORIZATIONS`**
+
+### **Objetivo de la fase:** Autorizacion representa el aval de la EPS/convenio para una cita puntual (`Cita 0..1:1 Autorizacion`). Requiere que `AppointmentModel` (Fase 13) ya exista. La FK `appointment_id` es única para expresar la cardinalidad 1:1 opcional.
+
+#### **14.1 — Entidad de dominio**
+
+![](images/clipboard-2242990083.png)
