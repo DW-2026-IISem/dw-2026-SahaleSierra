@@ -16,3 +16,5 @@
 // await seedAuthorizations(); // ejecutar despues de seedAppointments()
 // import { seedClinicalRecords } from '../../../features/business/clinical-records/infrastructure/persistence/seeders/clinical-records.seeder.js';
 // await seedClinicalRecords(); // ejecutar despues de seedPatients()
+// import { seedEncounters } from '../../../features/business/encounters/infrastructure/persistence/seeders/encounters.seeder.js';
+// await seedEncounters(); // ejecutar despues de seedAppointments(), seedServices() y seedClinicalRecords()
