@@ -909,7 +909,7 @@ npm run start:dev
 
 ## **FASE 12 — `11_BUSINESS_AGENDAS`**
 
-### **Objetivo de la fase:** Agenda pertenece a un médico (`Medico 1:N Agenda`). Requiere que `DoctorModel` (Fase 9) ya exista. 
+### **Objetivo de la fase:** Agenda pertenece a un médico (`Medico 1:N Agenda`). Requiere que `DoctorModel` (Fase 9) ya exista.
 
 #### **12.1 — Entidad de dominio**
 
@@ -1061,7 +1061,7 @@ npm run start:dev
 
 ![](images/clipboard-2557497856.png)
 
-#### **13.12 — DTO de creación** 
+#### **13.12 — DTO de creación**
 
 ![](images/clipboard-1909847763.png)
 
@@ -1131,8 +1131,118 @@ npm run start:dev
 
 ## **FASE 14 — `13_BUSINESS_AUTHORIZATIONS`**
 
-### **Objetivo de la fase:** Autorizacion representa el aval de la EPS/convenio para una cita puntual (`Cita 0..1:1 Autorizacion`). Requiere que `AppointmentModel` (Fase 13) ya exista. La FK `appointment_id` es única para expresar la cardinalidad 1:1 opcional.
+### **Objetivo de la fase: Autorizacion representa el aval de la EPS/convenio para una cita puntual (`Cita 0..1:1 Autorizacion`). Requiere que `AppointmentModel` (Fase 13) ya exista. La FK `appointment_id` es única para expresar la cardinalidad 1:1 opcional.**
 
 #### **14.1 — Entidad de dominio**
 
 ![](images/clipboard-2242990083.png)
+
+#### **14.2 — Excepción: autorización no encontrada**
+
+![](images/clipboard-498080842.png)
+
+#### **14.3 — Excepción: la cita ya tiene autorización**
+
+![](images/clipboard-2179765205.png)
+
+#### **14.4 — Interfaz de repositorio**
+
+![](images/clipboard-367307612.png)
+
+#### **14.5 — Modelo Sequelize (FK única a Appointment)**
+
+![](images/clipboard-1592418618.png)
+
+#### **14.6 — Repositorio de infraestructura**
+
+![](images/clipboard-2203784173.png)
+
+#### **14.7 — Migración (FK única a `appointments`)**
+
+![](images/clipboard-4261791871.png)
+
+#### **14.8 — Seeder (usa una cita ya sembrada)**
+
+![](images/clipboard-2893360910.png)
+
+#### **14.9 — DTO de filtro**
+
+![](images/clipboard-2607878943.png)
+
+#### **14.10 — DTO de respuesta**
+
+![](images/clipboard-2670644105.png)
+
+#### **14.11 — DTO de creación**
+
+![](images/clipboard-889364158.png)
+
+#### **14.12 — DTO de actualización**
+
+![](images/clipboard-783141371.png)
+
+#### **14.13 — Mapper**
+
+![](images/clipboard-3251017268.png)
+
+#### **14.14 — Use-case: crear autorización**
+
+![](images/clipboard-3215831674.png)
+
+#### **14.15 — Use-case: eliminar autorización**
+
+![](images/clipboard-3403584406.png)
+
+#### **14.16 — Use-case: obtener autorización**
+
+![](images/clipboard-4276657474.png)
+
+#### **14.17 — Use-case: listar autorizaciones**
+
+![](images/clipboard-2269218205.png)
+
+#### **14.18 — Use-case: actualizar autorización**
+
+![](images/clipboard-378751333.png)
+
+#### **14.19 — Serializer**
+
+![](images/clipboard-4201856750.png)
+
+#### **14.20 — Controller**
+
+![](images/clipboard-1305832599.png)
+
+#### **14.21 — Barrel `index.ts`**
+
+![](images/clipboard-1639653177.png)
+
+#### **14.22 — Módulo `authorizations.module.ts`**
+
+![](images/clipboard-2832694999.png)
+
+#### **14.23 — Registrar `AuthorizationModel` en `sequelize.factory.ts`**
+
+![](images/clipboard-510746442.png)
+
+#### **14.24 — Actualizar `business.module.ts`**
+
+![](images/clipboard-494838822.png)
+
+#### **14.25 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-930476244.png)
+
+#### **14.26 — Verificar tabla física `authorizations` y API**
+
+![](images/clipboard-3917585667.png)
+
+![](images/clipboard-3346721792.png)
+
+## **FASE 15 — `14_BUSINESS_CLINICAL_RECORDS`**
+
+### **Objetivo de la fase: HistoriaClinica pertenece a un único paciente (`Paciente 1:1 HistoriaClinica`) y será referenciada por Encounters en la Fase 16 (`HistoriaClinica 1:N Atencion`). Por eso se construye antes que Encounters, invirtiendo el orden original de la tabla de mapeo. Requiere que `PatientModel` (Fase 7) ya exista. Incluye el endpoint `GET /historias/:pacienteId` indicado en el RBAC del PDF.**
+
+#### **15.1 — Entidad de dominio**
+
+![](images/clipboard-3567733754.png)
