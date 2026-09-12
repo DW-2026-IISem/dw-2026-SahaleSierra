@@ -5,12 +5,16 @@ import { getSequelizeOptions } from './sequelize.options.js';
 import { PatientModel } from '../../../features/business/patients/infrastructure/persistence/models/patient.model.js';
 import { SpecialtyModel } from '../../../features/business/specialties/infrastructure/persistence/models/specialty.model.js';
 import { DoctorModel } from '../../../features/business/doctors/infrastructure/persistence/models/doctor.model.js';
+import { DoctorSpecialtyModel } from '../../../features/business/doctor-specialties/infrastructure/persistence/models/doctor-specialty.model.js';
+
+
 const require = createRequire(import.meta.url);
 
 export const ALL_MODELS = [
     PatientModel,
     SpecialtyModel,
     DoctorModel,
+    DoctorSpecialtyModel,
 ];
 
 export async function createSequelizeInstance(

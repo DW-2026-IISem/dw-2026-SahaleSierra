@@ -700,3 +700,99 @@ npm run start:dev
 #### **9.24 — Verificar tabla física `doctors` y API**
 
 ![![](images/clipboard-3400602838.png)](images/clipboard-2921708135.png)
+
+## **FASE 10 — `09_BUSINESS_DOCTOR_SPECIALTIES`**
+
+### **Objetivo de la fase:** Resolver la relación N:M `Medico ↔ Especialidad`. Requiere que `DoctorModel` (Fase 9) y `SpecialtyModel` (Fase 8) ya existan — por eso se implementa después de ambos. `principal_id` referencia a `doctors`, `relacionado_id` referencia a `specialties`, y `datos_relacion` guarda metadatos propios de la relación (ej. fecha de habilitación).
+
+#### **10.1 — Entidad de dominio**
+
+![](images/clipboard-883011185.png)
+
+#### **10.2 — Excepción: relación duplicada**
+
+![](images/clipboard-1243894878.png)
+
+#### **10.3 — Excepción: relación no encontrada**
+
+![](images/clipboard-97298628.png)
+
+#### **10.4 — Interfaz de repositorio**
+
+![](images/clipboard-3152666681.png)
+
+#### **10.5 — Modelo Sequelize (con asociaciones a Doctor y Specialty, ya existentes)**
+
+![](images/clipboard-2688348035.png)
+
+#### **10.6 — Repositorio de infraestructura**
+
+![](images/clipboard-1080111412.png)
+
+#### **10.7 — Migración (con FKs a `doctors` y `specialties`)**
+
+![](images/clipboard-1935346972.png)
+
+#### **10.8 — Seeder (usa los ids sembrados de Doctors y Specialties)**
+
+![](images/clipboard-139130002.png)
+
+#### **10.9 — DTO de filtro**
+
+![](images/clipboard-1935422337.png)
+
+#### **10.10 — DTO de respuesta**
+
+![](images/clipboard-3626468020.png)
+
+#### **10.11 — DTO de creación**
+
+![](images/clipboard-1171551054.png)
+
+#### **10.12 — Mapper**
+
+![](images/clipboard-1276533739.png)
+
+#### **10.13 — Use-case: asignar especialidad a médico**
+
+![](images/clipboard-1460173133.png)
+
+#### **10.14 — Use-case: quitar especialidad de médico**
+
+![](images/clipboard-600885170.png)
+
+#### **10.15 — Use-case: listar relaciones médico-especialidad**
+
+![](images/clipboard-2645415495.png)
+
+#### **10.16 — Serializer**
+
+![](images/clipboard-1882360456.png)
+
+#### **10.17 — Controller**
+
+![](images/clipboard-1383031572.png)
+
+#### **10.18 — Barrel `index.ts`**
+
+![](images/clipboard-4255625028.png)
+
+#### **10.19 — Módulo `doctor-specialties.module.ts`**
+
+![](images/clipboard-3553720707.png)
+
+#### **10.20 — Registrar en `sequelize.factory.ts`**
+
+![](images/clipboard-1325045534.png)
+
+#### **10.21 — Actualizar `business.module.ts`**
+
+![](images/clipboard-3180499516.png)
+
+#### **10.22 — Actualizar `database-seeder.service.ts` (orden: doctors → specialties → doctor_specialties)**
+
+![](images/clipboard-2044096693.png)
+
+#### **10.23 — Verificar tabla física `doctor_specialties` y API**
+
+![![](images/clipboard-1116631913.png)](images/clipboard-1558539880.png)
