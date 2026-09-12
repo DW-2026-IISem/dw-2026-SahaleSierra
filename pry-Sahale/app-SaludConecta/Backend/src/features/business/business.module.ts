@@ -8,6 +8,7 @@ import { AgendasModule } from './agendas/agendas.module.js';
 import { AppointmentsModule } from './appointments/appointments.module.js';
 import { AuthorizationsModule } from './authorizations/authorizations.module.js';
 import { ClinicalRecordsModule } from './clinical-records/clinical-records.module.js';
+import { EncountersModule } from './encounters/encounters.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ClinicalRecordsModule } from './clinical-records/clinical-records.modul
     AppointmentsModule,
     AuthorizationsModule,
     ClinicalRecordsModule,
+    EncountersModule,
   ],
   exports: [
     PatientsModule,
@@ -31,6 +33,7 @@ import { ClinicalRecordsModule } from './clinical-records/clinical-records.modul
     AppointmentsModule,
     AuthorizationsModule,
     ClinicalRecordsModule,
+    EncountersModule,
   ],
 })
 export class BusinessModule {}
