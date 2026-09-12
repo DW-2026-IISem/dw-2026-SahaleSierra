@@ -90,3 +90,5 @@ export async function createSequelizeInstance(
 // models: [..., AppointmentModel]  // requiere que PatientModel y AgendaModel ya esten registrados
 // import { AuthorizationModel } from '../../../features/business/authorizations/infrastructure/persistence/models/authorization.model.js';
 // models: [..., AuthorizationModel]  // requiere que AppointmentModel ya este registrado
+// import { ClinicalRecordModel } from '../../../features/business/clinical-records/infrastructure/persistence/models/clinical-record.model.js';
+// models: [..., ClinicalRecordModel]  // requiere que PatientModel ya este registrado
