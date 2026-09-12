@@ -1478,3 +1478,69 @@ npm run start:dev
 #### **17.1 — Migración adicional: agregar `invoice_id` a `encounters`**
 
 ![](images/clipboard-458927303.png)
+
+#### **17.2 — Extender `EncounterModel` con `invoiceId` (FK opcional)**
+
+![](images/clipboard-2985500537.png)
+
+#### **17.3 — Extender entidad de dominio `Encounter` con `invoiceId`**
+
+![](images/clipboard-2829425124.png)
+
+#### **17.4 — Extender `EncounterMapper` con `invoiceId`**
+
+![](images/clipboard-92141451.png)
+
+#### **17.5 — Entidad de dominio Invoice**
+
+![](images/clipboard-3751060674.png)
+
+#### **17.6 — Excepción: factura no encontrada**
+
+![](images/clipboard-2439711162.png)
+
+#### **17.7 — Excepción: número de factura duplicado**
+
+![](images/clipboard-3488891800.png)
+
+#### **17.8 — Excepción: atención ya facturada**
+
+![](images/clipboard-1440845183.png)
+
+#### **17.9 — Interfaz de repositorio**
+
+![](images/clipboard-3443321258.png)
+
+#### **17.10 — Modelo Sequelize**
+
+![](images/clipboard-2338715442.png)
+
+#### **17.11 — Repositorio de infraestructura**
+
+![](images/clipboard-280812605.png)
+
+#### **17.12 — Migración `create-invoices-table`**
+
+![](images/clipboard-3253464237.png)
+
+**Nota de orden:** esta migración (crear `invoices`) debe ejecutarse **antes** que la del paso 17.1 (agregar `invoice_id` a `encounters`), porque esa columna referencia a `invoices.id`. Coloca este archivo con un timestamp/prefijo anterior si usas `sequelize-cli db:migrate` con orden por nombre de archivo.
+
+#### **17.13 — Seeder (factura demo, sin atenciones asociadas todavía)**
+
+![](images/clipboard-3430894586.png)
+
+#### **17.14 — DTO de filtro**
+
+![](images/clipboard-547632166.png)
+
+#### **17.15 — DTO de respuesta**
+
+![](images/clipboard-2924871101.png)
+
+#### **17.16 — DTO de creación (a partir de atenciones facturables)**
+
+![](images/clipboard-2755431834.png)
+
+#### **17.17 — Mapper**
+
+![](images/clipboard-2633323116.png)
