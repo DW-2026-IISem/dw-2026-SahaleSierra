@@ -74,3 +74,5 @@ export async function createSequelizeInstance(
 // models: [..., DoctorModel]
 // import { DoctorSpecialtyModel } from '../../../features/business/doctor-specialties/infrastructure/persistence/models/doctor-specialty.model.js';
 // models: [..., DoctorSpecialtyModel]  // requiere que DoctorModel y SpecialtyModel ya estén registrados
+// import { ServiceModel } from '../../../features/business/services/infrastructure/persistence/models/service.model.js';
+// models: [..., ServiceModel]
