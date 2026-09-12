@@ -796,3 +796,113 @@ npm run start:dev
 #### **10.23 — Verificar tabla física `doctor_specialties` y API**
 
 ![![](images/clipboard-1116631913.png)](images/clipboard-1558539880.png)
+
+## **FASE 11 — `10_BUSINESS_SERVICES`**
+
+### **Objetivo de la fase:** Catálogo de servicios clínicos, referenciado luego por `Encounters` (Fase 15: `Servicio 1:N Atencion`).
+
+#### **11.1 — Entidad de dominio**
+
+![](images/clipboard-541589824.png)
+
+#### **11.2 — Excepción: servicio no encontrado**
+
+![](images/clipboard-1513165492.png)
+
+#### **11.3 — Excepción: nombre de servicio duplicado**
+
+![](images/clipboard-971937387.png)
+
+#### **11.4 — Interfaz de repositorio**
+
+![](images/clipboard-2732653662.png)
+
+#### **11.5 — Modelo Sequelize**
+
+![](images/clipboard-1791473539.png)
+
+#### **11.6 — Repositorio de infraestructura**
+
+![](images/clipboard-520134851.png)
+
+#### **11.7 — Migración**
+
+![](images/clipboard-1966386688.png)
+
+#### **11.8 — Seeder**
+
+![](images/clipboard-3863246267.png)
+
+#### **11.9 — DTO de filtro**
+
+![](images/clipboard-1920730475.png)
+
+#### **11.10 — DTO de respuesta**
+
+![](images/clipboard-251644431.png)
+
+#### **11.11 — DTO de creación**
+
+![](images/clipboard-4090505670.png)
+
+#### **11.12 — DTO de actualización**
+
+![](images/clipboard-1324242416.png)
+
+#### **11.13 — Mapper**
+
+![](images/clipboard-4264217520.png)
+
+#### **11.14 — Use-case: crear servicio**
+
+![](images/clipboard-3817425780.png)
+
+#### **11.15 — Use-case: obtener servicio**
+
+![](images/clipboard-1072766959.png)
+
+#### **11.16 — Use-case: listar servicios**
+
+![](images/clipboard-2408572411.png)
+
+#### **11.17 — Use-case: actualizar servicio**
+
+![](images/clipboard-4042430704.png)
+
+#### **11.18 — Use-case: eliminar servicio**
+
+![](images/clipboard-2670921466.png)
+
+#### **11.19 — Serializer**
+
+![](images/clipboard-46209851.png)
+
+#### **11.20 — Controller**
+
+![](images/clipboard-76533410.png)
+
+#### **11.21 — Barrel `index.ts`**
+
+![](images/clipboard-1964295835.png)
+
+#### **11.22 — Módulo `services.module.ts`**
+
+![](images/clipboard-3815497138.png)
+
+#### **11.23 — Registrar en `sequelize.factory.ts`**
+
+![](images/clipboard-307484914.png)
+
+#### **11.24 — Actualizar `business.module.ts`**
+
+![](images/clipboard-2386314622.png)
+
+#### **11.25 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-3014431907.png)
+
+#### **11.26 — Verificar tabla física `services` y API**
+
+![](images/clipboard-2461838265.png)
+
+![](images/clipboard-3257488065.png)
