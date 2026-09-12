@@ -1438,3 +1438,43 @@ npm run start:dev
 ![](images/clipboard-1520055463.png)
 
 #### **16.21 — Serializer**
+
+![](images/clipboard-2271596766.png)
+
+#### **16.22 — Controller**
+
+![](images/clipboard-2214271970.png)
+
+#### **16.23 — Barrel `index.ts`**
+
+![](images/clipboard-3852977788.png)
+
+#### **16.24 — Módulo `encounters.module.ts`**
+
+![](images/clipboard-3221819288.png)
+
+#### **16.25 — Registrar `EncounterModel` en `sequelize.factory.ts`**
+
+![](images/clipboard-2528519140.png)
+
+#### **16.26 — Actualizar `business.module.ts`**
+
+![](images/clipboard-3200517854.png)
+
+#### **16.27 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-3231877587.png)
+
+#### **16.28 — Verificar tabla física `encounters` y transición de cita**
+
+![](images/clipboard-3512139714.png)
+
+![](images/clipboard-4096869873.png)
+
+## **FASE 17 — `16_BUSINESS_INVOICES`**
+
+### **Objetivo de la fase:** Factura agrupa una o más atenciones facturables (`Factura agrupa atenciones facturables`). Como `EncounterModel` (Fase 16) ya existe pero no puede referenciar a `Invoice` (aún no existía), esta fase primero **extiende** Encounter con una FK opcional `invoice_id` mediante una migración adicional, y luego construye Invoice completo.
+
+#### **17.1 — Migración adicional: agregar `invoice_id` a `encounters`**
+
+![](images/clipboard-458927303.png)
