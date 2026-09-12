@@ -1544,3 +1544,33 @@ npm run start:dev
 #### **17.17 — Mapper**
 
 ![](images/clipboard-2633323116.png)
+
+#### **17.18 — Use-case: generar factura a partir de atenciones (IVA 19%)**
+
+![](images/clipboard-3855444357.png)
+
+#### **17.19 — Use-case: marcar factura como pagada**
+
+![](images/clipboard-2589186305.png)
+
+#### **17.20 — Use-case: anular factura**
+
+![](images/clipboard-2924036656.png)
+
+#### **17.21 — Use-case: obtener factura**
+
+![](images/clipboard-3793944072.png)
+
+#### **17.22 — Use-case: listar facturas**
+
+![](images/clipboard-2700640797.png)
+
+#### **17.23 — Use-case: eliminar factura**
+
+![](images/clipboard-531284708.png)
+
+#### **17.24 — Serializer**
+
+![](images/clipboard-1759957022.png)
+
+#### **17.25 — Controller**
