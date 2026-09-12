@@ -4,3 +4,5 @@
 // await seedSpecialties();
 // import { seedDoctors } from '../../../features/business/doctors/infrastructure/persistence/seeders/doctors.seeder.js';
 // await seedDoctors();
+// import { seedDoctorSpecialties } from '../../../features/business/doctor-specialties/infrastructure/persistence/seeders/doctor-specialties.seeder.js';
+// await seedDoctorSpecialties(); // ejecutar despues de seedDoctors() y seedSpecialties()
