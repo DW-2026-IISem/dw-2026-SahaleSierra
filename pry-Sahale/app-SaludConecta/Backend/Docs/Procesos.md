@@ -1306,3 +1306,135 @@ npm run start:dev
 #### **15.16 — Use-case: obtener historia clínica por id**
 
 ![](images/clipboard-1268696106.png)
+
+#### **15.17 — Use-case: obtener historia clínica por paciente (`GET /historias/:pacienteId`)**
+
+![](images/clipboard-2486518115.png)
+
+#### **15.18 — Use-case: listar historias clínicas**
+
+![](images/clipboard-4103466060.png)
+
+#### **15.19 — Use-case: actualizar historia clínica**
+
+![](images/clipboard-314165738.png)
+
+#### **15.20 — Serializer**
+
+![](images/clipboard-2699611962.png)
+
+#### **15.21 — Controller (incluye `GET /historias/:pacienteId`)**
+
+![](images/clipboard-2921887044.png)
+
+#### **15.22 — Barrel `index.ts`**
+
+![](images/clipboard-361135820.png)
+
+#### **15.23 — Módulo `clinical-records.module.ts`**
+
+![](images/clipboard-2201460179.png)
+
+#### **15.24 — Registrar `ClinicalRecordModel` en `sequelize.factory.ts`**
+
+![](images/clipboard-2294734183.png)
+
+#### **15.25 — Actualizar `business.module.ts`**
+
+![](images/clipboard-3434264203.png)
+
+#### **15.26 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-1235065780.png)
+
+#### **15.27 — Verificar tabla física `clinical_records` y API**
+
+![](images/clipboard-1385265418.png)
+
+![](images/clipboard-3815355896.png)
+
+## **FASE 16 — `15_BUSINESS_ENCOUNTERS`**
+
+### **Objetivo de la fase:** Atencion es el registro clínico de lo ocurrido en una cita (`Cita 0..1:1 Atencion`, `Servicio 1:N Atencion`, `HistoriaClinica 1:N Atencion`). Requiere que `AppointmentModel` (Fase 13), `ServiceModel` (Fase 11) y `ClinicalRecordModel` (Fase 15) ya existan. Al crearse, marca la cita asociada como `ATENDIDA` (regla de negocio del PDF: *"Una cita solo pasa a atendida con profesional, paciente y registro clínico"*).
+
+#### **16.1 — Enum de estado de atención**
+
+![](images/clipboard-2621944187.png)
+
+#### **16.2 — Entidad de dominio**
+
+![](images/clipboard-1471280638.png)
+
+#### **16.3 — Excepción: atención no encontrada**
+
+![](images/clipboard-3277904351.png)
+
+#### **16.4 — Excepción: la cita ya tiene atención registrada**
+
+![](images/clipboard-1725793003.png)
+
+#### **16.5 — Excepción: la historia clínica no corresponde al paciente de la cita**
+
+![](images/clipboard-1420906622.png)
+
+#### **16.6 — Interfaz de repositorio**
+
+![](images/clipboard-4011034879.png)
+
+#### **16.7 — Modelo Sequelize (FKs a Appointment, Service y ClinicalRecord)**
+
+![](images/clipboard-1194731527.png)
+
+#### **16.8 — Repositorio de infraestructura**
+
+![](images/clipboard-1075439925.png)
+
+#### **16.9 — Migración (FKs a `appointments`, `services`, `clinical_records`)**
+
+![](images/clipboard-2240441131.png)
+
+#### **16.10 — Seeder (usa cita, servicio e historia clínica ya sembrados)**
+
+![](images/clipboard-2062415409.png)
+
+#### **16.11 — DTO de filtro**
+
+![](images/clipboard-2214958483.png)
+
+#### **16.12 — DTO de respuesta**
+
+![](images/clipboard-1031323164.png)
+
+#### **16.13 — DTO de creación**
+
+![](images/clipboard-3541715740.png)
+
+#### **16.14 — DTO de actualización**
+
+![](images/clipboard-1557351125.png)
+
+#### **16.15 — Mapper**
+
+![](images/clipboard-157258515.png)
+
+#### **16.16 — Use-case: registrar atención (marca la cita como `ATENDIDA`)**
+
+![](images/clipboard-441570810.png)
+
+#### **16.17 — Use-case: eliminar atención**
+
+![](images/clipboard-1011700628.png)
+
+#### **16.18 — Use-case: obtener atención**
+
+![](images/clipboard-3771344729.png)
+
+#### **16.19 — Use-case: listar atenciones**
+
+![](images/clipboard-4225958360.png)
+
+#### **16.20 — Use-case: actualizar atención**
+
+![](images/clipboard-1520055463.png)
+
+#### **16.21 — Serializer**
