@@ -554,3 +554,123 @@ npm run start:dev
 #### **8.14 — Use-case: listar especialidades**
 
 ![](images/clipboard-204732368.png)
+
+#### **8.15 — Use-case: actualizar especialidad**
+
+![](images/clipboard-1387353211.png)
+
+#### **8.16 — Serializer**
+
+![](images/clipboard-2694635987.png)
+
+#### **8.17 — Controller**
+
+![](images/clipboard-844237264.png)
+
+#### **8.18 — Barrel, módulo y cableado**
+
+**Archivo:** `src/features/business/specialties/index.ts`
+
+![](images/clipboard-4003216314.png)
+
+**Archivo:** `src/features/business/specialties/specialties.module.ts`
+
+![](images/clipboard-3343330776.png)
+
+#### **8.19 — Registrar en `sequelize.factory.ts`**
+
+![](images/clipboard-1419556341.png)
+
+#### **8.20 — Actualizar `business.module.ts`**
+
+![](images/clipboard-2917465803.png)
+
+#### **8.21 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-134408047.png)
+
+#### **8.22 — Verificar tabla física `specialties` y API**
+
+![](images/clipboard-1995220257.png)
+
+![](images/clipboard-1223402139.png)
+
+## **FASE 9 — `08_BUSINESS_DOCTORS`**
+
+### **Objetivo de la fase:** Entidad Medico. Su relación N:M con Especialidad se resuelve en la Fase 10 (`DoctorSpecialties`), una vez que ambos modelos (`DoctorModel` y `SpecialtyModel`) ya existen.
+
+#### **9.1 — Entidad de dominio**
+
+![](images/clipboard-3874157117.png)
+
+#### **9.2 — Excepción: médico no encontrado**
+
+![](images/clipboard-847066394.png)
+
+#### **9.3 — Interfaz de repositorio**
+
+![](images/clipboard-3394553855.png)
+
+#### **9.4 — Modelo Sequelize**
+
+![](images/clipboard-1176963800.png)
+
+#### **9.5 — Repositorio de infraestructura**
+
+![](images/clipboard-4148223849.png)
+
+#### **9.6 — Migración**
+
+![](images/clipboard-682313176.png)
+
+#### **9.7 — Seeder**
+
+![](images/clipboard-1104709237.png)
+
+#### **9.8 — DTO filtro**
+
+![](images/clipboard-3116398373.png)
+
+#### **9.9 — DTO respuesta**
+
+![](images/clipboard-1122573904.png)
+
+#### **9.10 — DTO creación**
+
+![](images/clipboard-3153746762.png)
+
+#### **9.11 — DTO actualización**
+
+![](images/clipboard-1935717206.png)
+
+#### **9.9 — Mapper**
+
+![](images/clipboard-4206607647.png)
+
+#### **9.10 — Use-case: crear médico**
+
+![](images/clipboard-737367008.png)
+
+#### **9.11 — Use-case: eliminar médico**
+
+![](images/clipboard-3879785435.png)
+
+#### **9.12 — Use-case: obtener médico**
+
+![](images/clipboard-1361212684.png)
+
+#### **9.13 — Use-case: listar médicos**
+
+![](images/clipboard-502330834.png)
+
+#### **9.14 — Use-case: actualizar médico**
+
+![](images/clipboard-1791063202.png)
+
+#### **9.15 — Serializer**
+
+![](images/clipboard-3472537514.png)
+
+#### **9.16 — Controller**
+
+![](images/clipboard-2764228925.png)
