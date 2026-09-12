@@ -98,3 +98,5 @@ export async function createSequelizeInstance(
 // models: [..., ClinicalRecordModel]  // requiere que PatientModel ya este registrado
 // import { EncounterModel } from '../../../features/business/encounters/infrastructure/persistence/models/encounter.model.js';
 // models: [..., EncounterModel]  // requiere AppointmentModel, ServiceModel y ClinicalRecordModel ya registrados
+// import { InvoiceModel } from '../../../features/business/invoices/infrastructure/persistence/models/invoice.model.js';
+// models: [..., InvoiceModel]  // registrar ANTES que EncounterModel, ya que este ultimo lo referencia
