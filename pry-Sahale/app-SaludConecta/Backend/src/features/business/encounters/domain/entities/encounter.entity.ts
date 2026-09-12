@@ -73,3 +73,5 @@ export class Encounter {
     this.status = EncounterStatus.CANCELLED;
   }
 }
+// NOTA: agregar `invoiceId?: number;` a EncounterProps y a la clase Encounter (Fase 16),
+// y un metodo `assignInvoice(invoiceId: number): void { this.invoiceId = invoiceId; }`
