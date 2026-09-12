@@ -9,6 +9,7 @@ import { AppointmentsModule } from './appointments/appointments.module.js';
 import { AuthorizationsModule } from './authorizations/authorizations.module.js';
 import { ClinicalRecordsModule } from './clinical-records/clinical-records.module.js';
 import { EncountersModule } from './encounters/encounters.module.js';
+import { InvoicesModule } from './invoices/invoices.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { EncountersModule } from './encounters/encounters.module.js';
     AuthorizationsModule,
     ClinicalRecordsModule,
     EncountersModule,
+    InvoicesModule,
   ],
   exports: [
     PatientsModule,
@@ -34,6 +36,7 @@ import { EncountersModule } from './encounters/encounters.module.js';
     AuthorizationsModule,
     ClinicalRecordsModule,
     EncountersModule,
+    InvoicesModule,
   ],
 })
 export class BusinessModule {}
