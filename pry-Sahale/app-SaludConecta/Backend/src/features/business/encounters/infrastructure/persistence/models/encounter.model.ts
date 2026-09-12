@@ -44,3 +44,13 @@ export class EncounterModel extends Model {
   @Column({ type: DataType.STRING(20), allowNull: false })
   declare status: string;
 }
+// NOTA: agregar dentro de la clase EncounterModel (Fase 16), junto a los demás @ForeignKey:
+//
+// @ForeignKey(() => InvoiceModel)
+// @Column({ type: DataType.INTEGER, allowNull: true, field: 'invoice_id' })
+// declare invoiceId?: number;
+//
+// @BelongsTo(() => InvoiceModel)
+// declare invoice?: InvoiceModel;
+//
+// import { InvoiceModel } from '../../../../invoices/infrastructure/persistence/models/invoice.model.js';
