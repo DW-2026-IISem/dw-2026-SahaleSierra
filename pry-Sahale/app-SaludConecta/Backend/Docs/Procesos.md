@@ -643,34 +643,60 @@ npm run start:dev
 
 ![](images/clipboard-1935717206.png)
 
-#### **9.9 — Mapper**
+#### **9.12 — Mapper**
 
 ![](images/clipboard-4206607647.png)
 
-#### **9.10 — Use-case: crear médico**
+#### **9.13 — Use-case: crear médico**
 
 ![](images/clipboard-737367008.png)
 
-#### **9.11 — Use-case: eliminar médico**
+#### **9.14 — Use-case: eliminar médico**
 
 ![](images/clipboard-3879785435.png)
 
-#### **9.12 — Use-case: obtener médico**
+#### **9.15 — Use-case: obtener médico**
 
 ![](images/clipboard-1361212684.png)
 
-#### **9.13 — Use-case: listar médicos**
+#### **9.16 — Use-case: listar médicos**
 
 ![](images/clipboard-502330834.png)
 
-#### **9.14 — Use-case: actualizar médico**
+#### **9.17 — Use-case: actualizar médico**
 
 ![](images/clipboard-1791063202.png)
 
-#### **9.15 — Serializer**
+#### **9.18 — Serializer**
 
 ![](images/clipboard-3472537514.png)
 
-#### **9.16 — Controller**
+#### **9.19 — Controller**
 
 ![](images/clipboard-2764228925.png)
+
+#### **9.20 — Barrel, módulo y cableado**
+
+**Archivo:** `src/features/business/doctors/index.ts`
+
+![](images/clipboard-1526553284.png)
+
+**Archivo:** `src/features/business/doctors/doctors.module.ts`
+
+![](images/clipboard-789137623.png)
+
+#### **9.21 — Registrar en `sequelize.factory.ts`**
+
+![](images/clipboard-2989967567.png)
+
+#### **9.22 — Actualizar `business.module.ts`**
+
+![](images/clipboard-112486929.png)
+
+#### **9.23 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-1191558252.png)
+
+#### **9.24 — Verificar tabla física `doctors` y API**
+
+![![](images/clipboard-3400602838.png)](images/clipboard-2921708135.png)
