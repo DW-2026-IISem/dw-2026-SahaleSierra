@@ -60,3 +60,5 @@ export async function createSequelizeInstance(
 // registrar en el arreglo `models` de la factory:
 // import { PatientModel } from '../../../features/business/patients/infrastructure/persistence/models/patient.model.js';
 // models: [..., PatientModel]
+// import { SpecialtyModel } from '../../../features/business/specialties/infrastructure/persistence/models/specialty.model.js';
+// models: [..., SpecialtyModel]
