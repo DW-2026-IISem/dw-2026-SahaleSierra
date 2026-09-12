@@ -1246,3 +1246,63 @@ npm run start:dev
 #### **15.1 — Entidad de dominio**
 
 ![](images/clipboard-3567733754.png)
+
+#### **15.2 — Excepción: historia clínica no encontrada**
+
+![](images/clipboard-215507517.png)
+
+#### **15.3 — Excepción: el paciente ya tiene historia clínica**
+
+![](images/clipboard-2948224716.png)
+
+#### **15.4 — Interfaz de repositorio**
+
+![](images/clipboard-2322420088.png)
+
+#### **15.5 — Modelo Sequelize (FK única a Patient)**
+
+![](images/clipboard-568709114.png)
+
+#### **15.6 — Repositorio de infraestructura**
+
+![](images/clipboard-4092854535.png)
+
+#### **15.7 — Migración (FK única a `patients`)**
+
+![](images/clipboard-181935930.png)
+
+#### **15.8 — Seeder (una historia clínica por paciente sembrado)**
+
+![](images/clipboard-2263520867.png)
+
+#### **15.9 — DTO de filtro**
+
+![](images/clipboard-1497573982.png)
+
+#### **15.10 — DTO de respuesta**
+
+![](images/clipboard-1773532588.png)
+
+#### **15.11 — DTO de creación**
+
+![](images/clipboard-1800652970.png)
+
+#### **15.12 — DTO de actualización**
+
+![](images/clipboard-3069313213.png)
+
+#### **15.13 — Mapper**
+
+![](images/clipboard-1847734265.png)
+
+#### **15.14 — Use-case: crear historia clínica**
+
+![](images/clipboard-4061182537.png)
+
+#### **15.15 — Use-case: eliminar historia clínica**
+
+![](images/clipboard-3474834031.png)
+
+#### **15.16 — Use-case: obtener historia clínica por id**
+
+![](images/clipboard-1268696106.png)
