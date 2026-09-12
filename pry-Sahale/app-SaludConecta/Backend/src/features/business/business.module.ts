@@ -6,6 +6,7 @@ import { DoctorSpecialtiesModule } from './doctor-specialties/doctor-specialties
 import { ServicesModule } from './services/services.module.js';
 import { AgendasModule } from './agendas/agendas.module.js';
 import { AppointmentsModule } from './appointments/appointments.module.js';
+import { AuthorizationsModule } from './authorizations/authorizations.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { AppointmentsModule } from './appointments/appointments.module.js';
     ServicesModule,
     AgendasModule,
     AppointmentsModule,
+    AuthorizationsModule,
   ],
   exports: [
     PatientsModule,
@@ -25,6 +27,7 @@ import { AppointmentsModule } from './appointments/appointments.module.js';
     ServicesModule,
     AgendasModule,
     AppointmentsModule,
+    AuthorizationsModule,
   ],
 })
 export class BusinessModule {}
