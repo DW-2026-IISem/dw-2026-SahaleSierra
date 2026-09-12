@@ -8,3 +8,5 @@
 // await seedDoctorSpecialties(); // ejecutar despues de seedDoctors() y seedSpecialties()
 // import { seedServices } from '../../../features/business/services/infrastructure/persistence/seeders/services.seeder.js';
 // await seedServices();
+// import { seedAgendas } from '../../../features/business/agendas/infrastructure/persistence/seeders/agendas.seeder.js';
+// await seedAgendas(); // ejecutar despues de seedDoctors()
