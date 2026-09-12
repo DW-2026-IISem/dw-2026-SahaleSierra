@@ -12,3 +12,5 @@
 // await seedAgendas(); // ejecutar despues de seedDoctors()
 // import { seedAppointments } from '../../../features/business/appointments/infrastructure/persistence/seeders/appointments.seeder.js';
 // await seedAppointments(); // ejecutar despues de seedPatients() y seedAgendas()
+// import { seedAuthorizations } from '../../../features/business/authorizations/infrastructure/persistence/seeders/authorizations.seeder.js';
+// await seedAuthorizations(); // ejecutar despues de seedAppointments()
