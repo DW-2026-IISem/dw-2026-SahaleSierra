@@ -2318,3 +2318,27 @@ npm run start:dev
 **Archivo:** `src/features/business/specialties/presentation/http/controllers/specialties.controller.ts`
 
 ![](images/clipboard-3253927727.png)
+
+#### **18.6 — Agregar `@ApiOperation` a DoctorsController**
+
+**Archivo:** `src/features/business/doctors/presentation/http/controllers/doctors.controller.ts`
+
+![](images/clipboard-31569731.png)
+
+#### **18.7 — Agregar `@ApiOperation` a DoctorSpecialtiesController**
+
+**Archivo:** `src/features/business/doctor-specialties/presentation/http/controllers/doctor-specialties.controller.ts`
+
+![](images/clipboard-2720055433.png)
+
+#### **18.8 — Agregar `@ApiOperation` a ServicesController**
+
+**Archivo:** `src/features/business/services/presentation/http/controllers/services.controller.ts`
+
+![](images/clipboard-2438885181.png)
+
+#### **18.9 — Agregar `@ApiOperation` a AgendasController**
+
+**Archivo:** `src/features/business/agendas/presentation/http/controllers/agendas.controller.ts`
+
+![](images/clipboard-1399457046.png)

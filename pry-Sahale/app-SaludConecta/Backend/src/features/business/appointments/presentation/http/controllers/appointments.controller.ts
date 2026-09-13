@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateAppointmentDto } from '../../../application/dto/create-appointment.dto.js';
 import { RescheduleAppointmentDto } from '../../../application/dto/reschedule-appointment.dto.js';
@@ -35,12 +35,14 @@ export class AppointmentsController {
   ) {}
 
   @Roles('ADMIN', 'ADMISIONES')
+  @ApiOperation({ summary: 'Agendar una cita' })
   @Post()
   async create(@Body() dto: CreateAppointmentDto) {
     return AppointmentSerializer.one(await this.createAppointment.execute(dto));
   }
 
   @Roles('ADMIN', 'ADMISIONES', 'MEDICO')
+  @ApiOperation({ summary: 'Listar citas' })
   @Get()
   async list(@Query() filter: AppointmentFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listAppointments.execute(filter, { page: Number(page), limit: Number(limit) });
@@ -48,24 +50,28 @@ export class AppointmentsController {
   }
 
   @Roles('ADMIN', 'ADMISIONES', 'MEDICO')
+  @ApiOperation({ summary: 'Obtener una cita por ID' })
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number) {
     return AppointmentSerializer.one(await this.getAppointment.execute(id));
   }
 
   @Roles('ADMIN', 'ADMISIONES')
+  @ApiOperation({ summary: 'Reprogramar una cita' })
   @Patch(':id')
   async reschedule(@Param('id', ParseIntPipe) id: number, @Body() dto: RescheduleAppointmentDto) {
     return AppointmentSerializer.one(await this.rescheduleAppointment.execute(id, dto));
   }
 
   @Roles('ADMIN', 'ADMISIONES')
+  @ApiOperation({ summary: 'Cancelar una cita' })
   @Patch(':id/cancel')
   async cancel(@Param('id', ParseIntPipe) id: number) {
     return AppointmentSerializer.one(await this.cancelAppointment.execute(id));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar una cita' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteAppointment.execute(id);
