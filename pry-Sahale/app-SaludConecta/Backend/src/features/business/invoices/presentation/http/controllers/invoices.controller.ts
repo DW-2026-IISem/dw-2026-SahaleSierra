@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateInvoiceDto } from '../../../application/dto/create-invoice.dto.js';
 import { InvoiceFilterDto } from '../../../application/dto/invoice-filter.dto.js';
@@ -34,12 +34,14 @@ export class InvoicesController {
   ) {}
 
   @Roles('ADMIN', 'FACTURACION')
+  @ApiOperation({ summary: 'Generar una factura' })
   @Post()
   async create(@Body() dto: CreateInvoiceDto) {
     return InvoiceSerializer.one(await this.createInvoice.execute(dto));
   }
 
   @Roles('ADMIN', 'FACTURACION')
+  @ApiOperation({ summary: 'Listar facturas' })
   @Get()
   async list(@Query() filter: InvoiceFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listInvoices.execute(filter, { page: Number(page), limit: Number(limit) });
@@ -47,24 +49,28 @@ export class InvoicesController {
   }
 
   @Roles('ADMIN', 'FACTURACION')
+  @ApiOperation({ summary: 'Obtener una factura por ID' })
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number) {
     return InvoiceSerializer.one(await this.getInvoice.execute(id));
   }
 
   @Roles('ADMIN', 'FACTURACION')
+  @ApiOperation({ summary: 'Marcar una factura como pagada' })
   @Patch(':id/pay')
   async pay(@Param('id', ParseIntPipe) id: number) {
     return InvoiceSerializer.one(await this.payInvoice.execute(id));
   }
 
   @Roles('ADMIN', 'FACTURACION')
+  @ApiOperation({ summary: 'Anular una factura' })
   @Patch(':id/cancel')
   async cancel(@Param('id', ParseIntPipe) id: number) {
     return InvoiceSerializer.one(await this.cancelInvoice.execute(id));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar una factura' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteInvoice.execute(id);
