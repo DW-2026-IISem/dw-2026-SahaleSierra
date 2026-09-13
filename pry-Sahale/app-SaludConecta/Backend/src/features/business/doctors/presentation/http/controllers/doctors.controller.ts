@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateDoctorDto } from '../../../application/dto/create-doctor.dto.js';
 import { UpdateDoctorDto } from '../../../application/dto/update-doctor.dto.js';
@@ -33,29 +33,34 @@ export class DoctorsController {
   ) {}
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Crear un médico' })
   @Post()
   async create(@Body() dto: CreateDoctorDto) {
     return DoctorSerializer.one(await this.createDoctor.execute(dto));
   }
 
+  @ApiOperation({ summary: 'Listar médicos' })
   @Get()
   async list(@Query() filter: DoctorFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listDoctors.execute(filter, { page: Number(page), limit: Number(limit) });
     return { data: DoctorSerializer.many(result.data), total: result.total };
   }
 
+  @ApiOperation({ summary: 'Obtener un médico por ID' })
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number) {
     return DoctorSerializer.one(await this.getDoctor.execute(id));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Actualizar un médico' })
   @Patch(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateDoctorDto) {
     return DoctorSerializer.one(await this.updateDoctor.execute(id, dto));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar un médico' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteDoctor.execute(id);
