@@ -2293,4 +2293,8 @@ npm run start:dev
 
 ![](images/clipboard-569642085.png)
 
+#### **18.2 — Extender entidad de dominio `Encounter` con `invoiceId` y `assignInvoice()` — corrección real**
+
+**Archivo:** `src/features/business/encounters/domain/entities/encounter.entity.ts`
+
 ![![](images/clipboard-83442766.png)](images/clipboard-2535021115.png)
