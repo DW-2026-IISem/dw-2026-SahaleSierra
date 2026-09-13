@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateAgendaDto } from '../../../application/dto/create-agenda.dto.js';
 import { UpdateAgendaDto } from '../../../application/dto/update-agenda.dto.js';
@@ -33,29 +33,34 @@ export class AgendasController {
   ) {}
 
   @Roles('ADMIN', 'MEDICO')
+  @ApiOperation({ summary: 'Crear una agenda' })
   @Post()
   async create(@Body() dto: CreateAgendaDto) {
     return AgendaSerializer.one(await this.createAgenda.execute(dto));
   }
 
+  @ApiOperation({ summary: 'Listar agendas' })
   @Get()
   async list(@Query() filter: AgendaFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listAgendas.execute(filter, { page: Number(page), limit: Number(limit) });
     return { data: AgendaSerializer.many(result.data), total: result.total };
   }
 
+  @ApiOperation({ summary: 'Obtener una agenda por ID' })
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number) {
     return AgendaSerializer.one(await this.getAgenda.execute(id));
   }
 
   @Roles('ADMIN', 'MEDICO')
+  @ApiOperation({ summary: 'Actualizar una agenda' })
   @Patch(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAgendaDto) {
     return AgendaSerializer.one(await this.updateAgenda.execute(id, dto));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar una agenda' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteAgenda.execute(id);
