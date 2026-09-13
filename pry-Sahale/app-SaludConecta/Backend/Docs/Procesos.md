@@ -2306,3 +2306,15 @@ npm run start:dev
 ![**Archivo:** `src/features/business/encounters/application/mappers/encounter.mapper.ts`](images/clipboard-83442766.png)
 
 ![](images/clipboard-4125511886.png)
+
+#### **18.4 — Agregar `@ApiOperation` a PatientsController**
+
+**Archivo:** `src/features/business/patients/presentation/http/controllers/patients.controller.ts`
+
+![](images/clipboard-309807608.png)
+
+#### **18.5 — Agregar `@ApiOperation` a SpecialtiesController**
+
+**Archivo:** `src/features/business/specialties/presentation/http/controllers/specialties.controller.ts`
+
+![](images/clipboard-3253927727.png)

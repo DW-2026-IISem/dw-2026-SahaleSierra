@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateSpecialtyDto } from '../../../application/dto/create-specialty.dto.js';
 import { UpdateSpecialtyDto } from '../../../application/dto/update-specialty.dto.js';
@@ -33,29 +33,34 @@ export class SpecialtiesController {
   ) {}
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Crear una especialidad' })
   @Post()
   async create(@Body() dto: CreateSpecialtyDto) {
     return SpecialtySerializer.one(await this.createSpecialty.execute(dto));
   }
 
+  @ApiOperation({ summary: 'Listar especialidades' })
   @Get()
   async list(@Query() filter: SpecialtyFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listSpecialties.execute(filter, { page: Number(page), limit: Number(limit) });
     return { data: SpecialtySerializer.many(result.data), total: result.total };
   }
 
+  @ApiOperation({ summary: 'Obtener una especialidad por ID' })
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number) {
     return SpecialtySerializer.one(await this.getSpecialty.execute(id));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Actualizar una especialidad' })
   @Patch(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSpecialtyDto) {
     return SpecialtySerializer.one(await this.updateSpecialty.execute(id, dto));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar una especialidad' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteSpecialty.execute(id);
