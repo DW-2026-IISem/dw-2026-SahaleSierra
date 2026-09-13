@@ -2342,3 +2342,43 @@ npm run start:dev
 **Archivo:** `src/features/business/agendas/presentation/http/controllers/agendas.controller.ts`
 
 ![](images/clipboard-1399457046.png)
+
+#### **18.10 — Agregar `@ApiOperation` a AppointmentsController**
+
+**Archivo:** `src/features/business/appointments/presentation/http/controllers/appointments.controller.ts`
+
+![](images/clipboard-3726417910.png)
+
+#### **18.11 — Agregar `@ApiOperation` a AuthorizationsController**
+
+**Archivo:** `src/features/business/authorizations/presentation/http/controllers/authorizations.controller.ts`
+
+![](images/clipboard-257180339.png)
+
+#### **18.12 — Agregar `@ApiOperation` a ClinicalRecordsController**
+
+**Archivo:** `src/features/business/clinical-records/presentation/http/controllers/clinical-records.controller.ts`
+
+![](images/clipboard-1585936138.png)
+
+#### **18.13 — Agregar `@ApiOperation` a EncountersController**
+
+**Archivo:** `src/features/business/encounters/presentation/http/controllers/encounters.controller.ts`
+
+![](images/clipboard-4164110344.png)
+
+#### **18.14 — Agregar `@ApiOperation` a InvoicesController**
+
+**Archivo:** `src/features/business/invoices/presentation/http/controllers/invoices.controller.ts`
+
+![](images/clipboard-759086906.png)
+
+#### **18.15 — Verificar Swagger con los resúmenes de cada endpoint**
+
+![](images/clipboard-1981850871.png)
+
+![![](images/clipboard-3606464633.png)](images/clipboard-4270563341.png)
+
+![![](images/clipboard-2682107624.png)](images/clipboard-2165562762.png)
+
+![](images/clipboard-1345155284.png)
