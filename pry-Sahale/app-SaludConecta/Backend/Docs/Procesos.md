@@ -1574,3 +1574,35 @@ npm run start:dev
 ![](images/clipboard-1759957022.png)
 
 #### **17.25 — Controller**
+
+![](images/clipboard-33864342.png)
+
+#### **17.26 — Barrel `index.ts`**
+
+![](images/clipboard-3581477774.png)
+
+#### **17.27 — Módulo `invoices.module.ts`**
+
+![](images/clipboard-4253808965.png)
+
+#### **17.28 — Registrar `InvoiceModel` en `sequelize.factory.ts`**
+
+![](images/clipboard-1237820884.png)
+
+#### **17.29 — Actualizar `business.module.ts`**
+
+![](images/clipboard-2987944455.png)
+
+#### **17.30 — Actualizar `database-seeder.service.ts`**
+
+![](images/clipboard-1068979256.png)
+
+#### **17.31 — Verificar tabla física `invoices` y flujo completo de facturación**
+
+![](images/clipboard-3109777475.png)
+
+![](images/clipboard-3483783539.png)
+
+![](images/clipboard-569642085.png)
+
+![![](images/clipboard-83442766.png)](images/clipboard-2535021115.png)

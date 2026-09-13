@@ -5,6 +5,7 @@ export interface EncounterProps {
   appointmentId: number;
   serviceId: number;
   clinicalRecordId: number;
+  invoiceId?: number;
   startDate: Date;
   endDate: Date;
   total: number;
@@ -19,6 +20,7 @@ export class Encounter {
   appointmentId: number;
   serviceId: number;
   clinicalRecordId: number;
+  invoiceId?: number;
   startDate: Date;
   endDate: Date;
   total: number;
@@ -32,6 +34,7 @@ export class Encounter {
     this.appointmentId = props.appointmentId;
     this.serviceId = props.serviceId;
     this.clinicalRecordId = props.clinicalRecordId;
+    this.invoiceId = props.invoiceId;
     this.startDate = props.startDate;
     this.endDate = props.endDate;
     this.total = props.total;
@@ -42,7 +45,7 @@ export class Encounter {
   }
 
   static create(
-    props: Omit<EncounterProps, 'id' | 'status' | 'createdAt' | 'updatedAt'>,
+    props: Omit<EncounterProps, 'id' | 'invoiceId' | 'status' | 'createdAt' | 'updatedAt'>,
   ): Encounter {
     if (!props.appointmentId) throw new Error('La atención requiere una cita asociada');
     if (!props.serviceId) throw new Error('La atención requiere un servicio');
@@ -69,9 +72,14 @@ export class Encounter {
     }
   }
 
+  assignInvoice(invoiceId: number): void {
+    if (this.invoiceId) {
+      throw new Error('Esta atención ya está asociada a una factura');
+    }
+    this.invoiceId = invoiceId;
+  }
+
   cancel(): void {
     this.status = EncounterStatus.CANCELLED;
   }
 }
-// NOTA: agregar `invoiceId?: number;` a EncounterProps y a la clase Encounter (Fase 16),
-// y un metodo `assignInvoice(invoiceId: number): void { this.invoiceId = invoiceId; }`

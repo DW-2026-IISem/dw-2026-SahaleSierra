@@ -3,6 +3,7 @@ export class EncounterResponseDto {
   appointmentId!: number;
   serviceId!: number;
   clinicalRecordId!: number;
+  invoiceId?: number;
   startDate!: Date;
   endDate!: Date;
   total!: number;
