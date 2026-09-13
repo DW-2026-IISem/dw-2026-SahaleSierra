@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreatePatientDto } from '../../../application/dto/create-patient.dto.js';
 import { UpdatePatientDto } from '../../../application/dto/update-patient.dto.js';
@@ -33,6 +33,7 @@ export class PatientsController {
   ) {}
 
   @Roles('ADMIN', 'ADMISIONES')
+  @ApiOperation({ summary: 'Crear un paciente' })
   @Post()
   async create(@Body() dto: CreatePatientDto) {
     const patient = await this.createPatient.execute(dto);
@@ -40,6 +41,7 @@ export class PatientsController {
   }
 
   @Roles('ADMIN', 'ADMISIONES', 'MEDICO')
+  @ApiOperation({ summary: 'Listar pacientes' })
   @Get()
   async list(@Query() filter: PatientFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listPatients.execute(filter, { page: Number(page), limit: Number(limit) });
@@ -47,6 +49,7 @@ export class PatientsController {
   }
 
   @Roles('ADMIN', 'ADMISIONES', 'MEDICO')
+  @ApiOperation({ summary: 'Obtener un paciente por ID' })
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number) {
     const patient = await this.getPatient.execute(id);
@@ -54,6 +57,7 @@ export class PatientsController {
   }
 
   @Roles('ADMIN', 'ADMISIONES')
+  @ApiOperation({ summary: 'Actualizar un paciente' })
   @Patch(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePatientDto) {
     const patient = await this.updatePatient.execute(id, dto);
@@ -61,6 +65,7 @@ export class PatientsController {
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar un paciente' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deletePatient.execute(id);
