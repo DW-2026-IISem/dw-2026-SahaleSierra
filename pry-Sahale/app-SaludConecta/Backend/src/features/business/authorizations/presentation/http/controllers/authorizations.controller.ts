@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateAuthorizationDto } from '../../../application/dto/create-authorization.dto.js';
 import { UpdateAuthorizationDto } from '../../../application/dto/update-authorization.dto.js';
@@ -33,12 +33,14 @@ export class AuthorizationsController {
   ) {}
 
   @Roles('ADMIN', 'FACTURACION')
+  @ApiOperation({ summary: 'Registrar una autorización' })
   @Post()
   async create(@Body() dto: CreateAuthorizationDto) {
     return AuthorizationSerializer.one(await this.createAuthorization.execute(dto));
   }
 
   @Roles('ADMIN', 'FACTURACION', 'AUDITOR_CLINICO')
+  @ApiOperation({ summary: 'Listar autorizaciones' })
   @Get()
   async list(@Query() filter: AuthorizationFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listAuthorizations.execute(filter, { page: Number(page), limit: Number(limit) });
@@ -46,18 +48,21 @@ export class AuthorizationsController {
   }
 
   @Roles('ADMIN', 'FACTURACION', 'AUDITOR_CLINICO')
+  @ApiOperation({ summary: 'Obtener una autorización por ID' })
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number) {
     return AuthorizationSerializer.one(await this.getAuthorization.execute(id));
   }
 
   @Roles('ADMIN', 'FACTURACION')
+  @ApiOperation({ summary: 'Actualizar una autorización' })
   @Patch(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAuthorizationDto) {
     return AuthorizationSerializer.one(await this.updateAuthorization.execute(id, dto));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar una autorización' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteAuthorization.execute(id);
