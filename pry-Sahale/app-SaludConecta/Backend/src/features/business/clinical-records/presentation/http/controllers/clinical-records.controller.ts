@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateClinicalRecordDto } from '../../../application/dto/create-clinical-record.dto.js';
 import { UpdateClinicalRecordDto } from '../../../application/dto/update-clinical-record.dto.js';
@@ -35,12 +35,14 @@ export class ClinicalRecordsController {
   ) {}
 
   @Roles('ADMIN', 'MEDICO')
+  @ApiOperation({ summary: 'Crear una historia clínica' })
   @Post('clinical-records')
   async create(@Body() dto: CreateClinicalRecordDto) {
     return ClinicalRecordSerializer.one(await this.createClinicalRecord.execute(dto));
   }
 
   @Roles('ADMIN', 'MEDICO', 'AUDITOR_CLINICO')
+  @ApiOperation({ summary: 'Listar historias clínicas' })
   @Get('clinical-records')
   async list(@Query() filter: ClinicalRecordFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listClinicalRecords.execute(filter, { page: Number(page), limit: Number(limit) });
@@ -48,24 +50,28 @@ export class ClinicalRecordsController {
   }
 
   @Roles('ADMIN', 'MEDICO', 'AUDITOR_CLINICO')
+  @ApiOperation({ summary: 'Obtener una historia clínica por ID' })
   @Get('clinical-records/:id')
   async get(@Param('id', ParseIntPipe) id: number) {
     return ClinicalRecordSerializer.one(await this.getClinicalRecord.execute(id));
   }
 
   @Roles('ADMIN', 'MEDICO', 'AUDITOR_CLINICO')
+  @ApiOperation({ summary: 'Obtener la historia clínica de un paciente' })
   @Get('historias/:pacienteId')
   async getByPatient(@Param('pacienteId', ParseIntPipe) pacienteId: number) {
     return ClinicalRecordSerializer.one(await this.getClinicalRecordByPatient.execute(pacienteId));
   }
 
   @Roles('ADMIN', 'MEDICO')
+  @ApiOperation({ summary: 'Actualizar una historia clínica' })
   @Patch('clinical-records/:id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateClinicalRecordDto) {
     return ClinicalRecordSerializer.one(await this.updateClinicalRecord.execute(id, dto));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar una historia clínica' })
   @Delete('clinical-records/:id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteClinicalRecord.execute(id);
