@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateEncounterDto } from '../../../application/dto/create-encounter.dto.js';
 import { UpdateEncounterDto } from '../../../application/dto/update-encounter.dto.js';
@@ -33,12 +33,14 @@ export class EncountersController {
   ) {}
 
   @Roles('ADMIN', 'MEDICO')
+  @ApiOperation({ summary: 'Registrar una atención' })
   @Post()
   async create(@Body() dto: CreateEncounterDto) {
     return EncounterSerializer.one(await this.createEncounter.execute(dto));
   }
 
   @Roles('ADMIN', 'MEDICO', 'AUDITOR_CLINICO', 'FACTURACION')
+  @ApiOperation({ summary: 'Listar atenciones' })
   @Get()
   async list(@Query() filter: EncounterFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listEncounters.execute(filter, { page: Number(page), limit: Number(limit) });
@@ -46,18 +48,21 @@ export class EncountersController {
   }
 
   @Roles('ADMIN', 'MEDICO', 'AUDITOR_CLINICO', 'FACTURACION')
+  @ApiOperation({ summary: 'Obtener una atención por ID' })
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number) {
     return EncounterSerializer.one(await this.getEncounter.execute(id));
   }
 
   @Roles('ADMIN', 'MEDICO')
+  @ApiOperation({ summary: 'Actualizar una atención' })
   @Patch(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateEncounterDto) {
     return EncounterSerializer.one(await this.updateEncounter.execute(id, dto));
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Eliminar una atención' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteEncounter.execute(id);
