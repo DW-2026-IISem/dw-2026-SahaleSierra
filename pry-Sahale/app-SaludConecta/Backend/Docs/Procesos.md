@@ -2279,6 +2279,18 @@ npm run start:dev
 
 ![](images/clipboard-3483783539.png)
 
+## **FASE 18 — `17_FIXES_Y_AJUSTES`**
+
+### **Objetivo de la fase:** Esta fase junta dos tipos de ajustes detectados después de correr las Fases 1–17:
+
+1.  Los pasos 17.2–17.4 solo dejaron **comentarios guía**, no código real — aquí se aplica la extensión de `Encounter` con `invoiceId` de verdad (esto es lo que corrige el error `Property 'invoiceId' does not exist on type 'Encounter'`).
+
+2.  Se agrega `@ApiOperation({ summary: '...' })` a cada endpoint de los 11 controladores de negocio, para que Swagger (`/api/docs`) muestre una descripción corta de qué hace cada ruta
+
+#### **18.1 — Extender `EncounterModel` con `invoiceId` (FK opcional) — corrección real**
+
+**Archivo:** `src/features/business/encounters/infrastructure/persistence/models/encounter.model.ts`
+
 ![](images/clipboard-569642085.png)
 
 ![![](images/clipboard-83442766.png)](images/clipboard-2535021115.png)
