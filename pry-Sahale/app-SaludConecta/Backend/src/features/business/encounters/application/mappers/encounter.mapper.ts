@@ -9,6 +9,7 @@ export class EncounterMapper {
       appointmentId: model.appointmentId,
       serviceId: model.serviceId,
       clinicalRecordId: model.clinicalRecordId,
+      invoiceId: model.invoiceId,
       startDate: model.startDate,
       endDate: model.endDate,
       total: Number(model.total),
@@ -24,6 +25,7 @@ export class EncounterMapper {
       appointmentId: entity.appointmentId,
       serviceId: entity.serviceId,
       clinicalRecordId: entity.clinicalRecordId,
+      invoiceId: entity.invoiceId,
       startDate: entity.startDate,
       endDate: entity.endDate,
       total: entity.total,
@@ -38,6 +40,7 @@ export class EncounterMapper {
       appointmentId: entity.appointmentId,
       serviceId: entity.serviceId,
       clinicalRecordId: entity.clinicalRecordId,
+      invoiceId: entity.invoiceId,
       startDate: entity.startDate,
       endDate: entity.endDate,
       total: entity.total,
@@ -48,5 +51,3 @@ export class EncounterMapper {
     };
   }
 }
-// NOTA: en Fase 16 el mapper ya existe; agregar `invoiceId: model.invoiceId` en toDomain,
-// `invoiceId: entity.invoiceId` en toPersistence y en toResponse.
