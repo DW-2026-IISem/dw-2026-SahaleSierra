@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../../../../../common/decorators/roles.decorator.js';
 import { CreateDoctorSpecialtyDto } from '../../../application/dto/create-doctor-specialty.dto.js';
 import { DoctorSpecialtyFilterDto } from '../../../application/dto/doctor-specialty-filter.dto.js';
@@ -18,11 +18,13 @@ export class DoctorSpecialtiesController {
   ) {}
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Asignar una especialidad a un médico' })
   @Post()
   async create(@Body() dto: CreateDoctorSpecialtyDto) {
     return DoctorSpecialtySerializer.one(await this.createDoctorSpecialty.execute(dto));
   }
 
+  @ApiOperation({ summary: 'Listar relaciones médico-especialidad' })
   @Get()
   async list(@Query() filter: DoctorSpecialtyFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     const result = await this.listDoctorSpecialties.execute(filter, { page: Number(page), limit: Number(limit) });
@@ -30,6 +32,7 @@ export class DoctorSpecialtiesController {
   }
 
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Quitar una especialidad de un médico' })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.deleteDoctorSpecialty.execute(id);
