@@ -2382,3 +2382,452 @@ npm run start:dev
 ![![](images/clipboard-2682107624.png)](images/clipboard-2165562762.png)
 
 ![](images/clipboard-1345155284.png)
+
+## **FASE 19 — `18_DEMO_SWAGGER_UI`**
+
+### **Objetivo de la fase:** Demostrar el funcionamiento real de la base de datos ejecutando todas las operaciones desde **Swagger UI**, en el orden en que ocurren en el negocio: se registra un paciente, se crea una especialidad, se asigna a un médico, se publica una agenda, se agenda una cita, se valida la autorización, se abre la historia clínica, se registra la atención (que pasa la cita a `ATENDIDA`) y finalmente se genera la factura.
+
+#### **19.1 — Preparar el entorno**
+
+Levanta la aplicación en una terminal:
+
+``` bash
+npm run start:dev
+```
+
+![](images/clipboard-2602498839.png)
+
+Abre Swagger UI en el navegador:
+
+<http://localhost:3000/api/docs>
+
+#### **19.2 — Cómo se usa cada endpoint en Swagger**
+
+Este procedimiento se repite en todos los pasos siguientes:
+
+1.  Clic en el grupo (por ejemplo `patients`) para desplegarlo.
+
+2.  Clic en el endpoint (por ejemplo `POST /patients — Crear un paciente`).
+
+3.  Presionar el botón **Try it out**, arriba a la derecha del endpoint.
+
+4.  Borrar el body de ejemplo y pegar el JSON del paso.
+
+5.  Presionar **Execute**.
+
+6.  Revisar abajo, en **Server response**: el código debe ser `201` y el cuerpo mostrar el registro creado.
+
+7.  **Anotar el `id` devuelto**, porque los pasos siguientes lo necesitan.
+
+Tabla de referencia del recorrido completo:
+
+| \# | Paso | Grupo en Swagger | Endpoint | Tabla |
+|:-------------|:-------------|:-------------|:---------------|:-------------|
+| 1 | Paciente | `patients` | POST /patients | `patients` |
+| 2 | Especialidad | `specialties` | POST /specialties | `specialties` |
+| 3 | Médico | `doctors` | POST /doctors | `doctors` |
+| 4 | Asignación N:M | `doctor-specialties` | POST /doctor-specialties | `doctor_specialties` |
+| 5 | Servicio | `services` | POST /services | `services` |
+| 6 | Agenda | `agendas` | POST /agendas | `agendas` |
+| 7 | Cita | `appointments` | POST /appointments | `appointments` |
+| 8 | Autorización | `authorizations` | POST /authorizations | `authorizations` |
+| 9 | Historia clínica | `clinical-records` | POST /clinical-records | `clinical_records` |
+| 10 | Atención | `encounters` | POST /encounters | `encounters` |
+| 11 | Factura | `invoices` | POST /invoices | `invoices` |
+| 12 | Pago | `invoices` | PATCH /invoices/{id}/pay | `invoices` |
+
+#### **19.3 — Registrar un paciente (tabla `patients`)**
+
+**En Swagger:** grupo `patients` → `POST /patients Crear un paciente` → **Try it out** → pegar el body → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "documentType": "CC",
+  "documentNumber": "1118811828",
+  "name": "Sahale Sierra Serrano",
+  "birthDate": "2005-06-30",
+  "contact": "sahalesierra75@gmail.com"
+}
+```
+
+![](images/clipboard-2790742129.png)
+
+#### En DBeaver:
+
+``` sql
+SELECT id, document_type, document_number, name, birth_date, contact, is_active
+FROM patients
+ORDER BY id DESC;
+```
+
+![](images/clipboard-3251353675.png)
+
+**Prueba de validación:** presiona **Execute** una segunda vez con el mismo body. Swagger devuelve un error indicando que el documento ya existe — es la restricción `UNIQUE` sobre `document_number` más la validación del caso de uso trabajando juntas.
+
+![](images/clipboard-100979269.png)
+
+#### **19.4 — Crear una especialidad (tabla `specialties`)**
+
+**En Swagger:** grupo `specialties` → `POST /specialties Crear una especialidad` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "name": "Dermatologia",
+  "description": "Diagnostico y tratamiento de enfermedades de la piel"
+}
+```
+
+![](images/clipboard-1553774584.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT id, name, description, is_active
+FROM specialties
+ORDER BY id DESC;
+```
+
+![](images/clipboard-2520108154.png)
+
+#### **19.5 — Crear un médico (tabla `doctors`)**
+
+**En Swagger:** grupo `doctors` → `POST /doctors Crear un médico` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "name": "Dr. Jaider Quintero",
+  "description": "Especialista en dermatologia clinica"
+}
+```
+
+![](images/clipboard-3153632221.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT id, name, description, is_active
+FROM doctors
+ORDER BY id DESC;
+```
+
+![](images/clipboard-38613997.png)
+
+#### **19.6 — Asignar la especialidad al médico (tabla `doctor_specialties`, relación N:M)**
+
+**En Swagger:** grupo `doctor-specialties` → `POST /doctor-specialties Asignar una especialidad a un médico` → **Try it out** → **Execute**.
+
+**Body JSON** (Los ids son los correspondientes a los pasos 19.5 y 19.4):
+
+``` json
+{
+  "doctorId": 1,
+  "specialtyId": 1,
+  "relationData": "Habilitado desde 2026"
+}
+```
+
+![](images/clipboard-283145731.png)
+
+**En DBeaver** — aquí se ve la relación N:M resuelta con un `JOIN` de tres tablas:
+
+``` sql
+SELECT ds.id,
+       d.name  AS medico,
+       s.name  AS especialidad,
+       ds.datos_relacion,
+       ds.is_active
+FROM doctor_specialties ds
+JOIN doctors     d ON d.id = ds.principal_id
+JOIN specialties s ON s.id = ds.relacionado_id
+ORDER BY ds.id DESC;
+```
+
+![](images/clipboard-3007406044.png)
+
+**Dos pruebas para mostrar:**
+
+- Ejecuta otra vez con el mismo par: devuelve el error de relación duplicada.
+
+- Cambia `doctorId` a un número que no exista (por ejemplo `999`): devuelve "Médico no encontrado". Esto demuestra que la validación vive en el caso de uso, antes de tocar la base de datos.
+
+  ![](images/clipboard-1768957820.png)
+
+  ![](images/clipboard-186845870.png)
+
+#### **19.7 — Crear un servicio (tabla `services`)**
+
+**En Swagger:** grupo `services` → `POST /services Crear un servicio` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "name": "Consulta dermatologica",
+  "description": "Valoracion dermatologica ambulatoria"
+}
+```
+
+![](images/clipboard-2110344176.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT id, name, description, is_active
+FROM services
+ORDER BY id DESC;
+```
+
+![](images/clipboard-39669352.png)
+
+#### **19.8 — Publicar una agenda del médico (tabla `agendas`, FK a `doctors`)**
+
+**En Swagger:** grupo `agendas` → `POST /agendas Crear una agenda` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "doctorId": 1,
+  "name": "Agenda dermatologia manana",
+  "description": "Lunes a viernes de 8am a 12pm"
+}
+```
+
+![](images/clipboard-2427392410.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT a.id, a.name AS agenda, d.name AS medico, a.description, a.is_active
+FROM agendas a
+JOIN doctors d ON d.id = a.doctor_id
+ORDER BY a.id DESC;
+```
+
+![](images/clipboard-4061179988.png)
+
+#### **19.9 — Agendar una cita (tabla `appointments`, FK a `patients` y `agendas`)**
+
+**En Swagger:** grupo `appointments` → `POST /appointments Agendar una cita` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "patientId": 3,
+  "agendaId": 1,
+  "startDate": "2026-10-05T09:00:00",
+  "endDate": "2026-10-05T09:30:00",
+  "reason": "Lesion en la piel del antebrazo"
+}
+```
+
+![](images/clipboard-4037173233.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT c.id,
+       p.name  AS paciente,
+       d.name  AS medico,
+       a.name  AS agenda,
+       c.fecha_inicio,
+       c.fecha_fin,
+       c.reason AS motivo,
+       c.status AS estado
+FROM appointments c
+JOIN patients p ON p.id = c.patient_id
+JOIN agendas  a ON a.id = c.agenda_id
+JOIN doctors  d ON d.id = a.doctor_id
+ORDER BY c.id DESC;
+```
+
+![](images/clipboard-1263303692.png)
+
+#### **19.10 — Registrar la autorización de la cita (tabla `authorizations`, 0..1:1)**
+
+**En Swagger:** grupo `authorizations` → `POST /authorizations Registrar una autorización` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "appointmentId": 1,
+  "name": "Autorizacion EPS Sura 998877",
+  "description": "Autorizacion vigente para consulta especializada"
+}
+```
+
+![](images/clipboard-2864667957.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT au.id,
+       au.name AS autorizacion,
+       p.name  AS paciente,
+       c.fecha_inicio,
+       au.is_active
+FROM authorizations au
+JOIN appointments c ON c.id = au.appointment_id
+JOIN patients     p ON p.id = c.patient_id
+ORDER BY au.id DESC;
+```
+
+![](images/clipboard-948884950.png)
+
+**Para mostrar la cardinalidad:** presiona **Execute** otra vez con la misma cita. Falla con "La cita ya tiene una autorización registrada". Eso es la relación `0..1:1` — una cita no puede tener dos autorizaciones, garantizado por el `UNIQUE` sobre `appointment_id`.
+
+![](images/clipboard-398979229.png)
+
+#### **19.11 — Abrir la historia clínica del paciente (tabla `clinical_records`, 1:1)**
+
+**En Swagger:** grupo `clinical-records` → `POST /clinical-records Crear una historia clínica` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "patientId": 3,
+  "name": "Historia clinica Ana Maria Rojas",
+  "description": "Apertura de historia clinica en admisiones"
+}
+```
+
+![![](images/clipboard-3090175469.png)](images/clipboard-2371418099.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT hc.id,
+       p.name AS paciente,
+       p.document_number,
+       hc.name AS historia,
+       hc.is_active
+FROM clinical_records hc
+JOIN patients p ON p.id = hc.patient_id
+ORDER BY hc.id DESC;
+```
+
+![](images/clipboard-578168333.png)
+
+#### **19.12 — Registrar la atención (tabla `encounters`, pasa la cita a `ATENDIDA`)**
+
+Este es el paso más importante de la demostración, porque dispara una regla de negocio automática.
+
+**Paso A — el "antes".** Grupo `appointments` → `GET /appointments/{id} Obtener una cita por ID` → **Try it out** → `id` = `1` → **Execute**. Verás `"status": "PROGRAMADA"`.
+
+![](images/clipboard-213241043.png)
+
+**Paso B — registrar la atención.** Grupo `encounters` → `POST /encounters Registrar una atención` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "appointmentId": 1,
+  "serviceId": 1,
+  "clinicalRecordId": 1,
+  "total": 12000,
+  "observations": "Dermatitis de contacto. Se formula crema topica y control en 30 dias."
+}
+```
+
+![](images/clipboard-769833407.png)
+
+**Paso C — el "después".** Vuelve a `GET /appointments/{id}` con el mismo `id` y presiona **Execute** de nuevo. Ahora dice `"status": "ATENDIDA"`.
+
+![](images/clipboard-2372018767.png)
+
+**En DBeaver** — la consulta que amarra toda la cadena asistencial:
+
+``` sql
+SELECT at.id           AS atencion,
+       p.name          AS paciente,
+       d.name          AS medico,
+       s.name          AS servicio,
+       hc.name         AS historia_clinica,
+       at.total,
+       at.observations AS observaciones,
+       c.status        AS estado_cita,
+       at.invoice_id   AS factura
+FROM encounters at
+JOIN appointments     c  ON c.id  = at.referencia_id
+JOIN patients         p  ON p.id  = c.patient_id
+JOIN agendas          a  ON a.id  = c.agenda_id
+JOIN doctors          d  ON d.id  = a.doctor_id
+JOIN services         s  ON s.id  = at.service_id
+JOIN clinical_records hc ON hc.id = at.clinical_record_id
+ORDER BY at.id DESC;
+```
+
+![](images/clipboard-3517430817.png)
+
+**Dos cosas para señalar en pantalla:**
+
+- `estado_cita` ahora dice `ATENDIDA` — cambió sola al registrar la atención, cumpliendo la regla del proyecto: *"Una cita solo pasa a atendida con profesional, paciente y registro clínico"*.
+
+- `factura` está en `NULL` porque la atención todavía no ha sido facturada. En el siguiente paso se llena.
+
+#### **19.13 — Generar la factura (tabla `invoices`, agrupa atenciones)**
+
+**En Swagger:** grupo `invoices` → `POST /invoices Generar una factura` → **Try it out** → **Execute**.
+
+**Body JSON:**
+
+``` json
+{
+  "number": "FAC-2026-0001",
+  "encounterIds": [1]
+}
+```
+
+![](images/clipboard-3160240728.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT f.number    AS factura,
+       f.total     AS total_factura,
+       f.status    AS estado_factura,
+       at.id       AS atencion,
+       p.name      AS paciente,
+       s.name      AS servicio,
+       at.total    AS valor_atencion
+FROM invoices f
+JOIN encounters   at ON at.invoice_id = f.id
+JOIN appointments c  ON c.id = at.referencia_id
+JOIN patients     p  ON p.id = c.patient_id
+JOIN services     s  ON s.id = at.service_id
+ORDER BY f.id DESC, at.id;
+```
+
+![](images/clipboard-286180778.png)
+
+#### **19.14 — Cerrar el ciclo: pagar la factura**
+
+**En Swagger:** grupo `invoices` → `PATCH /invoices/{id}/pay Marcar una factura como pagada` → **Try it out** → `id` = `1` → **Execute**. No lleva body.
+
+**Respuesta esperada:** `"status": "PAGADA"`.
+
+![](images/clipboard-4013624240.png)
+
+**En DBeaver:**
+
+``` sql
+SELECT id, number AS numero, total, status AS estado
+FROM invoices
+ORDER BY id DESC;
+```
+
+![](images/clipboard-857021000.png)
+
+#### **19.15 — Verificación final: conteo de las 11 tablas**
+
+![](images/clipboard-4183825898.png)
