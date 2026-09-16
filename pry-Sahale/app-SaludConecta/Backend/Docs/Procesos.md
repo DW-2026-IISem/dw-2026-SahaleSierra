@@ -2,29 +2,29 @@
 
 ## Índice
 
-- [FASE 1 — `00_BASE_INIT_NESTJS`](#fase-1)
-- [FASE 2 — `01_BASE_DEPS_Y_PUERTO`](#fase-2)
-- [FASE 3 — `02_BASE_ESTRUCTURA_CA`](#fase-3)
-- [FASE 4 — `03_BASE_ENTORNO_ENV`](#fase-4)
-- [FASE 5 — `04_BASE_DATABASE_SEQUELIZE`](#fase-5)
-- [FASE 6 — `05_BASE_APP_COMMON_SECURITY`](#fase-6)
-- [FASE 7 — `06_BUSINESS_PATIENTS`](#fase-7)
-- [FASE 8 — `07_BUSINESS_SPECIALTIES`](#fase-8)
-- [FASE 9 — `08_BUSINESS_DOCTORS`](#fase-9)
-- [FASE 10 — `09_BUSINESS_DOCTOR_SPECIALTIES`](#fase-10)
-- [FASE 11 — `10_BUSINESS_SERVICES`](#fase-11)
-- [FASE 12 — `11_BUSINESS_AGENDAS`](#fase-12)
-- [FASE 13 — `12_BUSINESS_APPOINTMENTS`](#fase-13)
-- [FASE 14 — `13_BUSINESS_AUTHORIZATIONS`](#fase-14)
-- [FASE 15 — `14_BUSINESS_CLINICAL_RECORDS`](#fase-15)
-- [FASE 16 — `15_BUSINESS_ENCOUNTERS`](#fase-16)
-- [FASE 17 — `16_BUSINESS_INVOICES`](#fase-17)
-- [FASE 18 — `17_FIXES_Y_AJUSTES`](#fase-18)
-- [FASE 19 — `18_DEMO_SWAGGER_UI`](#fase-19)
+- [FASE 1: `00_BASE_INIT_NESTJS`](#fase-1-00_base_init_nestjs)
+- [FASE 2: `01_BASE_DEPS_Y_PUERTO`](#fase-2-01_base_deps_y_puerto)
+- [FASE 3: `02_BASE_ESTRUCTURA_CA`](#fase-3-02_base_estructura_ca)
+- [FASE 4: `03_BASE_ENTORNO_ENV`](#fase-4-03_base_entorno_env)
+- [FASE 5: `04_BASE_DATABASE_SEQUELIZE`](#fase-5-04_base_database_sequelize)
+- [FASE 6: `05_BASE_APP_COMMON_SECURITY`](#fase-6-05_base_app_common_security)
+- [FASE 7: `06_BUSINESS_PATIENTS`](#fase-7-06_business_patients)
+- [FASE 8: `07_BUSINESS_SPECIALTIES`](#fase-8-07_business_specialties)
+- [FASE 9: `08_BUSINESS_DOCTORS`](#fase-9-08_business_doctors)
+- [FASE 10: `09_BUSINESS_DOCTOR_SPECIALTIES`](#fase-10-09_business_doctor_specialties)
+- [FASE 11: `10_BUSINESS_SERVICES`](#fase-11-10_business_services)
+- [FASE 12: `11_BUSINESS_AGENDAS`](#fase-12-11_business_agendas)
+- [FASE 13: `12_BUSINESS_APPOINTMENTS`](#fase-13-12_business_appointments)
+- [FASE 14: `13_BUSINESS_AUTHORIZATIONS`](#fase-14-13_business_authorizations)
+- [FASE 15: `14_BUSINESS_CLINICAL_RECORDS`](#fase-15-14_business_clinical_records)
+- [FASE 16: `15_BUSINESS_ENCOUNTERS`](#fase-16-15_business_encounters)
+- [FASE 17: `16_BUSINESS_INVOICES`](#fase-17-16_business_invoices)
+- [FASE 18: `17_FIXES_Y_AJUSTES`](#fase-18-17_fixes_y_ajustes)
+- [FASE 19: `18_DEMO_SWAGGER_UI`](#fase-19-18_demo_swagger_ui)
 
 ------------------------------------------------------------------------
 
-## FASE 1 — `00_BASE_INIT_NESTJS` {#fase-1}
+## FASE 1: `00_BASE_INIT_NESTJS` {#fase-1-00_base_init_nestjs}
 
 ### **Objetivo de la fase:** Dejar el esqueleto oficial Nest corriendo en un puerto libre, con Git inicial.
 
@@ -57,7 +57,7 @@ chmod -R 755 ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/Backend
 
 ------------------------------------------------------------------------
 
-## FASE 2 — `01_BASE_DEPS_Y_PUERTO` {#fase-2}
+## FASE 2: `01_BASE_DEPS_Y_PUERTO` {#fase-2-01_base_deps_y_puerto}
 
 ### **Objetivo de la fase:** Instalar el stack profesional y evitar que un `start:dev` colgado bloquee el puerto.
 
@@ -89,7 +89,7 @@ chmod -R 755 ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/Backend
 
 ------------------------------------------------------------------------
 
-## FASE 3 — `02_BASE_ESTRUCTURA_CA` {#fase-3}
+## FASE 3: `02_BASE_ESTRUCTURA_CA` {#fase-3-02_base_estructura_ca}
 
 ### **Objetivo de la fase:** Crear el mapa mental: config / common / infrastructure / features (business + auth).
 
@@ -99,7 +99,7 @@ chmod -R 755 ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/Backend
 
 ------------------------------------------------------------------------
 
-## FASE 4 — `03_BASE_ENTORNO_ENV` {#fase-4}
+## FASE 4: `03_BASE_ENTORNO_ENV` {#fase-4-03_base_entorno_env}
 
 ### **Objetivo de la fase:** Centralizar variables en `.env`: selector `DB_DIALECT` y un bloque de credenciales por motor (MySQL, PostgreSQL, SQL Server, Oracle). Validar antes del boot.
 
@@ -133,7 +133,7 @@ chmod -R 755 ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/Backend
 
 ------------------------------------------------------------------------
 
-## FASE 5 — `04_BASE_DATABASE_SEQUELIZE` {#fase-5}
+## FASE 5: `04_BASE_DATABASE_SEQUELIZE` {#fase-5-04_base_database_sequelize}
 
 ### **Objetivo de la fase:** Conectar Sequelize al motor de `DB_DIALECT` usando el bloque `DB_MYSQL_*` / `DB_POSTGRES_*` / `DB_MSSQL_*` / `DB_ORACLE_*`. Aún sin features (ALL_MODELS vacío).
 
@@ -197,7 +197,7 @@ chmod -R 755 ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/Backend
 
 ------------------------------------------------------------------------
 
-## FASE 6 — `05_BASE_APP_COMMON_SECURITY` {#fase-6}
+## FASE 6: `05_BASE_APP_COMMON_SECURITY` {#fase-6-05_base_app_common_security}
 
 ### **Objetivo de la fase:** Dejar la infraestructura transversal lista antes de la primera entidad de negocio. Aún sin Business/Auth en AppModule y sin guards globales.
 
@@ -525,7 +525,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 7 — `06_BUSINESS_PATIENTS` {#fase-7}
+## FASE 7: `06_BUSINESS_PATIENTS` {#fase-7-06_business_patients}
 
 ### **Objetivo de la fase:** Primera entidad de negocio real. Orden: dominio → infraestructura → aplicación → presentación → módulo → cableado → verificación.
 
@@ -703,7 +703,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 8 — `07_BUSINESS_SPECIALTIES` {#fase-8}
+## FASE 8: `07_BUSINESS_SPECIALTIES` {#fase-8-07_business_specialties}
 
 ### **Objetivo de la fase:** Catálogo de especialidades médicas (`nombre`, `descripcion`, `is_active`), sin relaciones salientes propias — es referenciada por `DoctorSpecialties` en la Fase 10.
 
@@ -855,7 +855,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 9 — `08_BUSINESS_DOCTORS` {#fase-9}
+## FASE 9: `08_BUSINESS_DOCTORS` {#fase-9-08_business_doctors}
 
 ### **Objetivo de la fase:** Entidad Medico. Su relación N:M con Especialidad se resuelve en la Fase 10 (`DoctorSpecialties`), una vez que ambos modelos (`DoctorModel` y `SpecialtyModel`) ya existen.
 
@@ -1007,7 +1007,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 10 — `09_BUSINESS_DOCTOR_SPECIALTIES` {#fase-10}
+## FASE 10: `09_BUSINESS_DOCTOR_SPECIALTIES` {#fase-10-09_business_doctor_specialties}
 
 ### **Objetivo de la fase:** Resolver la relación N:M `Medico ↔ Especialidad`. Requiere que `DoctorModel` (Fase 9) y `SpecialtyModel` (Fase 8) ya existan — por eso se implementa después de ambos. `principal_id` referencia a `doctors`, `relacionado_id` referencia a `specialties`, y `datos_relacion` guarda metadatos propios de la relación (ej. fecha de habilitación).
 
@@ -1149,7 +1149,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 11 — `10_BUSINESS_SERVICES` {#fase-11}
+## FASE 11: `10_BUSINESS_SERVICES` {#fase-11-10_business_services}
 
 ### **Objetivo de la fase:** Catálogo de servicios clínicos, referenciado luego por `Encounters` (Fase 15: `Servicio 1:N Atencion`).
 
@@ -1311,7 +1311,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 12 — `11_BUSINESS_AGENDAS` {#fase-12}
+## FASE 12: `11_BUSINESS_AGENDAS` {#fase-12-11_business_agendas}
 
 ### **Objetivo de la fase:** Agenda pertenece a un médico (`Medico 1:N Agenda`). Requiere que `DoctorModel` (Fase 9) ya exista.
 
@@ -1467,7 +1467,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 13 — `12_BUSINESS_APPOINTMENTS` {#fase-13}
+## FASE 13: `12_BUSINESS_APPOINTMENTS` {#fase-13-12_business_appointments}
 
 ### **Objetivo de la fase:** Cita depende de Patient (Fase 7) y Agenda (Fase 12), ambas ya existentes. Maneja su propio ciclo de vida (`PROGRAMADA` → `ATENDIDA` / `CANCELADA` / `NO_ASISTIO`), distinto del campo `is_active` de catálogo. La transición a `ATENDIDA` la dispara el use-case de Encounters en la Fase 15 — aquí solo se define el método de dominio que lo permite.
 
@@ -1639,7 +1639,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 14 — `13_BUSINESS_AUTHORIZATIONS` {#fase-14}
+## FASE 14: `13_BUSINESS_AUTHORIZATIONS` {#fase-14-13_business_authorizations}
 
 ### Objetivo de la fase: Autorizacion representa el aval de la EPS/convenio para una cita puntual (`Cita 0..1:1 Autorizacion`). Requiere que `AppointmentModel` (Fase 13) ya exista. La FK `appointment_id` es única para expresar la cardinalidad 1:1 opcional.
 
@@ -1801,7 +1801,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 15 — `14_BUSINESS_CLINICAL_RECORDS` {#fase-15}
+## FASE 15: `14_BUSINESS_CLINICAL_RECORDS` {#fase-15-14_business_clinical_records}
 
 ### Objetivo de la fase: HistoriaClinica pertenece a un único paciente (`Paciente 1:1 HistoriaClinica`) y será referenciada por Encounters en la Fase 16 (`HistoriaClinica 1:N Atencion`). Por eso se construye antes que Encounters, invirtiendo el orden original de la tabla de mapeo. Requiere que `PatientModel` (Fase 7) ya exista. Incluye el endpoint `GET /historias/:pacienteId` indicado en el RBAC del PDF.
 
@@ -1969,7 +1969,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 16 — `15_BUSINESS_ENCOUNTERS` {#fase-16}
+## FASE 16: `15_BUSINESS_ENCOUNTERS` {#fase-16-15_business_encounters}
 
 ### **Objetivo de la fase:** Atencion es el registro clínico de lo ocurrido en una cita (`Cita 0..1:1 Atencion`, `Servicio 1:N Atencion`, `HistoriaClinica 1:N Atencion`). Requiere que `AppointmentModel` (Fase 13), `ServiceModel` (Fase 11) y `ClinicalRecordModel` (Fase 15) ya existan. Al crearse, marca la cita asociada como `ATENDIDA` (regla de negocio del PDF: *"Una cita solo pasa a atendida con profesional, paciente y registro clínico"*).
 
@@ -2143,7 +2143,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 17 — `16_BUSINESS_INVOICES` {#fase-17}
+## FASE 17: `16_BUSINESS_INVOICES` {#fase-17-16_business_invoices}
 
 ### **Objetivo de la fase:** Factura agrupa una o más atenciones facturables (`Factura agrupa atenciones facturables`). Como `EncounterModel` (Fase 16) ya existe pero no puede referenciar a `Invoice` (aún no existía), esta fase primero **extiende** Encounter con una FK opcional `invoice_id` mediante una migración adicional, y luego construye Invoice completo.
 
@@ -2337,7 +2337,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 18 — `17_FIXES_Y_AJUSTES` {#fase-18}
+## FASE 18: `17_FIXES_Y_AJUSTES` {#fase-18-17_fixes_y_ajustes}
 
 ### **Objetivo de la fase:** Esta fase junta dos tipos de ajustes detectados después de correr las Fases 1–17:
 
@@ -2443,7 +2443,7 @@ npm run start:dev
 
 ------------------------------------------------------------------------
 
-## FASE 19 — `18_DEMO_SWAGGER_UI` {#fase-19}
+## FASE 19: `18_DEMO_SWAGGER_UI` {#fase-19-18_demo_swagger_ui}
 
 ### **Objetivo de la fase:** Demostrar el funcionamiento real de la base de datos ejecutando todas las operaciones desde **Swagger UI**, en el orden en que ocurren en el negocio: se registra un paciente, se crea una especialidad, se asigna a un médico, se publica una agenda, se agenda una cita, se valida la autorización, se abre la historia clínica, se registra la atención (que pasa la cita a `ATENDIDA`) y finalmente se genera la factura.
 
