@@ -43,3 +43,36 @@ Esqueleto. Los imports de modelos, associations, Routes y Swagger llegan por PAR
 #### Cierre del ISS
 
 ![](images/clipboard-2181427957.png)
+
+## ISS-02 — Infraestructura de base de datos
+
+##### **Bloqueado por:** ISS-01.
+
+#### 3.1 Drivers Sequelize y `.env`
+
+![](images/clipboard-1870759706.png)
+
+![![](images/clipboard-1184211016.png)](images/clipboard-171196581.png)
+
+#### 3.2 Configuración Sequelize (`src/database/db.ts`)
+
+![](images/clipboard-4205252378.png)
+
+``` bash
+test -f src/database/db.ts && npx tsc --noEmit
+```
+
+#### 3.3 Carpeta seeders (reservada)
+
+![](images/clipboard-3663606755.png)
+
+#### Verificación del ISS-02
+
+``` bash
+npx tsc --noEmit
+test -f src/database/db.ts && test -f .env && test -d src/database/seeders
+```
+
+#### Cierre del ISS
+
+![](images/clipboard-448257243.png)
