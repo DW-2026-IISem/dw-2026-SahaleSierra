@@ -9,7 +9,30 @@ function paramId(req: Request): number {
 
 export class PatientController {
   // ================== READ ==================
-  // (rellenar en ISS-03-B) getAll, luego getOne
+    public async getAll(req: Request, res: Response) {
+    try {
+      const patients = await Patient.findAll({
+        where: { status: "active" },
+      });
+      res.status(200).json({ patients });
+    } catch (error) {
+      res.status(500).json({ error: "Error fetching patients", detail: String(error) });
+    }
+  }
+
+  public async getOne(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error fetching patient", detail: String(error) });
+    }
+  }
 
   // ================== CREATE ==================
   // (rellenar en ISS-03-C)

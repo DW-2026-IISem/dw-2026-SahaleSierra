@@ -6,6 +6,15 @@ export class PatientRoutes {
 
   public routes(app: Application): void {
     // ================== RUTAS SIN AUTENTICACIÓN / SIN MIDDLEWARE JWT ==================
-    // (rellenar en ISS-03-B…E)
+   
+    // getAll
+    app
+      .route("/api/patients")
+      .get(this.patientController.getAll.bind(this.patientController));
+
+    // getOne
+    app
+      .route("/api/patients/:id")
+      .get(this.patientController.getOne.bind(this.patientController));
   }
 }
