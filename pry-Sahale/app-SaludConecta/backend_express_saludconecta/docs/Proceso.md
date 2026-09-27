@@ -76,3 +76,106 @@ test -f src/database/db.ts && test -f .env && test -d src/database/seeders
 #### Cierre del ISS
 
 ![](images/clipboard-448257243.png)
+
+## 4. ISS-03-A — Feature Patient: fundación (modelo, esqueleto, HTTP, cableado)
+
+**Objetivo:** dejar el feature Patient listo para CRUD. Incluye el modelo, el esqueleto de controller y routes, la carpeta `http/`, el agregador de rutas y el sync.\
+
+**Bloqueado por:** ISS-02.\
+
+**Patrón del manual:** Client (§4.1–4.3).
+
+### 4.1 Modelo Patient
+
+**Archivo:** `src/features/business/patient/patient.model.ts`
+
+![](images/clipboard-1787450583.png)
+
+### 4.2 Esqueleto controller / routes + carpeta HTTP
+
+#### 4.2.a Carpeta `http/`
+
+``` bash
+mkdir -p src/features/business/patient/http
+```
+
+#### 4.2.b `patient.controller.ts` (esqueleto)
+
+![](images/clipboard-498527218.png)
+
+#### 4.2.c `patient.routes.ts` (esqueleto)
+
+![](images/clipboard-1382124680.png)
+
+### 4.3 Agregador Routes + cableado en Config
+
+#### 4.3.a `src/routes/index.ts` (archivo nuevo)
+
+![](images/clipboard-2850061102.png)
+
+#### 4.3.b PARCHE — `src/config/index.ts` (ya existe desde ISS-01)
+
+#### 1. Debajo de `var cors = require("cors");`, añadir:
+
+``` typescript
+import { sequelize, getDatabaseInfo, testConnection } from "../database/db";
+import "../features/business/patient/patient.model";
+import { Routes } from "../routes/index";
+```
+
+![](images/clipboard-946115674.png)
+
+**2. Dentro de** `export class App`, **debajo de** `public app: Application;`, **añadir:**
+
+``` typescript
+  public routePrv: Routes = new Routes();
+```
+
+![](images/clipboard-3912853981.png)
+
+**3. Dentro de** `routes()`, **reemplazar** la línea `// ISS-03 §4.3` por:
+
+``` typescript
+  this.routePrv.patientRoutes.routes(this.app);
+```
+
+![](images/clipboard-1817969709.png)
+
+**4. Dentro de** `dbConnection()`, **reemplazar** la línea `// ISS-02 / ISS-03` por:
+
+``` typescript
+    try {
+      // Mostrar información de la base de datos seleccionada
+      const dbInfo = getDatabaseInfo();
+      console.log(`🔗 Intentando conectar a: ${dbInfo.engine.toUpperCase()}`);
+
+      // Probar la conexión
+      const isConnected = await testConnection();
+
+      if (!isConnected) {
+        throw new Error(`No se pudo conectar a la base de datos ${dbInfo.engine.toUpperCase()}`);
+      }
+
+      // alter: true actualiza columnas faltantes (ej. createdAt/updatedAt tras timestamps: true).
+      // force: false no recrea tablas; no borra datos. En producción preferir migraciones.
+      await sequelize.sync({ force: false, alter: true });
+      console.log(`📦 Base de datos sincronizada exitosamente`);
+    } catch (error) {
+      console.error("❌ Error al conectar con la base de datos:", error);
+      process.exit(1); // Terminar la aplicación si no se puede conectar
+    }
+```
+
+![](images/clipboard-2192111545.png)
+
+#### Estado esperado del archivo tras el PARCHE, para comparar:
+
+![](images/clipboard-754351147.png)
+
+#### Verificación ISS-03-A
+
+![](images/clipboard-1428577850.png)
+
+#### Cierre del ISS
+
+![](images/clipboard-2682909370.png)
