@@ -1,0 +1,13 @@
+### Feature Specialty — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createSpecialty
+POST {{baseUrl}}/api/specialties
+Content-Type: application/json
+
+{
+  "name": "Cardiología",
+  "description": "Diagnóstico y tratamiento de enfermedades del corazón",
+  "status": "active"
+}

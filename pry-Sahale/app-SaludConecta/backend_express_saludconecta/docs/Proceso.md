@@ -774,6 +774,350 @@ Estado esperado:
 
 ![](images/clipboard-4104031887.png)
 
+#### Verificación ISS-04
+
+``` bash
+npx tsc --noEmit
+```
+
+``` bash
+npm run db:seed
+npm run db:seed -- --patients=20
+SEED_PATIENTS=5 npm run db:seed
+```
+
 ![](images/clipboard-496619547.png)
 
+La primera inserta 10, porque es el default. La segunda y la tercera muestran `📊 Conteos: { patients: 20 }` y `{ patients: 5 }`, lo que confirma que el CLI y el env se leen bien. Pero omiten la inserción, porque ya hay filas. Ese es exactamente el comportamiento del manual. Para ver insertar 20 o 5, vacía la tabla antes de cada una.
+
+``` bash
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/patients
+```
+
 ![](images/clipboard-794612193.png)
+
+#### Cierre del ISS
+
+![](images/clipboard-1844324295.png)
+
+## 10. ISS-05 — Swagger / OpenAPI (feature + registry externo)
+
+**Objetivo:** documentar el API de Patient en OpenAPI 3 y montar Swagger UI desde un registry externo, con el mismo patrón que los seeders.\
+**Bloqueado por:** ISS-03-E (rutas CRUD definidas).
+
+### 10.1 OpenAPI dentro del feature Patient
+
+#### 10.1.a Dependencias
+
+``` bash
+npm install swagger-ui-express@^5.0.1
+npm install -D @types/swagger-ui-express@^4.1.8
+```
+
+#### 10.1.b `patient.swagger.ts` (archivo nuevo)
+
+![](images/clipboard-2421580916.png)
+
+### 10.2 Registry externo + montaje en Config
+
+#### 10.2.a Carpeta `src/swagger/`
+
+``` bash
+mkdir -p src/swagger
+```
+
+#### 10.2.b `src/swagger/index.ts` (archivo nuevo)
+
+![](images/clipboard-4154904745.png)
+
+#### 10.2.c PARCHE — `src/config/index.ts`
+
+**1. Debajo de** `import { Routes } from "../routes/index";`, **añadir:**
+
+``` typescript
+import { setupSwagger } from "../swagger/index";
+```
+
+![](images/clipboard-3702101409.png)
+
+**2. Dentro del** `constructor`, **debajo de** `this.routes();` y **encima de** `this.dbConnection();`, **añadir:**
+
+``` typescript
+    this.docs();
+```
+
+![](images/clipboard-2023364622.png)
+
+**3. Dentro de** la clase `App`, **debajo de** el método `routes()` completo (después de su llave de cierre `}`) y **encima de** `private async dbConnection()`, **añadir:**
+
+``` typescript
+  
+  private docs(): void {
+    setupSwagger(this.app);
+  }
+```
+
+![](images/clipboard-3949529064.png)
+
+**Comprobación rápida:**
+
+``` bash
+grep -n -E "setupSwagger|this.docs|private docs" src/config/index.ts
+```
+
+![](images/clipboard-15935849.png)
+
+#### Verificación ISS-05
+
+``` bash
+npx tsc --noEmit
+
+curl -s http://localhost:4000/api/docs.json | head -c 400; echo
+```
+
+![](images/clipboard-2348473214.png)
+
+#### Cierre del ISS
+
+![](images/clipboard-109046364.png)
+
+![](images/clipboard-3318392445.png)
+
+## 11. ISS-06 — Feature Specialty (especialidades)
+
+**Objetivo:** CRUD + seeder + swagger de Specialty, un catálogo simple sin FK.\
+**Bloqueado por:** ISS-05.\
+**API:** `/api/specialties`, **SIN AUTH**.\
+**Patrón del manual:** ProductType (§11.1–11.6).
+
+La carpeta de la entidad es nueva. Un solo `mkdir -p` crea la base y `http/`, como en el manual (§11):
+
+``` bash
+mkdir -p src/features/business/specialty/http
+```
+
+#### 11.1 Modelo Specialty
+
+![](images/clipboard-919984415.png)
+
+### 11.2 Controller + routes (CRUD completo)
+
+#### 11.2.a `specialty.controller.ts`
+
+![](images/clipboard-2839363257.png)
+
+![](images/clipboard-4283427389.png)
+
+#### 11.2.b `specialty.routes.ts`
+
+![](images/clipboard-2817800089.png)
+
+### 11.3 HTTP (REST Client)
+
+#### 11.3.a `specialties.get.http`
+
+![](images/clipboard-3655790874.png)
+
+#### 11.3.b `specialties.create.http`
+
+![](images/clipboard-1158634796.png)
+
+#### 11.3.c `specialties.update.http`
+
+![](images/clipboard-2180701181.png)
+
+#### 11.3.d `specialties.delete.http`
+
+![](images/clipboard-1133132468.png)
+
+### 11.4 Cableado Routes + Config
+
+#### 11.4.a PARCHE — `src/routes/index.ts`
+
+**1. Debajo de** `import { PatientRoutes } from "../features/business/patient/patient.routes";`, **añadir:**
+
+``` typescript
+import { SpecialtyRoutes } from "../features/business/specialty/specialty.routes";
+```
+
+![](images/clipboard-2445337132.png)
+
+**2. Dentro de** `export class Routes`, **debajo de** `public patientRoutes: PatientRoutes = new PatientRoutes();`, **añadir:**
+
+``` typescript
+  public specialtyRoutes: SpecialtyRoutes = new SpecialtyRoutes();
+```
+
+![](images/clipboard-132731105.png)
+
+#### 11.4.b PARCHE — `src/config/index.ts`
+
+**1. Debajo de** `import "../features/business/patient/patient.model";`, **añadir:**
+
+``` typescript
+import "../features/business/specialty/specialty.model";
+```
+
+![](images/clipboard-1212819875.png)
+
+**2. Dentro de** `routes()`, **debajo de** `this.routePrv.patientRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.specialtyRoutes.routes(this.app);
+```
+
+![](images/clipboard-2227003245.png)
+
+``` bash
+npx tsc --noEmit
+```
+
+#### Verificación intermedia (API)
+
+``` bash
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/specialties \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Pediatría","description":"Atención de niños y adolescentes","status":"active"}'
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/specialties
+```
+
+![](images/clipboard-1733634952.png)
+
+### 11.5 Seeder Specialty
+
+#### 11.5.a `specialty.seeder.ts` (archivo nuevo)
+
+![](images/clipboard-1084376610.png)
+
+#### 11.5.b PARCHE — `src/database/seeders/counts.ts`
+
+**1. Dentro de** `export type SeedCounts`, **reemplazar** la línea:
+
+``` typescript
+  // specialties?: number;
+```
+
+**por:**
+
+``` typescript
+  specialties: number;
+```
+
+![](images/clipboard-2834746762.png)
+
+**2. Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `patients: 10,`, **añadir:**
+
+``` typescript
+  specialties: 10,
+```
+
+![](images/clipboard-2308104001.png)
+
+**3. Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envPatients ...) { ... }` (su llave de cierre) y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envSpecialties = process.env.SEED_SPECIALTIES;
+  if (envSpecialties !== undefined && envSpecialties !== "") {
+    counts.specialties = Number(envSpecialties);
+  }
+```
+
+![](images/clipboard-1893552122.png)
+
+#### 11.5.c PARCHE — `src/database/seeders/index.ts` (runner)
+
+**1. Debajo de** `import "../../features/business/patient/patient.model";`, **añadir:**
+
+``` typescript
+import "../../features/business/specialty/specialty.model";
+```
+
+![](images/clipboard-3463802318.png)
+
+**2. Debajo de** `import { seedPatients } from "../../features/business/patient/patient.seeder";`, **añadir:**
+
+``` typescript
+import { seedSpecialties } from "../../features/business/specialty/specialty.seeder";
+```
+
+![](images/clipboard-2409295992.png)
+
+**3. Debajo de** `await seedPatients(counts.patients);`, **añadir:**
+
+``` typescript
+  await seedSpecialties(counts.specialties);
+```
+
+![](images/clipboard-3193136178.png)
+
+``` bash
+npx tsc --noEmit
+```
+
+>  `specialties` ya tiene la fila que creaste en la verificación intermedia, así que el seeder la omitirá. Si quieres verlo insertar, vacía primero: `mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "DELETE FROM specialties;"`
+
+``` bash
+npm run db:seed
+```
+
+![](images/clipboard-4048940731.png)
+
+### 11.6 Swagger Specialty
+
+#### 11.6.a `specialty.swagger.ts` (archivo nuevo)
+
+![](images/clipboard-2813221844.png)
+
+![![](images/clipboard-4129560852.png)](images/clipboard-1446177125.png)
+
+![](images/clipboard-3791076147.png)
+
+#### 11.6.b PARCHE — `src/swagger/index.ts` (registry)
+
+**1. Debajo de** `import { patientSwagger } from "../features/business/patient/patient.swagger";`, **añadir:**
+
+``` typescript
+import { specialtySwagger } from "../features/business/specialty/specialty.swagger";
+```
+
+![](images/clipboard-2864213613.png)
+
+**2. Dentro de** `featureSwaggerModules`, **reemplazar** la línea:
+
+``` typescript
+  // specialtySwagger,
+```
+
+**por:**
+
+``` typescript
+  specialtySwagger,
+```
+
+![](images/clipboard-3883906777.png)
+
+#### Verificación ISS-06
+
+``` bash
+npx tsc --noEmit
+```
+
+**Con el servidor corriendo:**
+
+```         
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/specialties
+curl -s http://localhost:4000/api/docs.json | grep -o '"name":"Specialties"'
+```
+
+![](images/clipboard-3733768214.png)
+
+#### Cierre del ISS
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-1227945918.png)
+
+![](images/clipboard-3408712436.png)

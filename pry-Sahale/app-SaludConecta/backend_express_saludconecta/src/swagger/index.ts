@@ -1,6 +1,7 @@
 import { Application } from "express";
 import swaggerUi from "swagger-ui-express";
 import { patientSwagger } from "../features/business/patient/patient.swagger";
+import { specialtySwagger } from "../features/business/specialty/specialty.swagger";
 
 export type FeatureSwaggerModule = {
   tags: unknown[];
@@ -14,7 +15,7 @@ export type FeatureSwaggerModule = {
  */
 const featureSwaggerModules: FeatureSwaggerModule[] = [
   patientSwagger,
-  // specialtySwagger,
+  specialtySwagger,
   // doctorSwagger,
 ];
 

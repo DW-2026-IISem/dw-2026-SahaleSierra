@@ -1,0 +1,24 @@
+### Feature Specialty — UPDATE (PUT) / UPDATE (PATCH)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name updateSpecialtyPut
+PUT {{baseUrl}}/api/specialties/{{id}}
+Content-Type: application/json
+
+{
+  "name": "Cardiología Clínica",
+  "description": "Consulta ambulatoria de cardiología",
+  "status": "active"
+}
+
+###
+
+# @name updateSpecialtyPatch
+PATCH {{baseUrl}}/api/specialties/{{id}}
+Content-Type: application/json
+
+{
+  "description": "Descripción parcial"
+}
