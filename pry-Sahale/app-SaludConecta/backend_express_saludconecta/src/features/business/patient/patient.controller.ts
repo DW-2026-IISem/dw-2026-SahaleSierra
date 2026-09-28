@@ -96,5 +96,35 @@ export class PatientController {
   }
 
   // ================== DELETE ==================
-  // (rellenar en ISS-03-E)
+    /** Eliminación física */
+  public async deletePhysical(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      await patient.destroy();
+      res.status(200).json({ message: "Patient permanently deleted", id });
+    } catch (error) {
+      res.status(500).json({ error: "Error deleting patient", detail: String(error) });
+    }
+  }
+
+  /** Eliminación lógica → status = inactive */
+  public async deleteLogical(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      await patient.update({ status: "inactive" });
+      res.status(200).json({ message: "Patient deactivated (logical delete)", patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error deactivating patient", detail: String(error) });
+    }
+  }
 }

@@ -27,5 +27,16 @@ export class PatientRoutes {
       .route("/api/patients/:id")
       .put(this.patientController.updatePut.bind(this.patientController))
       .patch(this.patientController.updatePatch.bind(this.patientController));
+
+      
+    // delete físico
+    app
+      .route("/api/patients/:id")
+      .delete(this.patientController.deletePhysical.bind(this.patientController));
+
+    // delete lógico
+    app
+      .route("/api/patients/:id/deactivate")
+      .patch(this.patientController.deleteLogical.bind(this.patientController));
   }
 }
