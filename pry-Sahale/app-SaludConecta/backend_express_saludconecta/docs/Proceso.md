@@ -188,11 +188,11 @@ import { Routes } from "../routes/index";
 
 #### Criterios de aceptación (ISS-03-B)
 
--  Controller: `getAll` (solo `status: 'active'`) y, debajo, `getOne`
+- Controller: `getAll` (solo `status: 'active'`) y, debajo, `getOne`
 
--  Rutas `GET /api/patients` y `GET /api/patients/:id`, **sin auth**
+- Rutas `GET /api/patients` y `GET /api/patients/:id`, **sin auth**
 
--  `http/patients.get.http` con la leyenda **SIN AUTH**
+- `http/patients.get.http` con la leyenda **SIN AUTH**
 
 ### 5.1 PARCHE — `patient.controller.ts` (ya existe)
 
@@ -725,7 +725,7 @@ curl -s -X DELETE http://localhost:4000/api/patients/1
 curl -s http://localhost:4000/api/patients/1
 ```
 
->  Después de la baja lógica, `GET /api/patients` ya no lista el id 1 porque solo muestra `active`. Después del DELETE, `GET /api/patients/1` responde 404.
+> Después de la baja lógica, `GET /api/patients` ya no lista el id 1 porque solo muestra `active`. Después del DELETE, `GET /api/patients/1` responde 404.
 
 ![](images/clipboard-3894485331.png)
 
@@ -1055,7 +1055,7 @@ import { seedSpecialties } from "../../features/business/specialty/specialty.see
 npx tsc --noEmit
 ```
 
->  `specialties` ya tiene la fila que creaste en la verificación intermedia, así que el seeder la omitirá. Si quieres verlo insertar, vacía primero: `mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "DELETE FROM specialties;"`
+> `specialties` ya tiene la fila que creaste en la verificación intermedia, así que el seeder la omitirá. Si quieres verlo insertar, vacía primero: `mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "DELETE FROM specialties;"`
 
 ``` bash
 npm run db:seed
@@ -1121,3 +1121,263 @@ npm run dev
 ![](images/clipboard-1227945918.png)
 
 ![](images/clipboard-3408712436.png)
+
+## 12. ISS-07 — Feature Doctor (médicos)
+
+**Objetivo:** CRUD + seeder + swagger de Doctor.\
+**Bloqueado por:** ISS-06.\
+**API:** `/api/doctors`, **SIN AUTH**.\
+**Patrón del manual:** Product (§12.1–12.6), adaptado.
+
+``` bash
+mkdir -p src/features/business/doctor/http
+```
+
+#### 12.1 Modelo Doctor
+
+![](images/clipboard-3238989568.png)
+
+### 12.2 Controller + routes
+
+#### 12.2.a `doctor.controller.ts`
+
+![](images/clipboard-716057360.png)
+
+![](images/clipboard-804977858.png)
+
+#### 12.2.b `doctor.routes.ts`
+
+![](images/clipboard-1473753809.png)
+
+### 12.3 HTTP
+
+#### 12.3.a `doctors.get.http`
+
+![](images/clipboard-290385679.png)
+
+#### 12.3.b `doctors.create.http`
+
+![](images/clipboard-21995143.png)
+
+#### 12.3.c `doctors.update.http`
+
+![](images/clipboard-2125279583.png)
+
+#### 12.3.d `doctors.delete.http`
+
+![](images/clipboard-3368906699.png)
+
+### 12.4 Cableado
+
+#### 12.4.a PARCHE — `src/routes/index.ts`
+
+**1. Debajo de** `import { SpecialtyRoutes } from "../features/business/specialty/specialty.routes";`, **añadir:**
+
+``` typescript
+import { DoctorRoutes } from "../features/business/doctor/doctor.routes";
+```
+
+![](images/clipboard-2652895141.png)
+
+**2. Dentro de** `Routes`, **debajo de** `public specialtyRoutes: SpecialtyRoutes = new SpecialtyRoutes();`, **añadir:**
+
+``` typescript
+public doctorRoutes: DoctorRoutes = new DoctorRoutes();
+```
+
+![](images/clipboard-77003844.png)
+
+#### 12.4.b PARCHE — `src/config/index.ts` (modelo + ruta)
+
+**1. Debajo de** `import "../features/business/specialty/specialty.model";`, **añadir:**
+
+``` typescript
+import "../features/business/doctor/doctor.model";
+```
+
+![](images/clipboard-91547910.png)
+
+**2. Dentro de** `routes()`, **debajo de** `this.routePrv.specialtyRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+this.routePrv.doctorRoutes.routes(this.app);
+```
+
+![](images/clipboard-789136559.png)
+
+``` bash
+npx tsc --noEmit
+```
+
+### 12.5 Sync seguro para FKs (hueco del manual) — PARCHE `src/config/index.ts`
+
+**Por qué ahora:** en ISS-08 aparecen las primeras FKs (`doctor_specialties → doctors / specialties`). Con MySQL, `sync({ alter: true })` puede fallar al alterar tablas que ya tienen restricciones FK. El manual lo resuelve en §13.7 desactivando `FOREIGN_KEY_CHECKS` solo durante el sync, y añade la opción `DB_SYNC_FORCE`. Lo dejo instalado desde ya.
+
+**Dentro de** `dbConnection()`, **reemplazar** estas 4 líneas:
+
+```         
+      // alter: true actualiza columnas faltantes (ej. createdAt/updatedAt tras timestamps: true).
+      // force: false no recrea tablas; no borra datos. En producción preferir migraciones.
+      await sequelize.sync({ force: false, alter: true });
+      console.log(`📦 Base de datos sincronizada exitosamente`);
+```
+
+**por:**
+
+``` typescript
+      // Lab: sync crea/altera tablas desde los modelos (BD limpia → snake_case desde cero).
+      const force = process.env.DB_SYNC_FORCE === "true";
+      const isMysql =
+        sequelize.getDialect() === "mysql" || sequelize.getDialect() === "mariadb";
+
+      if (isMysql) {
+        await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+      }
+      try {
+        await sequelize.sync({ force, alter: !force });
+      } finally {
+        if (isMysql) {
+          await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+        }
+      }
+
+      console.log(
+        force
+          ? "📦 Base de datos recreada (DB_SYNC_FORCE=true)"
+          : "📦 Base de datos sincronizada exitosamente"
+      );
+```
+
+![](images/clipboard-3168607829.png)
+
+- `DB_SYNC_FORCE` **no** se agrega al `.env`. Por defecto no existe, así que el comportamiento es `alter: true`, igual que antes.
+
+- ⚠️ Si algún día corres `DB_SYNC_FORCE=true npm run dev`, se **borran y recrean todas las tablas con sus datos**. Úsalo solo cuando quieras empezar la BD desde cero.
+
+```         
+npx tsc --noEmit
+```
+
+### 12.6 Seeder + Swagger Doctor
+
+#### 12.6.a `doctor.seeder.ts` (archivo nuevo)
+
+![](images/clipboard-2527936000.png)
+
+#### 12.6.b PARCHE — `src/database/seeders/counts.ts`
+
+**1. Dentro de** `SeedCounts`, **reemplazar** la línea:
+
+``` typescript
+  // doctors?: number;
+```
+
+**por:**
+
+``` typescript
+  doctors: number;
+```
+
+![](images/clipboard-2720671105.png)
+
+**2. Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `specialties: 10,`, **añadir:**
+
+``` typescript
+  doctors: 15,
+```
+
+![](images/clipboard-984042910.png)
+
+**3. Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envSpecialties ...) { ... }` y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envDoctors = process.env.SEED_DOCTORS;
+  if (envDoctors !== undefined && envDoctors !== "") {
+    counts.doctors = Number(envDoctors);
+  }
+```
+
+![](images/clipboard-746242098.png)
+
+#### 12.6.c PARCHE — `src/database/seeders/index.ts` (runner)
+
+**1. Debajo de** `import "../../features/business/specialty/specialty.model";`, **añadir:**
+
+``` typescript
+import "../../features/business/doctor/doctor.model";
+```
+
+![](images/clipboard-3465110976.png)
+
+**2. Debajo de** `import { seedSpecialties } from "../../features/business/specialty/specialty.seeder";`, **añadir:**
+
+``` typescript
+import { seedDoctors } from "../../features/business/doctor/doctor.seeder";
+```
+
+![](images/clipboard-176202122.png)
+
+**3. Debajo de** `await seedSpecialties(counts.specialties);`, **añadir:**
+
+``` typescript
+  await seedDoctors(counts.doctors);
+```
+
+![](images/clipboard-1417754122.png)
+
+#### 12.6.d `doctor.swagger.ts` (archivo nuevo)
+
+![![](images/clipboard-722836965.png)](images/clipboard-4098916138.png)
+
+#### 12.6.e PARCHE — `src/swagger/index.ts` (registry)
+
+**1. Debajo de** `import { specialtySwagger } from "../features/business/specialty/specialty.swagger";`, **añadir:**
+
+``` typescript
+import { doctorSwagger } from "../features/business/doctor/doctor.swagger";
+```
+
+![](images/clipboard-3618266313.png)
+
+**2. Dentro de** `featureSwaggerModules`, **reemplazar** la línea:
+
+``` typescript
+  // doctorSwagger,
+```
+
+**por:**
+
+``` typescript
+  doctorSwagger,
+```
+
+![](images/clipboard-4193049817.png)
+
+#### Verificación ISS-07
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed
+```
+
+> Esperado: `📊 Conteos: { patients: 10, specialties: 10, doctors: 15 }`, luego `⏭️` para patients y specialties (ya tienen filas) y `✅ doctors: insertados 15`.
+
+![](images/clipboard-2571746492.png)
+
+**Con `npm run dev` corriendo:**
+
+``` bash
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/doctors
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/doctors \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Dra. Laura Ríos","description":"Pediatra","status":"active"}'
+```
+
+> En [**http://localhost:4000/api/docs**](http://localhost:4000/api/docs) deben aparecer tres grupos: Patients, Specialties y Doctors.
+
+![](images/clipboard-2948459209.png)
+
+#### Cierre del ISS
+
+![![](images/clipboard-917540823.png)](images/clipboard-2643533845.png)

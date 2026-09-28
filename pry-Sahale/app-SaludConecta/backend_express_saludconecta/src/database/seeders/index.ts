@@ -2,8 +2,10 @@ import dotenv from "dotenv";
 import { sequelize, testConnection } from "../db";
 import "../../features/business/patient/patient.model";
 import "../../features/business/specialty/specialty.model";
+import "../../features/business/doctor/doctor.model";
 import { seedPatients } from "../../features/business/patient/patient.seeder";
 import { seedSpecialties } from "../../features/business/specialty/specialty.seeder";
+import { seedDoctors } from "../../features/business/doctor/doctor.seeder";
 import { resolveSeedCounts } from "./counts";
 
 dotenv.config();
@@ -34,6 +36,7 @@ export async function runAllSeeders(): Promise<void> {
   // Orden: business (padres → hijos)
   await seedPatients(counts.patients);
   await seedSpecialties(counts.specialties);
+  await seedDoctors(counts.doctors);
 
   console.log("🌱 SeedersRunner finalizado");
 }

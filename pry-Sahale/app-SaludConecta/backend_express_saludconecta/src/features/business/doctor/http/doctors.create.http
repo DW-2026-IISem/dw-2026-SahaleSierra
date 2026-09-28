@@ -1,0 +1,13 @@
+### Feature Doctor — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createDoctor
+POST {{baseUrl}}/api/doctors
+Content-Type: application/json
+
+{
+  "name": "Dr. Carlos Gómez",
+  "description": "Médico de consulta externa, 10 años de experiencia",
+  "status": "active"
+}

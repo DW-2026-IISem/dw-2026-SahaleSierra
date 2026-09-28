@@ -5,6 +5,7 @@ var cors = require("cors");
 import { sequelize, getDatabaseInfo, testConnection } from "../database/db";
 import "../features/business/patient/patient.model";
 import "../features/business/specialty/specialty.model";
+import "../features/business/doctor/doctor.model";
 import { Routes } from "../routes/index";
 import { setupSwagger } from "../swagger/index";
 
@@ -37,6 +38,7 @@ export class App {
   private routes(): void {
     this.routePrv.patientRoutes.routes(this.app);
     this.routePrv.specialtyRoutes.routes(this.app);
+    this.routePrv.doctorRoutes.routes(this.app);
   }
   
   private docs(): void {
@@ -56,10 +58,28 @@ export class App {
         throw new Error(`No se pudo conectar a la base de datos ${dbInfo.engine.toUpperCase()}`);
       }
 
-      // alter: true actualiza columnas faltantes (ej. createdAt/updatedAt tras timestamps: true).
-      // force: false no recrea tablas; no borra datos. En producción preferir migraciones.
-      await sequelize.sync({ force: false, alter: true });
-      console.log(`📦 Base de datos sincronizada exitosamente`);
+      // Lab: sync crea/altera tablas desde los modelos (BD limpia → snake_case desde cero).
+      const force = process.env.DB_SYNC_FORCE === "true";
+      const isMysql =
+        sequelize.getDialect() === "mysql" || sequelize.getDialect() === "mariadb";
+
+      if (isMysql) {
+        await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+      }
+      try {
+        await sequelize.sync({ force, alter: !force });
+      } finally {
+        if (isMysql) {
+          await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+        }
+      }
+
+      console.log(
+        force
+          ? "📦 Base de datos recreada (DB_SYNC_FORCE=true)"
+          : "📦 Base de datos sincronizada exitosamente"
+      );
+      
     } catch (error) {
       console.error("❌ Error al conectar con la base de datos:", error);
       process.exit(1); // Terminar la aplicación si no se puede conectar

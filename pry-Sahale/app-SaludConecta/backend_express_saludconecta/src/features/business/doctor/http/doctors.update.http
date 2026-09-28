@@ -1,0 +1,24 @@
+### Feature Doctor — UPDATE (PUT) / UPDATE (PATCH)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name updateDoctorPut
+PUT {{baseUrl}}/api/doctors/{{id}}
+Content-Type: application/json
+
+{
+  "name": "Dr. Carlos Gómez Ruiz",
+  "description": "Médico de consulta externa, 11 años de experiencia",
+  "status": "active"
+}
+
+###
+
+# @name updateDoctorPatch
+PATCH {{baseUrl}}/api/doctors/{{id}}
+Content-Type: application/json
+
+{
+  "description": "Descripción parcial"
+}
