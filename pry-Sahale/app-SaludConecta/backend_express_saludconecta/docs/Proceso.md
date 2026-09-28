@@ -179,3 +179,601 @@ import { Routes } from "../routes/index";
 #### Cierre del ISS
 
 ![](images/clipboard-2682909370.png)
+
+## 5. ISS-03-B — Feature Patient: GetAll y GetOne
+
+**Objetivo:** listar los pacientes activos y obtener uno por id.\
+**Bloqueado por:** ISS-03-A.\
+**Patrón del manual:** §5 (Client getAll / getOne).
+
+#### Criterios de aceptación (ISS-03-B)
+
+-  Controller: `getAll` (solo `status: 'active'`) y, debajo, `getOne`
+
+-  Rutas `GET /api/patients` y `GET /api/patients/:id`, **sin auth**
+
+-  `http/patients.get.http` con la leyenda **SIN AUTH**
+
+### 5.1 PARCHE — `patient.controller.ts` (ya existe)
+
+**Reemplazar** la línea:
+
+``` typescript
+  // (rellenar en ISS-03-B) getAll, luego getOne
+```
+
+que está **debajo de** `// ================== READ ==================` y **encima de** `// ================== CREATE ==================`, por:
+
+``` typescript
+  public async getAll(req: Request, res: Response) {
+    try {
+      const patients = await Patient.findAll({
+        where: { status: "active" },
+      });
+      res.status(200).json({ patients });
+    } catch (error) {
+      res.status(500).json({ error: "Error fetching patients", detail: String(error) });
+    }
+  }
+
+  public async getOne(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error fetching patient", detail: String(error) });
+    }
+  }
+```
+
+![](images/clipboard-3363550502.png)
+
+### 5.2 PARCHE — `patient.routes.ts` (ya existe)
+
+**Reemplazar** la línea:
+
+``` typescript
+    // (rellenar en ISS-03-B…E)
+```
+
+que está **debajo de** `// ================== RUTAS SIN AUTENTICACIÓN / SIN MIDDLEWARE JWT ==================`, por:
+
+``` typescript
+
+    // getAll
+    app
+      .route("/api/patients")
+      .get(this.patientController.getAll.bind(this.patientController));
+
+    // getOne
+    app
+      .route("/api/patients/:id")
+      .get(this.patientController.getOne.bind(this.patientController));
+```
+
+![](images/clipboard-40898889.png)
+
+### 5.3 HTTP — `patients.get.http` (archivo nuevo)
+
+![](images/clipboard-4020349463.png)
+
+#### Verificación ISS-03-B
+
+``` bash
+npx tsc --noEmit
+```
+
+#### Cierre del ISS
+
+![](images/clipboard-1939501548.png)
+
+## 6. ISS-03-C — Feature Patient: Crear paciente
+
+**Objetivo:** dar de alta pacientes vía API, después de getAll y getOne.\
+**Bloqueado por:** ISS-03-B.
+
+### 6.1 PARCHE — `patient.controller.ts`
+
+**Reemplazar** la línea:
+
+``` typescript
+  // (rellenar en ISS-03-C)
+```
+
+que está **debajo de** `// ================== CREATE ==================` y **encima de** `// ================== UPDATE ==================`, por:
+
+``` typescript
+  public async create(req: Request, res: Response) {
+    try {
+      const body = req.body as PatientI;
+      const patient = await Patient.create({
+        document_type: body.document_type,
+        document_number: body.document_number,
+        name: body.name,
+        birth_date: body.birth_date,
+        contact: body.contact,
+        status: body.status ?? "active",
+      });
+      res.status(201).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error creating patient", detail: String(error) });
+    }
+  }
+```
+
+![](images/clipboard-3323343671.png)
+
+### 6.2 PARCHE — `patient.routes.ts`
+
+**Debajo de** el bloque `// getOne` (después de su `.get(...getOne...)`), **añadir:**
+
+``` typescript
+
+    // create
+    app
+      .route("/api/patients")
+      .post(this.patientController.create.bind(this.patientController));
+```
+
+![](images/clipboard-2668392503.png)
+
+### 6.3 HTTP — `patients.create.http` (archivo nuevo)
+
+![](images/clipboard-1043081121.png)
+
+#### Verificación ISS-03-C
+
+``` bash
+npx tsc --noEmit
+```
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+curl -s -X POST http://localhost:4000/api/patients \
+  -H 'Content-Type: application/json' \
+  -d '{"document_type":"CC","document_number":"1009999999","name":"Ana","birth_date":"1992-03-15","contact":"3001","status":"active"}'
+```
+
+![](images/clipboard-2702754715.png)
+
+Debe responder `201` con `{"patient":{...}}`. Si repites el mismo `document_number`, responde `500` con `SequelizeUniqueConstraintError` en `detail`. Eso confirma que el `UNIQUE` funciona (el manual no hace un manejo especial de ese error).
+
+#### Cierre del ISS
+
+![](images/clipboard-1975044642.png)
+
+## 7. ISS-03-D — Feature Patient: Update (PUT) y Update (PATCH)
+
+**Objetivo:** actualización completa y parcial.\
+**Bloqueado por:** ISS-03-C.
+
+### 7.1 PARCHE — `patient.controller.ts`
+
+**Reemplazar** la línea:
+
+``` typescript
+  // (rellenar en ISS-03-D)
+```
+
+que está **debajo de** `// ================== UPDATE ==================` y **encima de** `// ================== DELETE ==================`, por:
+
+``` typescript
+  public async updatePut(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const body = req.body as PatientI;
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+
+      await patient.update({
+        document_type: body.document_type,
+        document_number: body.document_number,
+        name: body.name,
+        birth_date: body.birth_date,
+        contact: body.contact,
+        status: body.status ?? patient.status,
+      });
+
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error updating patient (PUT)", detail: String(error) });
+    }
+  }
+
+  public async updatePatch(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const body = req.body as Partial<PatientI>;
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+
+      await patient.update(body);
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error updating patient (PATCH)", detail: String(error) });
+    }
+  }
+```
+
+![](images/clipboard-12650692.png)
+
+### 7.2 PARCHE — `patient.routes.ts`
+
+**Debajo de** el bloque `// create`, **añadir:**
+
+``` typescript
+
+    // update (PUT / PATCH)
+    app
+      .route("/api/patients/:id")
+      .put(this.patientController.updatePut.bind(this.patientController))
+      .patch(this.patientController.updatePatch.bind(this.patientController));
+```
+
+![](images/clipboard-2253749818.png)
+
+### 7.3 HTTP — `patients.update.http` (archivo nuevo)
+
+![](images/clipboard-3784882951.png)
+
+#### Verificación ISS-03-D
+
+``` bash
+npx tsc --noEmit
+```
+
+Con el servidor corriendo:
+
+``` bash
+curl -s -X PUT http://localhost:4000/api/patients/1 -H 'Content-Type: application/json' \
+  -d '{"document_type":"CC","document_number":"1000000001","name":"Paciente Editado","birth_date":"1990-05-10","contact":"300","status":"active"}'
+curl -s -X PATCH http://localhost:4000/api/patients/1 -H 'Content-Type: application/json' \
+  -d '{"contact":"301"}'
+```
+
+![](images/clipboard-2751318739.png)
+
+#### Cierre del ISS
+
+![](images/clipboard-4025998821.png)
+
+## 8. ISS-03-E — Feature Patient: Eliminar (físico y lógico)
+
+**Objetivo:** borrado físico (`DELETE`) y lógico (`status = 'inactive'`).\
+**Bloqueado por:** ISS-03-D.
+
+### 8.1 PARCHE — `patient.controller.ts`
+
+**Reemplazar** la línea:
+
+``` typescript
+  // (rellenar en ISS-03-E)
+```
+
+que está **debajo de** `// ================== DELETE ==================`, por:
+
+``` typescript
+  /** Eliminación física */
+  public async deletePhysical(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      await patient.destroy();
+      res.status(200).json({ message: "Patient permanently deleted", id });
+    } catch (error) {
+      res.status(500).json({ error: "Error deleting patient", detail: String(error) });
+    }
+  }
+
+  /** Eliminación lógica → status = inactive */
+  public async deleteLogical(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      await patient.update({ status: "inactive" });
+      res.status(200).json({ message: "Patient deactivated (logical delete)", patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error deactivating patient", detail: String(error) });
+    }
+  }
+```
+
+![](images/clipboard-4069456980.png)
+
+### 8.2 PARCHE — `patient.routes.ts`
+
+**Debajo de** el bloque `// update (PUT / PATCH)`, **añadir:**
+
+``` typescript
+
+    // delete físico
+    app
+      .route("/api/patients/:id")
+      .delete(this.patientController.deletePhysical.bind(this.patientController));
+
+    // delete lógico
+    app
+      .route("/api/patients/:id/deactivate")
+      .patch(this.patientController.deleteLogical.bind(this.patientController));
+```
+
+![](images/clipboard-1511939929.png)
+
+### 8.3 HTTP — `patients.delete.http` (archivo nuevo)
+
+![](images/clipboard-2404679656.png)
+
+#### 8.4 Estado final consolidado — `patient.controller.ts`
+
+``` bash
+: > src/features/business/patient/patient.controller.ts
+cat >> src/features/business/patient/patient.controller.ts << 'EOF'
+import { Request, Response } from "express";
+import { Patient, PatientI } from "./patient.model";
+
+function paramId(req: Request): number {
+  const raw = req.params.id;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return Number(value);
+}
+
+export class PatientController {
+  // ================== READ ==================
+  public async getAll(req: Request, res: Response) {
+    try {
+      const patients = await Patient.findAll({
+        where: { status: "active" },
+      });
+      res.status(200).json({ patients });
+    } catch (error) {
+      res.status(500).json({ error: "Error fetching patients", detail: String(error) });
+    }
+  }
+
+  public async getOne(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error fetching patient", detail: String(error) });
+    }
+  }
+
+  // ================== CREATE ==================
+  public async create(req: Request, res: Response) {
+    try {
+      const body = req.body as PatientI;
+      const patient = await Patient.create({
+        document_type: body.document_type,
+        document_number: body.document_number,
+        name: body.name,
+        birth_date: body.birth_date,
+        contact: body.contact,
+        status: body.status ?? "active",
+      });
+      res.status(201).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error creating patient", detail: String(error) });
+    }
+  }
+
+  // ================== UPDATE ==================
+  public async updatePut(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const body = req.body as PatientI;
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+
+      await patient.update({
+        document_type: body.document_type,
+        document_number: body.document_number,
+        name: body.name,
+        birth_date: body.birth_date,
+        contact: body.contact,
+        status: body.status ?? patient.status,
+      });
+
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error updating patient (PUT)", detail: String(error) });
+    }
+  }
+
+  public async updatePatch(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const body = req.body as Partial<PatientI>;
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+
+      await patient.update(body);
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error updating patient (PATCH)", detail: String(error) });
+    }
+  }
+
+  // ================== DELETE ==================
+  /** Eliminación física */
+  public async deletePhysical(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      await patient.destroy();
+      res.status(200).json({ message: "Patient permanently deleted", id });
+    } catch (error) {
+      res.status(500).json({ error: "Error deleting patient", detail: String(error) });
+    }
+  }
+
+  /** Eliminación lógica → status = inactive */
+  public async deleteLogical(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+      await patient.update({ status: "inactive" });
+      res.status(200).json({ message: "Patient deactivated (logical delete)", patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error deactivating patient", detail: String(error) });
+    }
+  }
+}
+EOF
+```
+
+#### 8.5 Estado final consolidado — `patient.routes.ts`
+
+``` bash
+: > src/features/business/patient/patient.routes.ts
+cat >> src/features/business/patient/patient.routes.ts << 'EOF'
+import { Application } from "express";
+import { PatientController } from "./patient.controller";
+
+export class PatientRoutes {
+  public patientController: PatientController = new PatientController();
+
+  public routes(app: Application): void {
+    // ================== RUTAS SIN AUTENTICACIÓN / SIN MIDDLEWARE JWT ==================
+
+    // getAll
+    app
+      .route("/api/patients")
+      .get(this.patientController.getAll.bind(this.patientController));
+
+    // getOne
+    app
+      .route("/api/patients/:id")
+      .get(this.patientController.getOne.bind(this.patientController));
+
+    // create
+    app
+      .route("/api/patients")
+      .post(this.patientController.create.bind(this.patientController));
+
+    // update (PUT / PATCH)
+    app
+      .route("/api/patients/:id")
+      .put(this.patientController.updatePut.bind(this.patientController))
+      .patch(this.patientController.updatePatch.bind(this.patientController));
+
+    // delete físico
+    app
+      .route("/api/patients/:id")
+      .delete(this.patientController.deletePhysical.bind(this.patientController));
+
+    // delete lógico
+    app
+      .route("/api/patients/:id/deactivate")
+      .patch(this.patientController.deleteLogical.bind(this.patientController));
+  }
+}
+EOF
+```
+
+#### Verificación ISS-03-E
+
+``` bash
+npx tsc --noEmit
+```
+
+Con el servidor corriendo, en este orden (primero la baja lógica, luego la física, como en el manual):
+
+``` bash
+curl -s -X PATCH http://localhost:4000/api/patients/1/deactivate
+curl -s http://localhost:4000/api/patients
+curl -s -X DELETE http://localhost:4000/api/patients/1
+curl -s http://localhost:4000/api/patients/1
+```
+
+>  Después de la baja lógica, `GET /api/patients` ya no lista el id 1 porque solo muestra `active`. Después del DELETE, `GET /api/patients/1` responde 404.
+
+![](images/clipboard-3894485331.png)
+
+#### Cierre del ISS
+
+![](images/clipboard-1105693956.png)
+
+## 9. ISS-04 — Seeders con Faker (feature + runner externo)
+
+**Objetivo:** generar datos falsos de Patient con Faker, más un orquestador externo que ejecuta todos los seeders con una cantidad configurable por entidad.\
+**Bloqueado por:** ISS-03-A (modelo). Se recomienda hacerlo después de ISS-03-E.
+
+### 9.1 Seeder dentro del feature Patient
+
+#### 9.1.a Dependencia
+
+Es infraestructura genérica, así que va igual que en el manual:
+
+``` bash
+npm install -D @faker-js/faker@^10.6.0
+```
+
+#### 9.1.b `patient.seeder.ts` (archivo nuevo)
+
+![](images/clipboard-3596340159.png)
+
+### 9.2 SeedersRunner + conteos por entidad (`database/seeders`)
+
+#### 9.2.1 `counts.ts` (archivo nuevo)
+
+![](images/clipboard-3429447933.png)
+
+#### 9.2.2 `index.ts`, el runner (archivo nuevo)
+
+![](images/clipboard-3180642736.png)
+
+#### 9.2.3 PARCHE — `package.json` (script `db:seed`)
+
+Dentro de `"scripts"`, debajo de `"dev"`, se agrega la clave `db:seed`:
+
+``` bash
+npm pkg set "scripts.db:seed=ts-node -- src/database/seeders/index.ts"
+```
+
+Estado esperado:
+
+![](images/clipboard-4104031887.png)
+
+![](images/clipboard-496619547.png)
+
+![](images/clipboard-794612193.png)
