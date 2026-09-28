@@ -34,7 +34,6 @@ Patient.init(
     document_number: {
       type: DataTypes.STRING,
       allowNull: true,
-      unique: true,
       validate: {
         notEmpty: { msg: "Document number cannot be empty" },
       },
@@ -63,7 +62,14 @@ Patient.init(
   {
     sequelize,
     modelName: "Patient",
-    tableName: "patients",
+     tableName: "patients",
     timestamps: true,
+    indexes: [
+      {
+        name: "patients_document_number_unique",
+        unique: true,
+        fields: ["document_number"],
+      },
+    ],
   }
 );
