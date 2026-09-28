@@ -53,7 +53,47 @@ export class PatientController {
   }
 
   // ================== UPDATE ==================
-  // (rellenar en ISS-03-D)
+    public async updatePut(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const body = req.body as PatientI;
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+
+      await patient.update({
+        document_type: body.document_type,
+        document_number: body.document_number,
+        name: body.name,
+        birth_date: body.birth_date,
+        contact: body.contact,
+        status: body.status ?? patient.status,
+      });
+
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error updating patient (PUT)", detail: String(error) });
+    }
+  }
+
+  public async updatePatch(req: Request, res: Response) {
+    try {
+      const id = paramId(req);
+      const body = req.body as Partial<PatientI>;
+      const patient = await Patient.findByPk(id);
+      if (!patient) {
+        res.status(404).json({ error: "Patient not found" });
+        return;
+      }
+
+      await patient.update(body);
+      res.status(200).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error updating patient (PATCH)", detail: String(error) });
+    }
+  }
 
   // ================== DELETE ==================
   // (rellenar en ISS-03-E)

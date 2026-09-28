@@ -21,5 +21,11 @@ export class PatientRoutes {
     app
       .route("/api/patients")
       .post(this.patientController.create.bind(this.patientController));
+
+    // update (PUT / PATCH)
+    app
+      .route("/api/patients/:id")
+      .put(this.patientController.updatePut.bind(this.patientController))
+      .patch(this.patientController.updatePatch.bind(this.patientController));
   }
 }
