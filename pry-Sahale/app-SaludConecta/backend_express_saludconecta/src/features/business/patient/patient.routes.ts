@@ -16,5 +16,10 @@ export class PatientRoutes {
     app
       .route("/api/patients/:id")
       .get(this.patientController.getOne.bind(this.patientController));
+    
+    // create
+    app
+      .route("/api/patients")
+      .post(this.patientController.create.bind(this.patientController));
   }
 }

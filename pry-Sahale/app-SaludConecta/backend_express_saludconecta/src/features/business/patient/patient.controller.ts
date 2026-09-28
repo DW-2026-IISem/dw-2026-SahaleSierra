@@ -35,7 +35,22 @@ export class PatientController {
   }
 
   // ================== CREATE ==================
-  // (rellenar en ISS-03-C)
+   public async create(req: Request, res: Response) {
+    try {
+      const body = req.body as PatientI;
+      const patient = await Patient.create({
+        document_type: body.document_type,
+        document_number: body.document_number,
+        name: body.name,
+        birth_date: body.birth_date,
+        contact: body.contact,
+        status: body.status ?? "active",
+      });
+      res.status(201).json({ patient });
+    } catch (error) {
+      res.status(500).json({ error: "Error creating patient", detail: String(error) });
+    }
+  }
 
   // ================== UPDATE ==================
   // (rellenar en ISS-03-D)

@@ -1,0 +1,16 @@
+### Feature Patient — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createPatient
+POST {{baseUrl}}/api/patients
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "1001234567",
+  "name": "Ana Pérez",
+  "birth_date": "1992-03-15",
+  "contact": "3001234567",
+  "status": "active"
+}
