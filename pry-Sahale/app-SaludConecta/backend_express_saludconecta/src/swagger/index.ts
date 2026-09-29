@@ -7,6 +7,7 @@ import { doctorSpecialtySwagger } from "../features/business/doctor-specialty/do
 import { serviceSwagger } from "../features/business/service/service.swagger";
 import { agendaSwagger } from "../features/business/agenda/agenda.swagger";
 import { appointmentSwagger } from "../features/business/appointment/appointment.swagger";
+import { clinicalRecordSwagger } from "../features/business/clinical-record/clinical-record.swagger";
 
 
 
@@ -28,6 +29,7 @@ const featureSwaggerModules: FeatureSwaggerModule[] = [
   serviceSwagger,
   agendaSwagger,
   appointmentSwagger,
+  clinicalRecordSwagger,
 
 ];
 

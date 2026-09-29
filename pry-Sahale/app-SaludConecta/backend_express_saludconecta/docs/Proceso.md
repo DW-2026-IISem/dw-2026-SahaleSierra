@@ -2307,3 +2307,239 @@ curl -s -w "\n%{http_code}\n" -X PATCH http://localhost:4000/api/appointments/ID
 ![](images/clipboard-1585878503.png)
 
 ![](images/clipboard-329460774.png)
+
+## **17. ISS-12 — Feature ClinicalRecord (historias clínicas)**
+
+**Objetivo:** historia clínica con relación **1:1** con Patient (`patient_id` único), CRUD, consulta por paciente, relación, seeder y swagger. **Bloqueado por:** ISS-03 (Patient). Va **antes** de Encounter (ISS-14) porque Encounter tiene FK a `clinical_records`. **API:** `/api/clinical-records`, **SIN AUTH**. **Patrón del manual:** Client (CRUD raíz) + FK con `assert…` (Product) + unicidad del par, como en ISS-08.
+
+### **17.1 Modelo ClinicalRecord**
+
+#### **17.1.a `clinical-record.model.ts`**
+
+![](images/clipboard-3533520416.png)
+
+### **17.2 Controller + routes**
+
+#### **17.2.a `clinical-record.controller.ts`**
+
+![](images/clipboard-390955367.png)
+
+![](images/clipboard-3407615602.png)
+
+#### **17.2.b `clinical-record.routes.ts`**
+
+![](images/clipboard-3660240493.png)
+
+### **17.3 HTTP**
+
+#### **17.3.a `clinical-records.get.http`**
+
+![](images/clipboard-3455243503.png)
+
+#### **17.3.b `clinical-records.create.http`**
+
+![](images/clipboard-236219179.png)
+
+#### **17.3.c `clinical-records.update.http`**
+
+![](images/clipboard-3277199466.png)
+
+#### **17.3.d `clinical-records.delete.http`**
+
+![](images/clipboard-221682766.png)
+
+### **17.4 Cableado Routes + Config**
+
+#### **17.4.a PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { AppointmentRoutes } from "../features/business/appointment/appointment.routes";`, **añadir:**
+
+``` typescript
+import { ClinicalRecordRoutes } from "../features/business/clinical-record/clinical-record.routes"; 
+```
+
+![](images/clipboard-244275973.png)
+
+**2.** **Dentro de** `Routes`, **debajo de** `public appointmentRoutes: AppointmentRoutes = new AppointmentRoutes();`, **añadir:**
+
+``` typescript
+  public clinicalRecordRoutes: ClinicalRecordRoutes = new ClinicalRecordRoutes(); 
+```
+
+![](images/clipboard-2509357317.png)
+
+#### **17.4.b PARCHE — `src/config/index.ts` (modelo + ruta)**
+
+**1.** **Debajo de** `import "../features/business/appointment/appointment.model";` (bloque de modelos, **encima de** los imports `.associations`), **añadir:**
+
+``` typescript
+import "../features/business/clinical-record/clinical-record.model"; 
+```
+
+![](images/clipboard-3159251273.png)
+
+**2.** **Dentro de** `routes()`, **debajo de** `this.routePrv.appointmentRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.clinicalRecordRoutes.routes(this.app); 
+```
+
+![](images/clipboard-2452180830.png)
+
+### **17.5 Relaciones (obligatorio al cerrar la tabla)**
+
+#### **17.5.a `clinical-record.associations.ts`**
+
+![](images/clipboard-3357873868.png)
+
+#### **17.5.b PARCHE — `src/config/index.ts` (asociaciones)**
+
+**Debajo de** `import "../features/business/appointment/appointment.associations";` (y **encima de** `import { Routes } ...`), **añadir:**
+
+``` typescript
+import "../features/business/clinical-record/clinical-record.associations"; 
+```
+
+![](images/clipboard-3381433133.png)
+
+### **17.6 Seeder + Swagger ClinicalRecord**
+
+#### **17.6.a `clinical-record.seeder.ts`**
+
+![](images/clipboard-4258130114.png)
+
+#### **17.6.b PARCHE — `src/database/seeders/counts.ts`**
+
+**1.** **Dentro de** `SeedCounts`, **debajo de** `appointments: number;`, **añadir:**
+
+``` typescript
+  clinical_records: number; 
+```
+
+![](images/clipboard-4130892346.png)
+
+**2.** **Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `appointments: 20,`, **añadir:**
+
+``` typescript
+  clinical_records: 10, 
+```
+
+![](images/clipboard-1450388770.png)
+
+**3.** **Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envAppointments ...) { ... }` (su llave de cierre) y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envClinicalRecords = process.env.SEED_CLINICAL_RECORDS;
+  if (envClinicalRecords !== undefined && envClinicalRecords !== "") {
+    counts.clinical_records = Number(envClinicalRecords);
+  }
+```
+
+![](images/clipboard-1421241730.png)
+
+#### **17.6.c PARCHE — `src/database/seeders/index.ts` (runner)**
+
+**1.** **Debajo de** `import "../../features/business/appointment/appointment.model";` (bloque de modelos), **añadir:**
+
+``` typescript
+import "../../features/business/clinical-record/clinical-record.model"; 
+```
+
+![](images/clipboard-3596462761.png)
+
+**2.** **Debajo de** `import "../../features/business/appointment/appointment.associations";`, **añadir:**
+
+``` typescript
+import "../../features/business/clinical-record/clinical-record.associations"; 
+```
+
+![](images/clipboard-578732673.png)
+
+**3.** **Debajo de** `import { seedAppointments } from "../../features/business/appointment/appointment.seeder";`, **añadir:**
+
+``` typescript
+import { seedClinicalRecords } from "../../features/business/clinical-record/clinical-record.seeder"; 
+```
+
+![](images/clipboard-3495788989.png)
+
+**4.** **Dentro de** `runAllSeeders()`, **debajo de** `await seedAppointments(counts.appointments);`, **añadir:**
+
+``` typescript
+  await seedClinicalRecords(counts.clinical_records); 
+```
+
+![](images/clipboard-2839663071.png)
+
+#### **17.6.d `clinical-record.swagger.ts`**
+
+![](images/clipboard-2959084137.png)
+
+![](images/clipboard-2957262018.png)
+
+![](images/clipboard-1494446279.png)
+
+#### **17.6.e PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { appointmentSwagger } from "../features/business/appointment/appointment.swagger";`, **añadir:**
+
+``` typescript
+import { clinicalRecordSwagger } from "../features/business/clinical-record/clinical-record.swagger"; 
+```
+
+![](images/clipboard-3933879850.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **debajo de** `appointmentSwagger,`, **añadir:**
+
+``` typescript
+  clinicalRecordSwagger, 
+```
+
+![](images/clipboard-3692653472.png)
+
+#### **Verificación ISS-12**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> Esperado: `clinical_records: 10` y `✅ clinical_records: insertados N` (N = mínimo entre 10 y los pacientes activos).
+
+![](images/clipboard-2771070247.png)
+
+**Con `npm run dev` corriendo:**
+
+``` bash
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/clinical-records
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/clinical-records/patient/1
+```
+
+> Si el paciente 1 tiene historia, `200`; si no, `404` con `"Clinical record not found for this patient"`.
+
+![](images/clipboard-2592405242.png)
+
+Prueba del 1:1 (usa un `patient_id` que **ya** tenga historia):
+
+``` bash
+ curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/clinical-records \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Duplicada","patient_id":10}'
+```
+
+> `400` con `"Patient already has a clinical record"` y el `id` existente.
+
+![](images/clipboard-2507721194.png)
+
+Índice único (debe salir **una sola** fila, también tras reiniciar el servidor varias veces):
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW INDEX FROM clinical_records WHERE Column_name = 'patient_id';" 
+```
+
+![](images/clipboard-1526955791.png)
+
+### **Cierre del ISS**
+
+![![](images/clipboard-444415685.png)](images/clipboard-3935348933.png)

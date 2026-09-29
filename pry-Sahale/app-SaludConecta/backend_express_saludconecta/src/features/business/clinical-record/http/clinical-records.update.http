@@ -1,0 +1,24 @@
+### Feature ClinicalRecord — UPDATE (PUT) / UPDATE (PATCH)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name updateClinicalRecordPut
+PUT {{baseUrl}}/api/clinical-records/{{id}}
+Content-Type: application/json
+
+{
+  "name": "Historia clínica — Ana Pérez",
+  "description": "Antecedente de hipertensión arterial controlada",
+  "status": "active"
+}
+
+###
+
+# @name updateClinicalRecordPatch
+PATCH {{baseUrl}}/api/clinical-records/{{id}}
+Content-Type: application/json
+
+{
+  "description": "Alergia a la penicilina"
+}

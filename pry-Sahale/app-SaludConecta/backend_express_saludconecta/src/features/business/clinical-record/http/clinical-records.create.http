@@ -1,0 +1,14 @@
+### Feature ClinicalRecord — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createClinicalRecord
+POST {{baseUrl}}/api/clinical-records
+Content-Type: application/json
+
+{
+  "name": "Historia clínica — Ana Pérez",
+  "description": "Sin antecedentes patológicos relevantes",
+  "patient_id": 1,
+  "status": "active"
+}

@@ -1,0 +1,17 @@
+### Feature ClinicalRecord — GET ALL / GET ONE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name getAllClinicalRecords
+GET {{baseUrl}}/api/clinical-records
+
+###
+
+# @name getOneClinicalRecord
+GET {{baseUrl}}/api/clinical-records/{{id}}
+
+###
+
+# @name getClinicalRecordByPatient
+GET {{baseUrl}}/api/clinical-records/patient/{{id}}
