@@ -1,0 +1,12 @@
+### Feature Service — DELETE físico / DELETE lógico (status = inactive)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name deleteServicePhysical
+DELETE {{baseUrl}}/api/services/{{id}}
+
+###
+
+# @name deleteServiceLogical
+PATCH {{baseUrl}}/api/services/{{id}}/deactivate

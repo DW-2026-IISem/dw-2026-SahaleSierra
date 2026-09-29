@@ -1472,7 +1472,7 @@ import "../features/business/doctor-specialty/doctor-specialty.associations";
 grep -n "features/business" src/config/index.ts
 ```
 
->  Orden esperado: patient.model → specialty.model → doctor.model → doctor-specialty.model → doctor-specialty.associations.
+> Orden esperado: patient.model → specialty.model → doctor.model → doctor-specialty.model → doctor-specialty.associations.
 
 ![](images/clipboard-960312584.png)
 
@@ -1606,7 +1606,7 @@ import { doctorSpecialtySwagger } from "../features/business/doctor-specialty/do
 npx tsc --noEmit npm run db:seed
 ```
 
->  Esperado: `📊 Conteos: { patients: 10, specialties: 10, doctors: 15, doctor_specialties: 12 }` y `✅ doctor_specialties: insertados 12`.
+> Esperado: `📊 Conteos: { patients: 10, specialties: 10, doctors: 15, doctor_specialties: 12 }` y `✅ doctor_specialties: insertados 12`.
 
 ![](images/clipboard-3515098646.png)
 
@@ -1616,7 +1616,7 @@ npx tsc --noEmit npm run db:seed
 mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW CREATE TABLE doctor_specialties\G"
 ```
 
->  Deben aparecer `FOREIGN KEY (doctor_id) REFERENCES doctors (id)`, `FOREIGN KEY (specialty_id) REFERENCES specialties (id)` y `UNIQUE KEY doctor_specialties_doctor_id_specialty_id_unique (doctor_id, specialty_id)`.
+> Deben aparecer `FOREIGN KEY (doctor_id) REFERENCES doctors (id)`, `FOREIGN KEY (specialty_id) REFERENCES specialties (id)` y `UNIQUE KEY doctor_specialties_doctor_id_specialty_id_unique (doctor_id, specialty_id)`.
 
 ![](images/clipboard-303358699.png)
 
@@ -1653,3 +1653,196 @@ npm run dev
 ![](images/clipboard-3613196036.png)
 
 ![](images/clipboard-1903178759.png)
+
+## 14. ISS-09 — Feature Service (servicios)
+
+**Objetivo:** CRUD + seeder + swagger de Service, un catálogo simple sin FK.\
+**Bloqueado por:** ISS-08.\
+**API:** `/api/services`, **SIN AUTH**.\
+**Patrón del manual:** ProductType (§11.1–11.6), igual que Specialty en ISS-06.
+
+#### 14.1 Modelo Service
+
+![](images/clipboard-2025431553.png)
+
+### 14.2 Controller + routes
+
+#### 14.2.a `service.controller.ts`
+
+![](images/clipboard-830644158.png)
+
+#### 14.2.b `service.routes.ts`
+
+![](images/clipboard-3047487996.png)
+
+### 14.3 HTTP
+
+#### 14.3.a `services.get.http`
+
+![](images/clipboard-4203127800.png)
+
+#### 14.3.b `services.create.http`
+
+![](images/clipboard-3314790484.png)
+
+#### 14.3.c `services.update.http`
+
+![](images/clipboard-286109110.png)
+
+#### 14.3.d `services.delete.http`
+
+![](images/clipboard-2774307527.png)
+
+### 14.4 Cableado Routes + Config
+
+#### 14.4.a PARCHE — `src/routes/index.ts`
+
+**1. Debajo de** `import { DoctorSpecialtyRoutes } from "../features/business/doctor-specialty/doctor-specialty.routes";`, **añadir:**
+
+``` typescript
+import { ServiceRoutes } from "../features/business/service/service.routes";
+```
+
+![](images/clipboard-876337061.png)
+
+**2. Dentro de** `Routes`, **debajo de** `public doctorSpecialtyRoutes: DoctorSpecialtyRoutes = new DoctorSpecialtyRoutes();`, **añadir:**
+
+``` typescript
+  public serviceRoutes: ServiceRoutes = new ServiceRoutes();
+```
+
+![](images/clipboard-3104060567.png)
+
+#### 14.4.b PARCHE — `src/config/index.ts`
+
+**1. Debajo de** `import "../features/business/doctor-specialty/doctor-specialty.model";` (y **encima de** `import "../features/business/doctor-specialty/doctor-specialty.associations";`), **añadir:**
+
+``` typescript
+import "../features/business/service/service.model";
+```
+
+> ![](images/clipboard-546192187.png)
+
+**2. Dentro de** `routes()`, **debajo de** `this.routePrv.doctorSpecialtyRoutes.routes(this.app);`, **añadir:**
+
+```         
+    this.routePrv.serviceRoutes.routes(this.app);
+```
+
+![](images/clipboard-3753364835.png)
+
+### 14.5 Seeder Service
+
+#### 14.5.a `service.seeder.ts`
+
+![](images/clipboard-939097638.png)
+
+#### 14.5.b PARCHE — `src/database/seeders/counts.ts`
+
+**1. Dentro de** `SeedCounts`, **debajo de** `doctor_specialties: number;`, **añadir:**
+
+``` typescript
+  services: number;
+```
+
+![](images/clipboard-1433314118.png)
+
+**2. Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `doctor_specialties: 12,`, **añadir:**
+
+``` typescript
+  services: 10,
+```
+
+![](images/clipboard-92040153.png)
+
+**3. Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envDoctorSpecialties ...) { ... }` y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envServices = process.env.SEED_SERVICES;
+  if (envServices !== undefined && envServices !== "") {
+    counts.services = Number(envServices);
+  }
+```
+
+![](images/clipboard-1560173970.png)
+
+#### 14.5.c PARCHE — `src/database/seeders/index.ts` (runner)
+
+**1. Debajo de** `import "../../features/business/doctor-specialty/doctor-specialty.model";` (y **encima de** su import de `.associations`), **añadir:**
+
+``` typescript
+import "../../features/business/service/service.model";
+```
+
+![](images/clipboard-2808292248.png)
+
+**2. Debajo de** `import { seedDoctorSpecialties } from "../../features/business/doctor-specialty/doctor-specialty.seeder";`, **añadir:**
+
+``` typescript
+import { seedServices } from "../../features/business/service/service.seeder";
+```
+
+![](images/clipboard-105079203.png)
+
+**3. Debajo de** `await seedDoctorSpecialties(counts.doctor_specialties);`, **añadir:**
+
+``` typescript
+  await seedServices(counts.services);
+```
+
+### ![](images/clipboard-1054835971.png)
+
+### 14.6 Swagger Service
+
+#### 14.6.a `service.swagger.ts`
+
+![](images/clipboard-4274892972.png)
+
+![](images/clipboard-2950721269.png)
+
+#### 14.6.b PARCHE — `src/swagger/index.ts` (registry)
+
+**1. Debajo de** `import { doctorSpecialtySwagger } from "../features/business/doctor-specialty/doctor-specialty.swagger";`, **añadir:**
+
+``` typescript
+import { serviceSwagger } from "../features/business/service/service.swagger";
+```
+
+![](images/clipboard-2271674548.png)
+
+**2. Dentro de** `featureSwaggerModules`, **debajo de** `doctorSpecialtySwagger,`, **añadir:**
+
+``` typescript
+  serviceSwagger,
+```
+
+![](images/clipboard-3195631886.png)
+
+#### Verificación ISS-09
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed
+```
+
+>  Esperado: `📊 Conteos: { ..., doctor_specialties: 12, services: 10 }` y `✅ services: insertados 10`.
+
+![](images/clipboard-1605310046.png)
+
+**Con `npm run dev` corriendo:**
+
+``` bash
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/services
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/services \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Holter 24 horas","description":"Monitoreo cardiaco ambulatorio","status":"active"}'
+```
+
+![](images/clipboard-4181361466.png)
+
+#### Cierre del ISS
+
+![](images/clipboard-3330534691.png)
+
+![](images/clipboard-2884272039.png)

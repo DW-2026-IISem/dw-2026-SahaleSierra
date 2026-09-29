@@ -1,0 +1,13 @@
+### Feature Service — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createService
+POST {{baseUrl}}/api/services
+Content-Type: application/json
+
+{
+  "name": "Consulta de medicina general",
+  "description": "Consulta ambulatoria de primera vez o control",
+  "status": "active"
+}

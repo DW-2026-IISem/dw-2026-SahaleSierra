@@ -1,0 +1,24 @@
+### Feature Service — UPDATE (PUT) / UPDATE (PATCH)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name updateServicePut
+PUT {{baseUrl}}/api/services/{{id}}
+Content-Type: application/json
+
+{
+  "name": "Consulta de medicina general (control)",
+  "description": "Consulta ambulatoria de control",
+  "status": "active"
+}
+
+###
+
+# @name updateServicePatch
+PATCH {{baseUrl}}/api/services/{{id}}
+Content-Type: application/json
+
+{
+  "description": "Descripción parcial"
+}
