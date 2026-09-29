@@ -1381,3 +1381,275 @@ curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/doctors \
 #### Cierre del ISS
 
 ![![](images/clipboard-917540823.png)](images/clipboard-2643533845.png)
+
+## 13. ISS-08 — Feature DoctorSpecialty (pivote N:M médico ↔ especialidad)
+
+**Objetivo:** implementar la relación N:M Doctor ↔ Specialty con un feature propio `doctor-specialty/` (tabla `doctor_specialties`), con CRUD, asociaciones, seeder y swagger.\
+**Bloqueado por:** ISS-07 (Doctor) y ISS-06 (Specialty).\
+**API:** `/api/doctor-specialties`, **SIN AUTH**.\
+**Patrón del manual:** el feature `product-sale/` de ISS-08 (§13.1, 13.1b, 13.2b, 13.3b, 13.4b, 13.6b). La parte de Sale del manual corresponde a Cita (ISS-11), no a este ISS.
+
+### 13.1 Modelo y asociaciones
+
+#### 13.1.a `doctor-specialty.model.ts`
+
+![](images/clipboard-2655353377.png)
+
+#### 13.1.b `doctor-specialty.associations.ts`
+
+![](images/clipboard-2011277876.png)
+
+#### 13.2 Controller DoctorSpecialty
+
+![![](images/clipboard-2734909804.png)](images/clipboard-620016912.png)
+
+![](images/clipboard-587062383.png)
+
+### 13.3 Routes + HTTP
+
+#### 13.3.a `doctor-specialty.routes.ts`
+
+![](images/clipboard-3859400043.png)
+
+#### 13.3.b `doctor-specialties.get.http`
+
+![](images/clipboard-526382800.png)
+
+#### 13.3.c `doctor-specialties.create.http`
+
+![](images/clipboard-807634614.png)
+
+#### 13.3.d `doctor-specialties.update.http`
+
+![](images/clipboard-967993009.png)
+
+#### 13.3.e `doctor-specialties.delete.http`
+
+![](images/clipboard-1626449416.png)
+
+### 13.4 Cableado + relaciones
+
+#### 13.4.a PARCHE — `src/routes/index.ts`
+
+**1. Debajo de** `import { DoctorRoutes } from "../features/business/doctor/doctor.routes";`, **añadir:**
+
+``` typescript
+import { DoctorSpecialtyRoutes } from "../features/business/doctor-specialty/doctor-specialty.routes";
+```
+
+![](images/clipboard-3145334434.png)
+
+**2. Dentro de** `Routes`, **debajo de** `public doctorRoutes: DoctorRoutes = new DoctorRoutes();`, **añadir:**
+
+``` typescript
+  public doctorSpecialtyRoutes: DoctorSpecialtyRoutes = new DoctorSpecialtyRoutes();
+```
+
+![](images/clipboard-2343117070.png)
+
+#### 13.4.b PARCHE — `src/config/index.ts`
+
+**1. Debajo de** `import "../features/business/doctor/doctor.model";`, **añadir** el modelo y, justo debajo, sus asociaciones. Van encima de `import { Routes }`, como indica el manual en §12.5 y §13.5:
+
+``` typescript
+import "../features/business/doctor-specialty/doctor-specialty.model";
+import "../features/business/doctor-specialty/doctor-specialty.associations";
+```
+
+![](images/clipboard-3714236713.png)
+
+**2. Dentro de** `routes()`, **debajo de** `this.routePrv.doctorRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.doctorSpecialtyRoutes.routes(this.app);
+```
+
+![](images/clipboard-644098041.png)
+
+**Comprobación de que las asociaciones quedaron después de los tres modelos que usan:**
+
+``` bash
+grep -n "features/business" src/config/index.ts
+```
+
+>  Orden esperado: patient.model → specialty.model → doctor.model → doctor-specialty.model → doctor-specialty.associations.
+
+![](images/clipboard-960312584.png)
+
+### 13.5 Seeder + counts + runner
+
+#### 13.5.a `doctor-specialty.seeder.ts`
+
+![](images/clipboard-877576420.png)
+
+#### 13.5.b PARCHE — `src/database/seeders/counts.ts`
+
+**1. Dentro de** `SeedCounts`, **reemplazar** la línea:
+
+``` typescript
+  // doctor_specialties?: number;
+```
+
+**por:**
+
+``` typescript
+  doctor_specialties: number;
+```
+
+![](images/clipboard-505143214.png)
+
+**2. Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `doctors: 15,`, **añadir:**
+
+``` typescript
+  doctor_specialties: 12,
+```
+
+![](images/clipboard-572543308.png)
+
+**3. Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envDoctors ...) { ... }` y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envDoctorSpecialties = process.env.SEED_DOCTOR_SPECIALTIES;
+  if (envDoctorSpecialties !== undefined && envDoctorSpecialties !== "") {
+    counts.doctor_specialties = Number(envDoctorSpecialties);
+  }
+```
+
+![](images/clipboard-1673377857.png)
+
+#### 13.5.c PARCHE — `src/database/seeders/index.ts` (runner)
+
+**1. Debajo de** `import "../../features/business/doctor/doctor.model";`, **añadir:**
+
+``` typescript
+import "../../features/business/doctor-specialty/doctor-specialty.model"; 
+import "../../features/business/doctor-specialty/doctor-specialty.associations";
+```
+
+![](images/clipboard-302348298.png)
+
+**2. Debajo de** `import { seedDoctors } from "../../features/business/doctor/doctor.seeder";`, **añadir:**
+
+``` typescript
+import { seedDoctorSpecialties } from "../../features/business/doctor-specialty/doctor-specialty.seeder";
+```
+
+![](images/clipboard-2418679764.png)
+
+**3. Dentro de** `runAllSeeders()`, **reemplazar** la línea:
+
+``` typescript
+  await sequelize.sync({ force: false, alter: true });
+```
+
+**por el bloque del manual (§13.7), porque ya hay FKs:**
+
+``` typescript
+  const isMysql =
+    sequelize.getDialect() === "mysql" || sequelize.getDialect() === "mariadb";
+  if (isMysql) {
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+  }
+  try {
+    await sequelize.sync({ force: false, alter: true });
+  } finally {
+    if (isMysql) {
+      await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+    }
+  }
+```
+
+![](images/clipboard-1316473249.png)
+
+**4. Debajo de** `await seedDoctors(counts.doctors);`, **añadir:**
+
+``` typescript
+  await seedDoctorSpecialties(counts.doctor_specialties);
+```
+
+![](images/clipboard-2233492553.png)
+
+```         
+npx tsc --noEmit
+```
+
+### 13.6 Swagger DoctorSpecialty
+
+#### 13.6.a `doctor-specialty.swagger.ts`
+
+![](images/clipboard-456845312.png)
+
+![](images/clipboard-156882560.png)
+
+#### 13.6.b PARCHE — `src/swagger/index.ts` (registry)
+
+**1. Debajo de** `import { doctorSwagger } from "../features/business/doctor/doctor.swagger";`, **añadir:**
+
+``` typescript
+import { doctorSpecialtySwagger } from "../features/business/doctor-specialty/doctor-specialty.swagger";
+```
+
+![](images/clipboard-797831054.png)
+
+**2. Dentro de** `featureSwaggerModules`, **debajo de** `doctorSwagger,`, **añadir:**
+
+``` typescript
+  doctorSpecialtySwagger,
+```
+
+![](images/clipboard-1892067709.png)
+
+#### Verificación ISS-08
+
+``` bash
+npx tsc --noEmit npm run db:seed
+```
+
+>  Esperado: `📊 Conteos: { patients: 10, specialties: 10, doctors: 15, doctor_specialties: 12 }` y `✅ doctor_specialties: insertados 12`.
+
+![](images/clipboard-3515098646.png)
+
+**Revisa en la BD las FKs y el índice único con nombre:**
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW CREATE TABLE doctor_specialties\G"
+```
+
+>  Deben aparecer `FOREIGN KEY (doctor_id) REFERENCES doctors (id)`, `FOREIGN KEY (specialty_id) REFERENCES specialties (id)` y `UNIQUE KEY doctor_specialties_doctor_id_specialty_id_unique (doctor_id, specialty_id)`.
+
+![](images/clipboard-303358699.png)
+
+**Con `npm run dev` corriendo:**
+
+``` bash
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/doctor-specialties
+```
+
+![](images/clipboard-525966440.png)
+
+**Prueba del par repetido. Toma un `doctor_id` / `specialty_id` que ya salgan en el GET anterior:**
+
+``` bash
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/doctor-specialties \
+  -H 'Content-Type: application/json' \
+  -d '{"doctor_id":1,"specialty_id":1,"relation_data":"Prueba"}'
+```
+
+> Si el par ya existe, la respuesta es `400` con `"Doctor already has this specialty"`. Si no existe, es `201`. Repite el mismo comando para ver el `400`.
+>
+> ![](images/clipboard-3496712200.png)
+>
+> En **/api/docs** aparece el grupo **DoctorSpecialties**, y ya son 4 grupos en total.
+
+**Nota sobre el borrado físico de padres.** Ahora que existen FKs, un `DELETE /api/doctors/:id` o `/api/specialties/:id` de un registro que tenga relaciones en `doctor_specialties` queda sujeto a la regla ON DELETE que Sequelize puso en la FK (puedes verla en el `SHOW CREATE TABLE` de arriba). Según esa regla, se borran las relaciones en cascada o MySQL rechaza el borrado (500). En ambos casos, para médicos o especialidades con relaciones, lo indicado es la **baja lógica** (`/deactivate`).
+
+#### Cierre del ISS
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-3613196036.png)
+
+![](images/clipboard-1903178759.png)

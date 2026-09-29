@@ -1,0 +1,12 @@
+### Feature DoctorSpecialty — DELETE físico / DELETE lógico (status = inactive)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name deleteDoctorSpecialtyPhysical
+DELETE {{baseUrl}}/api/doctor-specialties/{{id}}
+
+###
+
+# @name deleteDoctorSpecialtyLogical
+PATCH {{baseUrl}}/api/doctor-specialties/{{id}}/deactivate

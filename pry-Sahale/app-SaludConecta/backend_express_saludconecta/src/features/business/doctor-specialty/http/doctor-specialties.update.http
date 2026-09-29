@@ -1,0 +1,23 @@
+### Feature DoctorSpecialty — UPDATE (PUT) / UPDATE (PATCH)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name updateDoctorSpecialtyPut
+PUT {{baseUrl}}/api/doctor-specialties/{{id}}
+Content-Type: application/json
+
+{
+  "relation_data": "Especialidad secundaria",
+  "status": "active"
+}
+
+###
+
+# @name updateDoctorSpecialtyPatch
+PATCH {{baseUrl}}/api/doctor-specialties/{{id}}
+Content-Type: application/json
+
+{
+  "relation_data": "Atiende martes y jueves"
+}

@@ -3,6 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import { patientSwagger } from "../features/business/patient/patient.swagger";
 import { specialtySwagger } from "../features/business/specialty/specialty.swagger";
 import { doctorSwagger } from "../features/business/doctor/doctor.swagger";
+import { doctorSpecialtySwagger } from "../features/business/doctor-specialty/doctor-specialty.swagger";
 
 export type FeatureSwaggerModule = {
   tags: unknown[];
@@ -18,6 +19,7 @@ const featureSwaggerModules: FeatureSwaggerModule[] = [
   patientSwagger,
   specialtySwagger,
   doctorSwagger,
+  doctorSpecialtySwagger,
 ];
 
 export function buildOpenApiDocument() {

@@ -1,0 +1,14 @@
+### Feature DoctorSpecialty — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createDoctorSpecialty
+POST {{baseUrl}}/api/doctor-specialties
+Content-Type: application/json
+
+{
+  "doctor_id": 1,
+  "specialty_id": 1,
+  "relation_data": "Especialidad principal",
+  "status": "active"
+}
