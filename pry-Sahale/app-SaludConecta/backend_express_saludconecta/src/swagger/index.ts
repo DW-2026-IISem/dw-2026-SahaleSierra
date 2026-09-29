@@ -6,6 +6,8 @@ import { doctorSwagger } from "../features/business/doctor/doctor.swagger";
 import { doctorSpecialtySwagger } from "../features/business/doctor-specialty/doctor-specialty.swagger";
 import { serviceSwagger } from "../features/business/service/service.swagger";
 import { agendaSwagger } from "../features/business/agenda/agenda.swagger";
+import { appointmentSwagger } from "../features/business/appointment/appointment.swagger";
+
 
 
 export type FeatureSwaggerModule = {
@@ -25,6 +27,7 @@ const featureSwaggerModules: FeatureSwaggerModule[] = [
   doctorSpecialtySwagger,
   serviceSwagger,
   agendaSwagger,
+  appointmentSwagger,
 
 ];
 

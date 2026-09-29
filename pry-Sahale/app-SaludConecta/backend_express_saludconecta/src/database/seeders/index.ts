@@ -6,14 +6,17 @@ import "../../features/business/doctor/doctor.model";
 import "../../features/business/doctor-specialty/doctor-specialty.model";
 import "../../features/business/service/service.model";
 import "../../features/business/agenda/agenda.model";
+import "../../features/business/appointment/appointment.model";
 import "../../features/business/doctor-specialty/doctor-specialty.associations";
 import "../../features/business/agenda/agenda.associations";
+import "../../features/business/appointment/appointment.associations";
 import { seedPatients } from "../../features/business/patient/patient.seeder";
 import { seedSpecialties } from "../../features/business/specialty/specialty.seeder";
 import { seedDoctors } from "../../features/business/doctor/doctor.seeder";
 import { seedDoctorSpecialties } from "../../features/business/doctor-specialty/doctor-specialty.seeder";
 import { seedServices } from "../../features/business/service/service.seeder";
 import { seedAgendas } from "../../features/business/agenda/agenda.seeder";
+import { seedAppointments } from "../../features/business/appointment/appointment.seeder";
 import { resolveSeedCounts } from "./counts";
 
 dotenv.config();
@@ -59,6 +62,7 @@ export async function runAllSeeders(): Promise<void> {
   await seedDoctorSpecialties(counts.doctor_specialties);
   await seedServices(counts.services);
   await seedAgendas(counts.agendas);
+  await seedAppointments(counts.appointments);
 
   console.log("🌱 SeedersRunner finalizado");
 }

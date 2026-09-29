@@ -1,0 +1,12 @@
+### Feature Appointment — GET ALL / GET ONE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name getAllAppointments
+GET {{baseUrl}}/api/appointments
+
+###
+
+# @name getOneAppointment
+GET {{baseUrl}}/api/appointments/{{id}}

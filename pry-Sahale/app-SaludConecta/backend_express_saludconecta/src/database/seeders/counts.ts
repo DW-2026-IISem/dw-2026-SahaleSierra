@@ -11,6 +11,7 @@ export type SeedCounts = {
   doctor_specialties: number;
   services: number;
   agendas: number;
+  appointments: number;
 
 };
 
@@ -21,6 +22,7 @@ export const DEFAULT_SEED_COUNTS: SeedCounts = {
   doctor_specialties: 12,
   services: 10,
   agendas: 15,
+  appointments: 20,
 
 };
 
@@ -55,6 +57,11 @@ export function resolveSeedCounts(argv: string[] = process.argv.slice(2)): SeedC
   const envAgendas = process.env.SEED_AGENDAS;
   if (envAgendas !== undefined && envAgendas !== "") {
     counts.agendas = Number(envAgendas);
+  }
+
+  const envAppointments = process.env.SEED_APPOINTMENTS;
+  if (envAppointments !== undefined && envAppointments !== "") {
+    counts.appointments = Number(envAppointments);
   }
 
 

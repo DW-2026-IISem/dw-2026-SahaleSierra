@@ -2077,3 +2077,233 @@ mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW CREATE T
 ![](images/clipboard-448079756.png)
 
 ![](images/clipboard-2502191711.png)
+
+## **16. ISS-11 — Feature Appointment (citas)**
+
+**Objetivo:** citas con FKs `agenda_id` y `patient_id`, create **transaccional** con validaciones de negocio, estado de negocio `state`, relaciones, seeder y swagger. **Bloqueado por:** ISS-10 (Agenda) y ISS-03 (Patient). **API:** `/api/appointments`, **SIN AUTH**. **Patrón del manual:** Sale (§13): cabecera transaccional con orquestación (`sequelize.transaction()`, `lock`, `rollback`).
+
+### **16.1 Modelo Appointment**
+
+#### **16.1.a `appointment.model.ts`**
+
+![](images/clipboard-3906753759.png)
+
+### **16.2 Controller + routes**
+
+#### **16.2.a `appointment.controller.ts`**
+
+![](images/clipboard-3756026930.png)
+
+![](images/clipboard-76632046.png)
+
+![](images/clipboard-2603480625.png)
+
+#### **16.2.b `appointment.routes.ts`**
+
+![](images/clipboard-1681541715.png)
+
+### **16.3 HTTP**
+
+#### **16.3.a `appointments.get.http`**
+
+![](images/clipboard-652127904.png)
+
+#### **16.3.b `appointments.create.http`**
+
+![](images/clipboard-1154989468.png)
+
+#### **16.3.c `appointments.update.http`**
+
+![](images/clipboard-3922306873.png)
+
+#### **16.3.d `appointments.delete.http`**
+
+![](images/clipboard-4174316757.png)
+
+### **16.4 Cableado Routes + Config**
+
+#### **16.4.a PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { AgendaRoutes } from "../features/business/agenda/agenda.routes";`, **añadir:**
+
+``` typescript
+import { AppointmentRoutes } from "../features/business/appointment/appointment.routes"; 
+```
+
+![](images/clipboard-641743269.png)
+
+**2.** **Dentro de** `Routes`, **debajo de** `public agendaRoutes: AgendaRoutes = new AgendaRoutes();`, **añadir:**
+
+``` typescript
+  public appointmentRoutes: AppointmentRoutes = new AppointmentRoutes(); 
+```
+
+![](images/clipboard-544953465.png)
+
+#### **16.4.b PARCHE — `src/config/index.ts` (modelo + ruta)**
+
+**1.** **Debajo de** `import "../features/business/agenda/agenda.model";` (bloque de modelos, **encima de** los imports `.associations`), **añadir:**
+
+``` typescript
+import "../features/business/appointment/appointment.model"; 
+```
+
+![](images/clipboard-3270949156.png)
+
+**2.** **Dentro de** `routes()`, **debajo de** `this.routePrv.agendaRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.appointmentRoutes.routes(this.app); 
+```
+
+![](images/clipboard-1478183322.png)
+
+### **16.5 Relaciones (obligatorio al cerrar la tabla)**
+
+#### **16.5.a `appointment.associations.ts`**
+
+![](images/clipboard-1176217339.png)
+
+#### **16.5.b PARCHE — `src/config/index.ts` (asociaciones)**
+
+**Debajo de** `import "../features/business/agenda/agenda.associations";` (y **encima de** `import { Routes } ...`), **añadir:**
+
+``` typescript
+import "../features/business/appointment/appointment.associations"; 
+```
+
+![](images/clipboard-2400390744.png)
+
+### **16.6 Seeder + Swagger Appointment**
+
+#### **16.6.a `appointment.seeder.ts`**
+
+![](images/clipboard-754374418.png)
+
+### **16.6.b PARCHE — `src/database/seeders/counts.ts`**
+
+**1.** **Dentro de** `SeedCounts`, **debajo de** `agendas: number;`, **añadir:**
+
+``` typescript
+  appointments: number; 
+```
+
+![](images/clipboard-3313044307.png)
+
+**2.** **Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `agendas: 15,`, **añadir:**
+
+``` typescript
+  appointments: 20, 
+```
+
+![](images/clipboard-962885524.png)
+
+**3.** **Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envAgendas ...) { ... }` (su llave de cierre) y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envAppointments = process.env.SEED_APPOINTMENTS;
+  if (envAppointments !== undefined && envAppointments !== "") {
+    counts.appointments = Number(envAppointments);
+  }
+```
+
+![](images/clipboard-731897678.png)
+
+### **16.6.c PARCHE — `src/database/seeders/index.ts` (runner)**
+
+**1.** **Debajo de** `import "../../features/business/agenda/agenda.model";` (bloque de modelos), **añadir:**
+
+``` typescript
+import "../../features/business/appointment/appointment.model"; 
+```
+
+![](images/clipboard-2811142543.png)
+
+**2.** **Debajo de** `import "../../features/business/agenda/agenda.associations";`, **añadir:**
+
+``` typescript
+import "../../features/business/appointment/appointment.associations"; 
+```
+
+![](images/clipboard-2967009020.png)
+
+**3.** **Debajo de** `import { seedAgendas } from "../../features/business/agenda/agenda.seeder";`, **añadir:**
+
+``` typescript
+import { seedAppointments } from "../../features/business/appointment/appointment.seeder"; 
+```
+
+![](images/clipboard-1054205611.png)
+
+**4.** **Dentro de** `runAllSeeders()`, **debajo de** `await seedAgendas(counts.agendas);`, **añadir:**
+
+``` typescript
+  await seedAppointments(counts.appointments); 
+```
+
+![](images/clipboard-1380240690.png)
+
+### **16.6.d `appointment.swagger.ts`**
+
+![![](images/clipboard-2360072257.png)](images/clipboard-1087054046.png)
+
+### **16.6.e PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { agendaSwagger } from "../features/business/agenda/agenda.swagger";`, **añadir:**
+
+``` typescript
+import { appointmentSwagger } from "../features/business/appointment/appointment.swagger"; 
+```
+
+![](images/clipboard-3485874918.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **debajo de** `agendaSwagger,`, **añadir:**
+
+``` typescript
+  appointmentSwagger, 
+```
+
+![](images/clipboard-3474580228.png)
+
+### **Verificación ISS-11**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> Esperado: `appointments: 20` en los conteos y `✅ appointments: insertados 20`.
+
+![](images/clipboard-1759599115.png)
+
+Con `npm run dev` corriendo. Usa un `agenda_id` y un `patient_id` activos (míralos con `curl -s http://localhost:4000/api/agendas` y `/api/patients`):
+
+``` bash
+ curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/appointments \
+  -H 'Content-Type: application/json' \
+  -d '{"agenda_id":1,"patient_id":4,"start_date":"2026-12-01T10:00:00","end_date":"2026-12-01T10:30:00","reason":"Prueba"}'
+```
+
+> `201`, con `"state":"scheduled"`. Si repites **el mismo** comando, responde `400` con `"Agenda already has an appointment in that time range"`: la regla de cruce funciona.
+
+![](images/clipboard-3863596145.png)
+
+Prueba de la regla del PDF (usa el `id` de la cita recién creada):
+
+``` bash
+curl -s -w "\n%{http_code}\n" -X PATCH http://localhost:4000/api/appointments/ID_DE_LA_CITA \
+  -H 'Content-Type: application/json' -d '{"state":"attended"}'
+```
+
+> `400` con `"State 'attended' is set only by POST /api/encounters (requires clinical record)"`.
+
+> En **/api/docs** aparece el grupo **Appointments**.
+
+![](images/clipboard-1055814489.png)
+
+### **Cierre del ISS**
+
+![](images/clipboard-1585878503.png)
+
+![](images/clipboard-329460774.png)
