@@ -3,6 +3,8 @@ import { SpecialtyRoutes } from "../features/business/specialty/specialty.routes
 import { DoctorRoutes } from "../features/business/doctor/doctor.routes";
 import { DoctorSpecialtyRoutes } from "../features/business/doctor-specialty/doctor-specialty.routes";
 import { ServiceRoutes } from "../features/business/service/service.routes";
+import { AgendaRoutes } from "../features/business/agenda/agenda.routes";
+
 
 export class Routes {
   public patientRoutes: PatientRoutes = new PatientRoutes();
@@ -10,4 +12,6 @@ export class Routes {
   public doctorRoutes: DoctorRoutes = new DoctorRoutes();
   public doctorSpecialtyRoutes: DoctorSpecialtyRoutes = new DoctorSpecialtyRoutes();
   public serviceRoutes: ServiceRoutes = new ServiceRoutes();
+  public agendaRoutes: AgendaRoutes = new AgendaRoutes();
+
 }

@@ -1,0 +1,25 @@
+### Feature Agenda — UPDATE (PUT) / UPDATE (PATCH)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name updateAgendaPut
+PUT {{baseUrl}}/api/agendas/{{id}}
+Content-Type: application/json
+
+{
+  "name": "Agenda Tarde — Dr. Carlos Gómez",
+  "description": "Lunes a viernes, jornada de la tarde",
+  "doctor_id": 1,
+  "status": "active"
+}
+
+###
+
+# @name updateAgendaPatch
+PATCH {{baseUrl}}/api/agendas/{{id}}
+Content-Type: application/json
+
+{
+  "description": "Martes y jueves, jornada de la mañana"
+}

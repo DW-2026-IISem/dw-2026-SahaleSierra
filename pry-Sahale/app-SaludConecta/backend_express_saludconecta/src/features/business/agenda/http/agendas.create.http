@@ -1,0 +1,14 @@
+### Feature Agenda — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createAgenda
+POST {{baseUrl}}/api/agendas
+Content-Type: application/json
+
+{
+  "name": "Agenda Mañana — Dr. Carlos Gómez",
+  "description": "Lunes a viernes, jornada de la mañana",
+  "doctor_id": 1,
+  "status": "active"
+}

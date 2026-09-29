@@ -1846,3 +1846,234 @@ curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/services \
 ![](images/clipboard-3330534691.png)
 
 ![](images/clipboard-2884272039.png)
+
+## **15. ISS-10 — Feature Agenda (agendas de médicos)**
+
+**Objetivo:** CRUD + relación + seeder + swagger de Agenda, con FK `doctor_id` (Médico 1:N Agenda). **Bloqueado por:** ISS-09 (y Doctor, ISS-07). **API:** `/api/agendas`, **SIN AUTH**. **Patrón del manual:** Product (§12.1–12.6): catálogo con FK a padre + `assertActive…` + `*.associations.ts`.
+
+### **15.1 Modelo Agenda**
+
+#### **15.1.a `agenda.model.ts`**
+
+![](images/clipboard-3334499264.png)
+
+### **15.2 Controller + routes**
+
+#### **15.2.a `agenda.controller.ts`**
+
+![](images/clipboard-642275165.png)
+
+![](images/clipboard-3748207310.png)
+
+#### **15.2.b `agenda.routes.ts`**
+
+![](images/clipboard-508931526.png)
+
+### **15.3 HTTP**
+
+#### **15.3.a `agendas.get.http`**
+
+![](images/clipboard-1044085043.png)
+
+#### **15.3.b `agendas.create.http`**
+
+![](images/clipboard-4181127409.png)
+
+#### **15.3.c `agendas.update.http`**
+
+![](images/clipboard-3900427624.png)
+
+#### **15.3.d `agendas.delete.http`**
+
+![](images/clipboard-500976808.png)
+
+### **15.4 Cableado Routes + Config**
+
+#### **15.4.a PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { ServiceRoutes } from "../features/business/service/service.routes";`, **añadir:**
+
+``` typescript
+import { AgendaRoutes } from "../features/business/agenda/agenda.routes"; 
+```
+
+![](images/clipboard-1223866791.png)
+
+**2.** **Dentro de** `Routes`, **debajo de** `public serviceRoutes: ServiceRoutes = new ServiceRoutes();`, **añadir:**
+
+``` typescript
+  public agendaRoutes: AgendaRoutes = new AgendaRoutes(); 
+```
+
+![](images/clipboard-1400031792.png)
+
+#### **15.4.b PARCHE — `src/config/index.ts` (modelo + ruta)**
+
+**1.** **Debajo de** `import "../features/business/service/service.model";` (bloque de modelos, **encima de** los imports `.associations`), **añadir:**
+
+``` typescript
+import "../features/business/agenda/agenda.model"; 
+```
+
+![](images/clipboard-3038231675.png)
+
+**2.** **Dentro de** `routes()`, **debajo de** `this.routePrv.serviceRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.agendaRoutes.routes(this.app); 
+```
+
+![](images/clipboard-907659225.png)
+
+### **15.5 Relaciones (obligatorio al cerrar la tabla)**
+
+#### **15.5.a `agenda.associations.ts`**
+
+![](images/clipboard-3427901151.png)
+
+### **15.5.b PARCHE — `src/config/index.ts` (asociaciones)**
+
+**Debajo de** `import "../features/business/doctor-specialty/doctor-specialty.associations";` (y **encima de** `import { Routes } ...`), **añadir:**
+
+``` typescript
+import "../features/business/agenda/agenda.associations";
+```
+
+![](images/clipboard-2774155368.png)
+
+### **15.6 Seeder + Swagger Agenda**
+
+#### **15.6.a `agenda.seeder.ts`**
+
+![](images/clipboard-494490102.png)
+
+#### **15.6.b PARCHE — `src/database/seeders/counts.ts`**
+
+**1.** **Dentro de** `SeedCounts`, **debajo de** `services: number;`, **añadir:**
+
+``` typescript
+  agendas: number; 
+```
+
+![](images/clipboard-1825804366.png)
+
+**2.** **Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `services: 10,`, **añadir:**
+
+``` typescript
+  agendas: 15, 
+```
+
+![](images/clipboard-1550243606.png)
+
+**3.** **Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envServices ...) { ... }` (su llave de cierre) y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envAgendas = process.env.SEED_AGENDAS;
+  if (envAgendas !== undefined && envAgendas !== "") {
+    counts.agendas = Number(envAgendas);
+  }
+```
+
+![](images/clipboard-3911328146.png)
+
+#### **15.6.c PARCHE — `src/database/seeders/index.ts` (runner)**
+
+**1.** **Debajo de** `import "../../features/business/service/service.model";` (bloque de modelos), **añadir:**
+
+``` typescript
+import "../../features/business/agenda/agenda.model"; 
+```
+
+![](images/clipboard-2882332743.png)
+
+**2.** **Debajo de** `import "../../features/business/doctor-specialty/doctor-specialty.associations";`, **añadir:**
+
+``` typescript
+import "../../features/business/agenda/agenda.associations"; 
+```
+
+![](images/clipboard-849934330.png)
+
+**3.** **Debajo de** `import { seedServices } from "../../features/business/service/service.seeder";`, **añadir:**
+
+``` typescript
+import { seedAgendas } from "../../features/business/agenda/agenda.seeder"; 
+```
+
+![](images/clipboard-3804853091.png)
+
+**4.** **Dentro de** `runAllSeeders()`, **debajo de** `await seedServices(counts.services);`, **añadir:**
+
+``` typescript
+  await seedAgendas(counts.agendas); 
+```
+
+![](images/clipboard-801504797.png)
+
+#### **15.6.d `agenda.swagger.ts`**
+
+![](images/clipboard-3009067145.png)
+
+![](images/clipboard-1811730560.png)
+
+#### **15.6.e PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { serviceSwagger } from "../features/business/service/service.swagger";`, **añadir:**
+
+``` typescript
+import { agendaSwagger } from "../features/business/agenda/agenda.swagger"; 
+```
+
+![](images/clipboard-1297849160.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **debajo de** `serviceSwagger,`, **añadir:**
+
+``` typescript
+  agendaSwagger, 
+```
+
+![](images/clipboard-3504683203.png)
+
+#### **Verificación ISS-10**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> Esperado: en `📊 Conteos` aparece `agendas: 15` y luego `✅ agendas: insertados 15`.
+
+![](images/clipboard-2885844517.png)
+
+**Con `npm run dev` corriendo:**
+
+``` bash
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/agendas
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/agendas \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Agenda prueba","description":"Sábados","doctor_id":1,"status":"active"}'
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/agendas \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Agenda sin médico","doctor_id":99999}'
+```
+
+> El primer POST responde `201` (si el médico 1 existe y está activo). El segundo responde `404` con `"Doctor not found"`.
+
+![](images/clipboard-3038723269.png)
+
+Revisa la FK en la BD:
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW CREATE TABLE agendas\G" 
+```
+
+> Debe aparecer `FOREIGN KEY (doctor_id) REFERENCES doctors (id)`. En **/api/docs** aparece el grupo **Agendas**.
+
+![](images/clipboard-1133375987.png)
+
+### **Cierre del ISS**
+
+![](images/clipboard-448079756.png)
+
+![](images/clipboard-2502191711.png)

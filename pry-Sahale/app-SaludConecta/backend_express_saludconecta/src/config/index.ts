@@ -7,8 +7,10 @@ import "../features/business/patient/patient.model";
 import "../features/business/specialty/specialty.model";
 import "../features/business/doctor/doctor.model";
 import "../features/business/doctor-specialty/doctor-specialty.model";
-import "../features/business/doctor-specialty/doctor-specialty.associations";
 import "../features/business/service/service.model";
+import "../features/business/agenda/agenda.model";
+import "../features/business/doctor-specialty/doctor-specialty.associations";
+import "../features/business/agenda/agenda.associations";
 import { Routes } from "../routes/index";
 import { setupSwagger } from "../swagger/index";
 
@@ -44,6 +46,8 @@ export class App {
     this.routePrv.doctorRoutes.routes(this.app);
     this.routePrv.doctorSpecialtyRoutes.routes(this.app);
     this.routePrv.serviceRoutes.routes(this.app);
+    this.routePrv.agendaRoutes.routes(this.app);
+
   }
   
   private docs(): void {

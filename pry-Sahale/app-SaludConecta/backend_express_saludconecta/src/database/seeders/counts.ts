@@ -10,6 +10,8 @@ export type SeedCounts = {
   doctors: number;
   doctor_specialties: number;
   services: number;
+  agendas: number;
+
 };
 
 export const DEFAULT_SEED_COUNTS: SeedCounts = {
@@ -18,6 +20,8 @@ export const DEFAULT_SEED_COUNTS: SeedCounts = {
   doctors: 15,
   doctor_specialties: 12,
   services: 10,
+  agendas: 15,
+
 };
 
 export function resolveSeedCounts(argv: string[] = process.argv.slice(2)): SeedCounts {
@@ -47,6 +51,12 @@ export function resolveSeedCounts(argv: string[] = process.argv.slice(2)): SeedC
   if (envServices !== undefined && envServices !== "") {
     counts.services = Number(envServices);
   }
+  
+  const envAgendas = process.env.SEED_AGENDAS;
+  if (envAgendas !== undefined && envAgendas !== "") {
+    counts.agendas = Number(envAgendas);
+  }
+
 
   for (const arg of argv) {
     const m = arg.match(/^--([a-zA-Z_]+)=(\d+)$/);
