@@ -1826,7 +1826,7 @@ npx tsc --noEmit
 npm run db:seed
 ```
 
->  Esperado: `📊 Conteos: { ..., doctor_specialties: 12, services: 10 }` y `✅ services: insertados 10`.
+> Esperado: `📊 Conteos: { ..., doctor_specialties: 12, services: 10 }` y `✅ services: insertados 10`.
 
 ![](images/clipboard-1605310046.png)
 
@@ -2543,3 +2543,234 @@ mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW INDEX FR
 ### **Cierre del ISS**
 
 ![![](images/clipboard-444415685.png)](images/clipboard-3935348933.png)
+
+## **18. ISS-13 — Feature Authorization (autorizaciones)**
+
+**Objetivo:** autorización con relación **0..1:1** con Appointment (`appointment_id` único), CRUD, relación, seeder y swagger. **Bloqueado por:** ISS-11 (Appointment). **API:** `/api/authorizations`, **SIN AUTH**. **Patrón del manual:** Product (extensión con FK + `assert…`), con unicidad 0..1:1.
+
+### **18.1 Modelo Authorization**
+
+#### **18.1.a `authorization.model.ts`**
+
+![](images/clipboard-615169849.png)
+
+### **18.2 Controller + routes**
+
+#### **18.2.a `authorization.controller.ts`**
+
+![](images/clipboard-3988710926.png)
+
+![](images/clipboard-2175216951.png)
+
+#### **18.2.b `authorization.routes.ts`**
+
+![](images/clipboard-107595810.png)
+
+### **18.3 HTTP**
+
+#### **18.3.a `authorizations.get.http`**
+
+![](images/clipboard-3819626232.png)
+
+#### **18.3.b `authorizations.create.http`**
+
+![](images/clipboard-1561883473.png)
+
+#### **18.3.c `authorizations.update.http`**
+
+![](images/clipboard-3103596788.png)
+
+#### **18.3.d `authorizations.delete.http`**
+
+![](images/clipboard-2164528307.png)
+
+### **18.4 Cableado Routes + Config**
+
+#### **18.4.a PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { ClinicalRecordRoutes } from "../features/business/clinical-record/clinical-record.routes";`, **añadir:**
+
+``` typescript
+import { AuthorizationRoutes } from "../features/business/authorization/authorization.routes"; 
+```
+
+![](images/clipboard-3307378298.png)
+
+**2.** **Dentro de** `Routes`, **debajo de** `public clinicalRecordRoutes: ClinicalRecordRoutes = new ClinicalRecordRoutes();`, **añadir:**
+
+``` typescript
+  public authorizationRoutes: AuthorizationRoutes = new AuthorizationRoutes(); 
+```
+
+![](images/clipboard-2280153095.png)
+
+#### **18.4.b PARCHE — `src/config/index.ts` (modelo + ruta)**
+
+**1.** **Debajo de** `import "../features/business/clinical-record/clinical-record.model";` (bloque de modelos, **encima de** los imports `.associations`), **añadir:**
+
+``` typescript
+import "../features/business/authorization/authorization.model"; 
+```
+
+![](images/clipboard-3791783058.png)
+
+**2.** **Dentro de** `routes()`, **debajo de** `this.routePrv.clinicalRecordRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.authorizationRoutes.routes(this.app); 
+```
+
+![](images/clipboard-2832905304.png)
+
+### **18.5 Relaciones (obligatorio al cerrar la tabla)**
+
+#### **18.5.a `authorization.associations.ts`**
+
+![](images/clipboard-1032826312.png)
+
+#### **18.5.b PARCHE — `src/config/index.ts` (asociaciones)**
+
+**Debajo de** `import "../features/business/clinical-record/clinical-record.associations";` (y **encima de** `import { Routes } ...`), **añadir:**
+
+``` typescript
+import "../features/business/authorization/authorization.associations"; 
+```
+
+![](images/clipboard-610630788.png)
+
+### **18.6 Seeder + Swagger Authorization**
+
+#### **18.6.a `authorization.seeder.ts`**
+
+![](images/clipboard-3382884904.png)
+
+#### **18.6.b PARCHE — `src/database/seeders/counts.ts`**
+
+**1.** **Dentro de** `SeedCounts`, **debajo de** `clinical_records: number;`, **añadir:**
+
+``` typescript
+  authorizations: number; 
+```
+
+![](images/clipboard-3158035698.png)
+
+**2.** **Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `clinical_records: 10,`, **añadir:**
+
+``` typescript
+  authorizations: 8, 
+```
+
+![](images/clipboard-212652000.png)
+
+**3.** **Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envClinicalRecords ...) { ... }` (su llave de cierre) y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envAuthorizations = process.env.SEED_AUTHORIZATIONS;
+  if (envAuthorizations !== undefined && envAuthorizations !== "") {
+    counts.authorizations = Number(envAuthorizations);
+  }
+```
+
+![](images/clipboard-226888100.png)
+
+#### **18.6.c PARCHE — `src/database/seeders/index.ts` (runner)**
+
+**1.** **Debajo de** `import "../../features/business/clinical-record/clinical-record.model";` (bloque de modelos), **añadir:**
+
+``` typescript
+import "../../features/business/authorization/authorization.model"; 
+```
+
+![](images/clipboard-1127886512.png)
+
+**2.** **Debajo de** `import "../../features/business/clinical-record/clinical-record.associations";`, **añadir:**
+
+``` typescript
+import "../../features/business/authorization/authorization.associations"; 
+```
+
+![](images/clipboard-3968501991.png)
+
+**3.** **Debajo de** `import { seedClinicalRecords } from "../../features/business/clinical-record/clinical-record.seeder";`, **añadir:**
+
+``` typescript
+import { seedAuthorizations } from "../../features/business/authorization/authorization.seeder"; 
+```
+
+![](images/clipboard-1488932082.png)
+
+**4.** **Dentro de** `runAllSeeders()`, **debajo de** `await seedClinicalRecords(counts.clinical_records);`, **añadir:**
+
+``` typescript
+  await seedAuthorizations(counts.authorizations); 
+```
+
+![](images/clipboard-3076719836.png)
+
+#### **18.6.d `authorization.swagger.ts`**
+
+![](images/clipboard-298488311.png)
+
+![](images/clipboard-4270472893.png)
+
+#### **18.6.e PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { clinicalRecordSwagger } from "../features/business/clinical-record/clinical-record.swagger";`, **añadir:**
+
+``` typescript
+import { authorizationSwagger } from "../features/business/authorization/authorization.swagger"; 
+```
+
+![](images/clipboard-1886004360.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **debajo de** `clinicalRecordSwagger,`, **añadir:**
+
+``` typescript
+  authorizationSwagger, 
+```
+
+![](images/clipboard-1307751888.png)
+
+#### **Verificación ISS-13**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> Esperado: `authorizations: 8` y `✅ authorizations: insertados 8`.
+
+![](images/clipboard-4026726948.png)
+
+**Con `npm run dev` corriendo:**
+
+``` bash
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/authorizations
+```
+
+![](images/clipboard-216811190.png)
+
+Prueba del 0..1:1 (toma un `appointment_id` que ya salga en el GET anterior):
+
+```         
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/authorizations \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"AUT-DUP","appointment_id":ID_DE_LA_CITA}'
+```
+
+> `400` con `"Appointment already has an authorization"`.
+>
+> ![](images/clipboard-1669025773.png)
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW INDEX FROM authorizations WHERE Column_name = 'appointment_id';" 
+```
+
+> Una sola fila: `authorizations_appointment_id_unique`. En **/api/docs** aparece **Authorizations**.
+
+![](images/clipboard-2991121755.png)
+
+### **Cierre del ISS**
+
+![![](images/clipboard-486525536.png)](images/clipboard-587849003.png)

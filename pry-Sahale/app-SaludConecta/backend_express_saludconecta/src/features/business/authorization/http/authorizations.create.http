@@ -1,0 +1,14 @@
+### Feature Authorization — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createAuthorization
+POST {{baseUrl}}/api/authorizations
+Content-Type: application/json
+
+{
+  "name": "AUT-00012345",
+  "description": "Autorización EPS Sura",
+  "appointment_id": 1,
+  "status": "active"
+}

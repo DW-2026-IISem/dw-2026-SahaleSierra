@@ -11,10 +11,12 @@ import "../features/business/service/service.model";
 import "../features/business/agenda/agenda.model";
 import "../features/business/appointment/appointment.model";
 import "../features/business/clinical-record/clinical-record.model";
+import "../features/business/authorization/authorization.model";
 import "../features/business/doctor-specialty/doctor-specialty.associations";
 import "../features/business/agenda/agenda.associations";
 import "../features/business/appointment/appointment.associations";
 import "../features/business/clinical-record/clinical-record.associations";
+import "../features/business/authorization/authorization.associations";
 import { Routes } from "../routes/index";
 import { setupSwagger } from "../swagger/index";
 
@@ -53,6 +55,7 @@ export class App {
     this.routePrv.agendaRoutes.routes(this.app);
     this.routePrv.appointmentRoutes.routes(this.app);
     this.routePrv.clinicalRecordRoutes.routes(this.app);
+    this.routePrv.authorizationRoutes.routes(this.app);
 
   }
   
