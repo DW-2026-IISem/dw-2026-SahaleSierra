@@ -2774,3 +2774,246 @@ mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW INDEX FR
 ### **Cierre del ISS**
 
 ![![](images/clipboard-486525536.png)](images/clipboard-587849003.png)
+
+## **19. ISS-14 — Feature Encounter (atenciones)**
+
+**Objetivo:** registrar la atención de una cita con create **transaccional** que implementa la regla central del PDF, más relaciones, seeder y swagger. **Bloqueado por:** ISS-11 (Appointment), ISS-12 (ClinicalRecord) e ISS-09 (Service). **API:** `/api/encounters`, **SIN AUTH**. **Patrón del manual:** Sale (transaccional con total/estado).
+
+### **19.1 Modelo Encounter**
+
+#### **19.1.a `encounter.model.ts`**
+
+![](images/clipboard-3283049971.png)
+
+### **19.2 Controller + routes**
+
+#### **19.2.a `encounter.controller.ts`**
+
+![](images/clipboard-4174389681.png)
+
+![](images/clipboard-2744022659.png)
+
+![](images/clipboard-838948918.png)
+
+![](images/clipboard-273346441.png)
+
+#### **19.2.b `encounter.routes.ts`**
+
+![](images/clipboard-2990835566.png)
+
+### **19.3 HTTP**
+
+#### **19.3.a `encounters.get.http`**
+
+![](images/clipboard-3602718820.png)
+
+#### **19.3.b `encounters.create.http`**
+
+![](images/clipboard-3032081703.png)
+
+#### **19.3.c `encounters.update.http`**
+
+![](images/clipboard-521516477.png)
+
+#### **19.3.d `encounters.delete.http`**
+
+![](images/clipboard-1180210665.png)
+
+### **19.4 Cableado Routes + Config**
+
+#### **19.4.a PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { AuthorizationRoutes } from "../features/business/authorization/authorization.routes";`, **añadir:**
+
+``` typescript
+import { EncounterRoutes } from "../features/business/encounter/encounter.routes"; 
+```
+
+![](images/clipboard-2700563326.png)
+
+**2.** **Dentro de** `Routes`, **debajo de** `public authorizationRoutes: AuthorizationRoutes = new AuthorizationRoutes();`, **añadir:**
+
+``` typescript
+  public encounterRoutes: EncounterRoutes = new EncounterRoutes(); 
+```
+
+![](images/clipboard-761345889.png)
+
+#### **19.4.b PARCHE — `src/config/index.ts` (modelo + ruta)**
+
+**1.** **Debajo de** `import "../features/business/authorization/authorization.model";` (bloque de modelos, **encima de** los imports `.associations`), **añadir:**
+
+``` typescript
+import "../features/business/encounter/encounter.model"; 
+```
+
+![](images/clipboard-2378461097.png)
+
+**2.** **Dentro de** `routes()`, **debajo de** `this.routePrv.authorizationRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.encounterRoutes.routes(this.app); 
+```
+
+![](images/clipboard-3371674327.png)
+
+### **19.5 Relaciones (obligatorio al cerrar la tabla)**
+
+#### **19.5.a `encounter.associations.ts`**
+
+![](images/clipboard-1831063070.png)
+
+#### **19.5.b PARCHE — `src/config/index.ts` (asociaciones)**
+
+**Debajo de** `import "../features/business/authorization/authorization.associations";` (y **encima de** `import { Routes } ...`), **añadir:**
+
+``` typescript
+import "../features/business/encounter/encounter.associations"; 
+```
+
+![](images/clipboard-1177189243.png)
+
+### **19.6 Seeder + Swagger Encounter**
+
+#### **19.6.a `encounter.seeder.ts`**
+
+![](images/clipboard-1554293791.png)
+
+#### **19.6.b PARCHE — `src/database/seeders/counts.ts`**
+
+**1.** **Dentro de** `SeedCounts`, **debajo de** `authorizations: number;`, **añadir:**
+
+``` typescript
+  encounters: number; 
+```
+
+![](images/clipboard-456766981.png)
+
+**2.** **Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `authorizations: 8,`, **añadir:**
+
+``` typescript
+  encounters: 10, 
+```
+
+![](images/clipboard-3662726417.png)
+
+**3.** **Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envAuthorizations ...) { ... }` (su llave de cierre) y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envEncounters = process.env.SEED_ENCOUNTERS;
+  if (envEncounters !== undefined && envEncounters !== "") {
+    counts.encounters = Number(envEncounters);
+  }
+```
+
+![](images/clipboard-3581720653.png)
+
+### **19.6.c PARCHE — `src/database/seeders/index.ts` (runner)**
+
+**1.** **Debajo de** `import "../../features/business/authorization/authorization.model";` (bloque de modelos), **añadir:**
+
+``` typescript
+import "../../features/business/encounter/encounter.model"; 
+```
+
+![](images/clipboard-4278674687.png)
+
+**2.** **Debajo de** `import "../../features/business/authorization/authorization.associations";`, **añadir:**
+
+``` typescript
+import "../../features/business/encounter/encounter.associations"; 
+```
+
+![](images/clipboard-1843357644.png)
+
+**3.** **Debajo de** `import { seedAuthorizations } from "../../features/business/authorization/authorization.seeder";`, **añadir:**
+
+``` typescript
+import { seedEncounters } from "../../features/business/encounter/encounter.seeder"; 
+```
+
+![](images/clipboard-348589925.png)
+
+**4.** **Dentro de** `runAllSeeders()`, **debajo de** `await seedAuthorizations(counts.authorizations);`, **añadir:**
+
+``` typescript
+  await seedEncounters(counts.encounters); 
+```
+
+![](images/clipboard-1541260653.png)
+
+#### **19.6.d `encounter.swagger.ts`**
+
+![](images/clipboard-39308365.png)
+
+![](images/clipboard-1680222170.png)
+
+#### **19.6.e PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { authorizationSwagger } from "../features/business/authorization/authorization.swagger";`, **añadir:**
+
+``` typescript
+import { encounterSwagger } from "../features/business/encounter/encounter.swagger"; 
+```
+
+![](images/clipboard-1321448849.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **debajo de** `authorizationSwagger,`, **añadir:**
+
+``` typescript
+  encounterSwagger, 
+```
+
+![](images/clipboard-3842335621.png)
+
+### **Verificación ISS-14**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> Esperado: `encounters: 10` y `✅ encounters: insertados N` (N ≤ 10: solo atiende citas cuyo paciente tiene historia clínica activa).
+
+![](images/clipboard-740447796.png)
+
+**Prueba de la regla del PDF, de punta a punta.** Con `npm run dev` corriendo:
+
+1.  Busca una cita `scheduled`:
+
+``` bash
+curl -s http://localhost:4000/api/appointments | grep -o '"id":[0-9]*,"start_date"[^}]*"state":"scheduled"' | head -
+```
+
+![](images/clipboard-2493980009.png)
+
+2.  Intenta atenderla (reemplaza `ID_CITA`):
+
+``` bash
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/encounters \
+  -H 'Content-Type: application/json' \
+  -d '{"appointment_id":ID_CITA,"service_id":1,"total":85000,"state":"completed","observations":"Prueba"}'
+```
+
+![](images/clipboard-1180668663.png)
+
+> - Si el paciente de esa cita **tiene** historia clínica activa → `201`; la respuesta trae `"appointment":{..."state":"attended"...}`.
+>
+> - Si **no** la tiene → `400` con `"Patient must have an active clinical record"` y la cita sigue en `scheduled`.
+>
+> - Si repites el mismo POST → `400` con `"Appointment must be 'scheduled' (current: 'attended')"`.
+
+3.  Confirma el cambio de estado:
+
+``` bash
+curl -s http://localhost:4000/api/appointments/ID_CITA 
+```
+
+> En **/api/docs** aparece el grupo **Encounters**.
+
+![](images/clipboard-2249891664.png)
+
+### **Cierre del ISS**
+
+![![](images/clipboard-1908203904.png)](images/clipboard-3452296490.png)

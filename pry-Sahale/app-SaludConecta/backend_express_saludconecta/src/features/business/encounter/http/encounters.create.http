@@ -1,0 +1,16 @@
+### Feature Encounter — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createEncounter
+POST {{baseUrl}}/api/encounters
+Content-Type: application/json
+
+{
+  "appointment_id": 1,
+  "service_id": 1,
+  "total": 85000,
+  "state": "completed",
+  "observations": "Paciente estable, se dan recomendaciones generales",
+  "status": "active"
+}

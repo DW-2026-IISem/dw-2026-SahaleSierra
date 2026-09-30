@@ -7,6 +7,7 @@ import { AgendaRoutes } from "../features/business/agenda/agenda.routes";
 import { AppointmentRoutes } from "../features/business/appointment/appointment.routes";
 import { ClinicalRecordRoutes } from "../features/business/clinical-record/clinical-record.routes";
 import { AuthorizationRoutes } from "../features/business/authorization/authorization.routes";
+import { EncounterRoutes } from "../features/business/encounter/encounter.routes";
 
 
 export class Routes {
@@ -19,6 +20,7 @@ export class Routes {
   public appointmentRoutes: AppointmentRoutes = new AppointmentRoutes();
   public clinicalRecordRoutes: ClinicalRecordRoutes = new ClinicalRecordRoutes();
   public authorizationRoutes: AuthorizationRoutes = new AuthorizationRoutes();
+  public encounterRoutes: EncounterRoutes = new EncounterRoutes();
 
 
 }
