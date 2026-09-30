@@ -249,6 +249,15 @@ export class EncounterController {
         res.status(totalCheck.status).json({ error: totalCheck.error });
         return;
       }
+      
+      if (encounter.invoice_id !== null && Number(total) !== Number(encounter.total)) {
+        res.status(400).json({
+          error: "Billed encounter total cannot change",
+          invoice_id: encounter.invoice_id,
+        });
+        return;
+      }
+
 
       const start_date = body.start_date ?? encounter.start_date;
       const end_date = body.end_date ?? null;
@@ -291,6 +300,19 @@ export class EncounterController {
           return;
         }
       }
+      
+      if (
+        body.total !== undefined &&
+        encounter.invoice_id !== null &&
+        Number(body.total) !== Number(encounter.total)
+      ) {
+        res.status(400).json({
+          error: "Billed encounter total cannot change",
+          invoice_id: encounter.invoice_id,
+        });
+        return;
+      }
+
 
       const rangeCheck = assertValidRange(
         body.start_date ?? encounter.start_date,
@@ -328,6 +350,16 @@ export class EncounterController {
         res.status(404).json({ error: "Encounter not found" });
         return;
       }
+      
+      if (encounter.invoice_id !== null) {
+        await t.rollback();
+        res.status(400).json({
+          error: "Billed encounter cannot be deleted (delete the invoice first)",
+          invoice_id: encounter.invoice_id,
+        });
+        return;
+      }
+
 
       const appointment = await Appointment.findByPk(encounter.appointment_id, {
         transaction: t,

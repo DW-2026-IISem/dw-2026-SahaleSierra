@@ -15,6 +15,7 @@ export type SeedCounts = {
   clinical_records: number;
   authorizations: number;
   encounters: number;
+  invoices: number;
 
 };
 
@@ -29,6 +30,7 @@ export const DEFAULT_SEED_COUNTS: SeedCounts = {
   clinical_records: 10, 
   authorizations: 8,
   encounters: 10,
+  invoices: 5,
 
 };
 
@@ -83,6 +85,11 @@ export function resolveSeedCounts(argv: string[] = process.argv.slice(2)): SeedC
   const envEncounters = process.env.SEED_ENCOUNTERS;
   if (envEncounters !== undefined && envEncounters !== "") {
     counts.encounters = Number(envEncounters);
+  }
+
+  const envInvoices = process.env.SEED_INVOICES;
+  if (envInvoices !== undefined && envInvoices !== "") {
+    counts.invoices = Number(envInvoices);
   }
 
 

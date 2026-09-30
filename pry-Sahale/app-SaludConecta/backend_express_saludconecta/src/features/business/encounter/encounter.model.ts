@@ -20,6 +20,7 @@ export interface EncounterI {
   total: number;
   state: EncounterState;
   observations?: string | null;
+  invoice_id?: number | null;
   status: "active" | "inactive";
   createdAt?: Date;
   updatedAt?: Date;
@@ -35,6 +36,7 @@ export class Encounter extends Model {
   public total!: number;
   public state!: EncounterState;
   public observations!: string | null;
+  public invoice_id!: number | null;
   public status!: "active" | "inactive";
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -75,6 +77,10 @@ Encounter.init(
     },
     observations: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    invoice_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
     status: {

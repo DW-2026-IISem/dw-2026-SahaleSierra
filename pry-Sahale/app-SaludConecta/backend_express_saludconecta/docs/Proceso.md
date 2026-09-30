@@ -3017,3 +3017,352 @@ curl -s http://localhost:4000/api/appointments/ID_CITA
 ### **Cierre del ISS**
 
 ![![](images/clipboard-1908203904.png)](images/clipboard-3452296490.png)
+
+## **20. ISS-15 — Feature Invoice (facturas) + extensión de Encounter**
+
+**Objetivo:** factura que **agrupa atenciones facturables**, con create transaccional que calcula subtotal/total, extensión real de `encounters` con `invoice_id`, relaciones, seeder y swagger. **Bloqueado por:** ISS-14 (Encounter). **API:** `/api/invoices`, **SIN AUTH**. **Patrón del manual:** Sale (agregador con `subtotal / tax / total` e ítems).
+
+### **20.1 Modelo Invoice**
+
+#### **20.1.a `invoice.model.ts`**
+
+![](images/clipboard-3463862661.png)
+
+#### **20.1.b PARCHE — `src/features/business/encounter/encounter.model.ts` (extensión: `invoice_id`)**
+
+Invoice no existía cuando se creó Encounter (ISS-14), por eso la FK opcional se agrega ahora. `invoice_id = null` significa "atención aún no facturada".
+
+**1.** **Dentro de** `export interface EncounterI`, **debajo de** `observations?: string | null;`, **añadir:**
+
+``` typescript
+  invoice_id?: number | null; 
+```
+
+![](images/clipboard-2694857729.png)
+
+**2.** **Dentro de** `export class Encounter`, **debajo de** `public observations!: string | null;`, **añadir:**
+
+``` typescript
+  public invoice_id!: number | null; 
+```
+
+![](images/clipboard-3137584198.png)
+
+**3.** **Dentro de** `Encounter.init({ ... })`, **debajo de** el bloque completo `observations: { type: DataTypes.TEXT, allowNull: true, },` (su `},` de cierre) y **encima de** `status: {`, **añadir:**
+
+``` typescript
+    invoice_id: {       type: DataTypes.INTEGER,       allowNull: true,     }, 
+```
+
+![](images/clipboard-2155365190.png)
+
+#### **20.1.c PARCHE — `src/features/business/encounter/encounter.controller.ts` (proteger atenciones facturadas)**
+
+Con `invoice_id` ya existente, una atención facturada no puede borrarse ni cambiar su `total`, porque la factura quedaría descuadrada.
+
+**1.** **Dentro de** `updatePut`, **debajo de** el bloque `const total = body.total ?? 0;` + `const totalCheck = assertValidTotal(total);` + su `if (!totalCheck.ok) { ... }` (llave de cierre), **añadir:**
+
+``` typescript
+
+      if (encounter.invoice_id !== null && Number(total) !== Number(encounter.total)) {
+        res.status(400).json({
+          error: "Billed encounter total cannot change",
+          invoice_id: encounter.invoice_id,
+        });
+        return;
+      }
+```
+
+![](images/clipboard-272551463.png)
+
+**2.** **Dentro de** `updatePatch`, **debajo de** el bloque `if (body.total !== undefined) { const totalCheck = assertValidTotal(body.total); ... }` (su llave de cierre exterior), **añadir:**
+
+``` typescript
+
+      if (
+        body.total !== undefined &&
+        encounter.invoice_id !== null &&
+        Number(body.total) !== Number(encounter.total)
+      ) {
+        res.status(400).json({
+          error: "Billed encounter total cannot change",
+          invoice_id: encounter.invoice_id,
+        });
+        return;
+      }
+```
+
+![](images/clipboard-2993868218.png)
+
+**3.** **Dentro de** `deletePhysical`, **debajo de** `const encounter = await Encounter.findByPk(id, { transaction: t });` y su `if (!encounter) { ... }` (llave de cierre), **añadir:**
+
+``` typescript
+
+      if (encounter.invoice_id !== null) {
+        await t.rollback();
+        res.status(400).json({
+          error: "Billed encounter cannot be deleted (delete the invoice first)",
+          invoice_id: encounter.invoice_id,
+        });
+        return;
+      }
+```
+
+![](images/clipboard-2121412651.png)
+
+### **20.2 Controller + routes**
+
+#### **20.2.a `invoice.controller.ts`**
+
+![](images/clipboard-1276430952.png)
+
+![](images/clipboard-2267522795.png)
+
+![](images/clipboard-368387369.png)
+
+#### **20.2.b `invoice.routes.ts`**
+
+![](images/clipboard-921113493.png)
+
+## **20.3 HTTP**
+
+#### **20.3.a `invoices.get.http`**
+
+![](images/clipboard-3322269460.png)
+
+#### **20.3.b `invoices.create.http`**
+
+![](images/clipboard-2155798808.png)
+
+#### **20.3.c `invoices.update.http`**
+
+![](images/clipboard-904383730.png)
+
+#### **20.3.d `invoices.delete.http`**
+
+![](images/clipboard-1632155617.png)
+
+### **20.4 Cableado Routes + Config**
+
+#### **20.4.a PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { EncounterRoutes } from "../features/business/encounter/encounter.routes";`, **añadir:**
+
+``` typescript
+import { InvoiceRoutes } from "../features/business/invoice/invoice.routes"; 
+```
+
+![](images/clipboard-3625766079.png)
+
+**2.** **Dentro de** `Routes`, **debajo de** `public encounterRoutes: EncounterRoutes = new EncounterRoutes();`, **añadir:**
+
+``` typescript
+  public invoiceRoutes: InvoiceRoutes = new InvoiceRoutes(); 
+```
+
+![](images/clipboard-1530649244.png)
+
+#### **20.4.b PARCHE — `src/config/index.ts` (modelo + ruta)**
+
+**1.** **Debajo de** `import "../features/business/encounter/encounter.model";` (bloque de modelos, **encima de** los imports `.associations`), **añadir:**
+
+``` typescript
+import "../features/business/invoice/invoice.model"; 
+```
+
+![](images/clipboard-1613685239.png)
+
+**2.** **Dentro de** `routes()`, **debajo de** `this.routePrv.encounterRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.invoiceRoutes.routes(this.app); 
+```
+
+![](images/clipboard-3444766267.png)
+
+### **20.5 Relaciones (obligatorio al cerrar la tabla)**
+
+#### **20.5.a `invoice.associations.ts`**
+
+![](images/clipboard-3097097035.png)
+
+#### **20.5.b PARCHE — `src/config/index.ts` (asociaciones)**
+
+**Debajo de** `import "../features/business/encounter/encounter.associations";` (y **encima de** `import { Routes } ...`), **añadir:**
+
+``` typescript
+import "../features/business/invoice/invoice.associations"; 
+```
+
+![](images/clipboard-4068036849.png)
+
+### **20.6 Seeder + Swagger Invoice**
+
+#### **20.6.a `invoice.seeder.ts`**
+
+![](images/clipboard-1213422935.png)
+
+#### **20.6.b PARCHE — `src/database/seeders/counts.ts`**
+
+**1.** **Dentro de** `SeedCounts`, **debajo de** `encounters: number;`, **añadir:**
+
+``` typescript
+  invoices: number; 
+```
+
+![](images/clipboard-189200334.png)
+
+**2.** **Dentro de** `DEFAULT_SEED_COUNTS`, **debajo de** `encounters: 10,`, **añadir:**
+
+``` typescript
+  invoices: 5, 
+```
+
+![](images/clipboard-3823349205.png)
+
+**3.** **Dentro de** `resolveSeedCounts`, **debajo de** el bloque `if (envEncounters ...) { ... }` (su llave de cierre) y **encima de** `for (const arg of argv) {`, **añadir:**
+
+``` typescript
+
+  const envInvoices = process.env.SEED_INVOICES;
+  if (envInvoices !== undefined && envInvoices !== "") {
+    counts.invoices = Number(envInvoices);
+  }
+```
+
+![](images/clipboard-705588058.png)
+
+#### **20.6.c PARCHE — `src/database/seeders/index.ts` (runner)**
+
+**1.** **Debajo de** `import "../../features/business/encounter/encounter.model";` (bloque de modelos), **añadir:**
+
+``` typescript
+import "../../features/business/invoice/invoice.model"; 
+```
+
+![](images/clipboard-348072876.png)
+
+**2.** **Debajo de** `import "../../features/business/encounter/encounter.associations";`, **añadir:**
+
+``` typescript
+import "../../features/business/invoice/invoice.associations"; 
+```
+
+![](images/clipboard-3249837232.png)
+
+**3.** **Debajo de** `import { seedEncounters } from "../../features/business/encounter/encounter.seeder";`, **añadir:**
+
+``` typescript
+import { seedInvoices } from "../../features/business/invoice/invoice.seeder"; 
+```
+
+![](images/clipboard-1669989197.png)
+
+**4.** **Dentro de** `runAllSeeders()`, **debajo de** `await seedEncounters(counts.encounters);`, **añadir:**
+
+``` typescript
+  await seedInvoices(counts.invoices); 
+```
+
+![](images/clipboard-3596251352.png)
+
+### **20.6.d `invoice.swagger.ts`**
+
+![](images/clipboard-4269317921.png)
+
+![](images/clipboard-3556579944.png)
+
+![](images/clipboard-3824377371.png)
+
+![](images/clipboard-3833647246.png)
+
+### **20.6.e PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { encounterSwagger } from "../features/business/encounter/encounter.swagger";`, **añadir:**
+
+``` typescript
+import { invoiceSwagger } from "../features/business/invoice/invoice.swagger"; 
+```
+
+![](images/clipboard-964643242.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **debajo de** `encounterSwagger,`, **añadir:**
+
+``` typescript
+  invoiceSwagger, 
+```
+
+![](images/clipboard-3802639721.png)
+
+#### **20.6.f PARCHE — `src/features/business/encounter/encounter.swagger.ts` (campo `invoice_id`)**
+
+**Dentro de** `components.schemas.Encounter.properties`, **debajo de** `observations: { type: "string", nullable: true },`, **añadir:**
+
+``` typescript
+          invoice_id: { type: "integer", nullable: true, example: null }, 
+```
+
+![](images/clipboard-2380960873.png)
+
+#### **Verificación ISS-15**
+
+``` bash
+npx tsc --noEmit 
+npm run dev 
+```
+
+> Arranca **antes** del seeder: el sync con `alter: true` agrega la columna `invoice_id` (y su FK) a `encounters`. Detenlo con Ctrl+C y luego:
+
+``` bash
+npm run db:seed 
+```
+
+![](images/clipboard-2560209610.png)
+
+> Esperado: `invoices: 5` y `✅ invoices: insertados N`.
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "DESCRIBE encounters; SHOW INDEX FROM invoices WHERE Column_name = 'number';" 
+```
+
+![](images/clipboard-709947416.png)
+
+> `encounters` ya tiene `invoice_id` (NULL permitido) y `invoices.number` tiene **un solo** índice: `invoices_number_unique`.
+
+**Prueba de facturación.** Con `npm run dev` corriendo:
+
+1.  Busca atenciones `completed` sin factura (`"invoice_id":null`):
+
+``` bash
+curl -s http://localhost:4000/api/encounters | grep -o '"id":[0-9]*,"appointment_id"[^}]*"state":"completed"[^}]*"invoice_id":null' | grep -o '^"id":[0-9]*'
+```
+
+> Cada línea es el `id` de una atención facturable. Si no sale ninguna, crea una atención nueva como en ISS-14 (con `"state":"completed"`).
+>
+> ![](images/clipboard-2964116867.png)
+
+2.  Factura una (reemplaza `ID_ATENCION`):
+
+``` bash
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/invoices \
+  -H 'Content-Type: application/json' \
+  -d '{"number":"FV-900001","tax":0,"encounter_ids":[ID_ATENCION]}'
+```
+
+> `201`; `subtotal` y `total` coinciden con el `total` de la atención, y `encounters` trae la atención con su `invoice_id`.
+>
+> ![](images/clipboard-99716745.png)
+
+3.  Repite el mismo POST cambiando solo `number` (por ejemplo `FV-900002`):
+
+> `400` con `"Encounter already billed: ..."`. No se factura dos veces.
+>
+> ![](images/clipboard-1703461050.png)
+
+> En **/api/docs** aparecen los **11 grupos**: Patients, Specialties, Doctors, DoctorSpecialties, Services, Agendas, Appointments, ClinicalRecords, Authorizations, Encounters e Invoices.
+
+### **Cierre del ISS**
+
+![![](images/clipboard-336575025.png)](images/clipboard-2623634151.png)
+
+![](images/clipboard-3796395947.png)

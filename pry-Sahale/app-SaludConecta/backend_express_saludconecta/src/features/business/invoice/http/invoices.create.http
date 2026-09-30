@@ -1,0 +1,14 @@
+### Feature Invoice — CREATE
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+
+# @name createInvoice
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+
+{
+  "number": "FV-100001",
+  "tax": 0,
+  "encounter_ids": [1],
+  "status": "active"
+}

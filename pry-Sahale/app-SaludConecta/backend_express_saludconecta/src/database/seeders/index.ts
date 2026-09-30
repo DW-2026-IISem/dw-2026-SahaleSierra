@@ -10,12 +10,14 @@ import "../../features/business/appointment/appointment.model";
 import "../../features/business/clinical-record/clinical-record.model";
 import "../../features/business/authorization/authorization.model";
 import "../../features/business/encounter/encounter.model";
+import "../../features/business/invoice/invoice.model";
 import "../../features/business/doctor-specialty/doctor-specialty.associations";
 import "../../features/business/agenda/agenda.associations";
 import "../../features/business/appointment/appointment.associations";
 import "../../features/business/clinical-record/clinical-record.associations";
 import "../../features/business/authorization/authorization.associations";
 import "../../features/business/encounter/encounter.associations";
+import "../../features/business/invoice/invoice.associations";
 import { seedPatients } from "../../features/business/patient/patient.seeder";
 import { seedSpecialties } from "../../features/business/specialty/specialty.seeder";
 import { seedDoctors } from "../../features/business/doctor/doctor.seeder";
@@ -26,6 +28,7 @@ import { seedAppointments } from "../../features/business/appointment/appointmen
 import { seedClinicalRecords } from "../../features/business/clinical-record/clinical-record.seeder";
 import { seedAuthorizations } from "../../features/business/authorization/authorization.seeder";
 import { seedEncounters } from "../../features/business/encounter/encounter.seeder";
+import { seedInvoices } from "../../features/business/invoice/invoice.seeder";
 import { resolveSeedCounts } from "./counts";
 
 dotenv.config();
@@ -75,6 +78,7 @@ export async function runAllSeeders(): Promise<void> {
   await seedClinicalRecords(counts.clinical_records);
   await seedAuthorizations(counts.authorizations);
   await seedEncounters(counts.encounters);
+  await seedInvoices(counts.invoices);
 
   console.log("🌱 SeedersRunner finalizado");
 }

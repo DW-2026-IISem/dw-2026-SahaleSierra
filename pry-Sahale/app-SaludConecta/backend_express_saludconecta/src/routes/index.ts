@@ -8,6 +8,7 @@ import { AppointmentRoutes } from "../features/business/appointment/appointment.
 import { ClinicalRecordRoutes } from "../features/business/clinical-record/clinical-record.routes";
 import { AuthorizationRoutes } from "../features/business/authorization/authorization.routes";
 import { EncounterRoutes } from "../features/business/encounter/encounter.routes";
+import { InvoiceRoutes } from "../features/business/invoice/invoice.routes";
 
 
 export class Routes {
@@ -21,6 +22,7 @@ export class Routes {
   public clinicalRecordRoutes: ClinicalRecordRoutes = new ClinicalRecordRoutes();
   public authorizationRoutes: AuthorizationRoutes = new AuthorizationRoutes();
   public encounterRoutes: EncounterRoutes = new EncounterRoutes();
+  public invoiceRoutes: InvoiceRoutes = new InvoiceRoutes();
 
 
 }

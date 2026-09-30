@@ -10,6 +10,7 @@ import { appointmentSwagger } from "../features/business/appointment/appointment
 import { clinicalRecordSwagger } from "../features/business/clinical-record/clinical-record.swagger";
 import { authorizationSwagger } from "../features/business/authorization/authorization.swagger";
 import { encounterSwagger } from "../features/business/encounter/encounter.swagger";
+import { invoiceSwagger } from "../features/business/invoice/invoice.swagger";
 
 
 
@@ -34,6 +35,7 @@ const featureSwaggerModules: FeatureSwaggerModule[] = [
   clinicalRecordSwagger,
   authorizationSwagger,
   encounterSwagger,
+  invoiceSwagger,
 
 ];
 

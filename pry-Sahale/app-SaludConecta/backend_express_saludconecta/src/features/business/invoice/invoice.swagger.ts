@@ -1,35 +1,35 @@
 /**
- * Documentación OpenAPI del feature Encounter (tabla encounters).
+ * Documentación OpenAPI del feature Invoice (tabla invoices).
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
  * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
  */
 
-export const encounterSwagger = {
+export const invoiceSwagger = {
   tags: [
     {
-      name: "Encounters",
-      description: "Atenciones: registro de la consulta (pasa la cita a attended) — **SIN AUTH** (sin middleware JWT)",
+      name: "Invoices",
+      description: "Facturas: agrupan atenciones facturables — **SIN AUTH** (sin middleware JWT)",
     },
   ],
   paths: {
-    "/api/encounters": {
+    "/api/invoices": {
       get: {
-        tags: ["Encounters"],
-        summary: "Listar atenciones activas",
-        description: "SIN AUTH — retorna encounters con status=active",
+        tags: ["Invoices"],
+        summary: "Listar facturas activas",
+        description: "SIN AUTH — retorna invoices con status=active",
         security: [],
         responses: {
           "200": {
-            description: "Lista de atenciones",
+            description: "Lista de facturas",
             content: {
               "application/json": {
                 schema: {
                   type: "object",
                   properties: {
-                    encounters: {
+                    invoices: {
                       type: "array",
-                      items: { $ref: "#/components/schemas/Encounter" },
+                      items: { $ref: "#/components/schemas/Invoice" },
                     },
                   },
                 },
@@ -39,41 +39,41 @@ export const encounterSwagger = {
         },
       },
       post: {
-        tags: ["Encounters"],
-        summary: "Crear atención",
-        description: "SIN AUTH — transaccional (regla del PDF): cita activa en state=scheduled, médico de la agenda activo, paciente activo, historia clínica activa del paciente y servicio activo. Al crear, la cita pasa a state=attended",
+        tags: ["Invoices"],
+        summary: "Crear factura",
+        description: "SIN AUTH — transaccional: number único; encounter_ids de atenciones activas, completed, sin factura y del mismo paciente. subtotal = suma de totales; total = subtotal + tax",
         security: [],
         requestBody: {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/EncounterCreate" },
+              schema: { $ref: "#/components/schemas/InvoiceCreate" },
             },
           },
         },
         responses: {
           "201": {
-            description: "Atención creada",
+            description: "Factura creada",
             content: {
               "application/json": {
                 schema: {
                   type: "object",
                   properties: {
-                    encounter: { $ref: "#/components/schemas/Encounter" },
+                    invoice: { $ref: "#/components/schemas/Invoice" },
                   },
                 },
               },
             },
           },
-          "400": { description: "Validación (cita no programada, médico/paciente inactivo, sin historia clínica, servicio inactivo)" },
-          "404": { description: "Cita o servicio no encontrado" },
+          "400": { description: "Validación (number repetido, atenciones no facturables o de distintos pacientes)" },
+          "404": { description: "Atención no encontrada" },
         },
       },
     },
-    "/api/encounters/{id}": {
+    "/api/invoices/{id}": {
       get: {
-        tags: ["Encounters"],
-        summary: "Obtener atención por id",
+        tags: ["Invoices"],
+        summary: "Obtener factura por id",
         description: "SIN AUTH",
         security: [],
         parameters: [
@@ -86,13 +86,13 @@ export const encounterSwagger = {
         ],
         responses: {
           "200": {
-            description: "Atención encontrada",
+            description: "Factura encontrada",
             content: {
               "application/json": {
                 schema: {
                   type: "object",
                   properties: {
-                    encounter: { $ref: "#/components/schemas/Encounter" },
+                    invoice: { $ref: "#/components/schemas/Invoice" },
                   },
                 },
               },
@@ -102,9 +102,9 @@ export const encounterSwagger = {
         },
       },
       put: {
-        tags: ["Encounters"],
-        summary: "Actualizar atención (PUT — reemplazo)",
-        description: "SIN AUTH — reemplaza datos de la atención; appointment_id, clinical_record_id y service_id no cambian",
+        tags: ["Invoices"],
+        summary: "Actualizar factura (PUT — reemplazo)",
+        description: "SIN AUTH — cabecera; total = subtotal + tax",
         security: [],
         parameters: [
           {
@@ -118,20 +118,20 @@ export const encounterSwagger = {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/EncounterUpdate" },
+              schema: { $ref: "#/components/schemas/InvoiceUpdate" },
             },
           },
         },
         responses: {
           "200": { description: "Actualizado" },
-          "400": { description: "Validación (total o fechas)" },
+          "400": { description: "tax inválido" },
           "404": { description: "No encontrado" },
         },
       },
       patch: {
-        tags: ["Encounters"],
-        summary: "Actualizar atención (PATCH — parcial)",
-        description: "SIN AUTH — datos parciales; las FKs no cambian",
+        tags: ["Invoices"],
+        summary: "Actualizar factura (PATCH — parcial)",
+        description: "SIN AUTH — cabecera parcial; si cambia tax se recalcula total",
         security: [],
         parameters: [
           {
@@ -145,20 +145,20 @@ export const encounterSwagger = {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/EncounterPatch" },
+              schema: { $ref: "#/components/schemas/InvoicePatch" },
             },
           },
         },
         responses: {
           "200": { description: "Actualizado" },
-          "400": { description: "Validación (total o fechas)" },
+          "400": { description: "tax inválido" },
           "404": { description: "No encontrado" },
         },
       },
       delete: {
-        tags: ["Encounters"],
-        summary: "Eliminar atención (físico)",
-        description: "SIN AUTH — borra la atención y la cita vuelve a state=scheduled",
+        tags: ["Invoices"],
+        summary: "Eliminar factura (físico)",
+        description: "SIN AUTH — libera las atenciones (invoice_id = null) y borra la factura",
         security: [],
         parameters: [
           {
@@ -174,10 +174,10 @@ export const encounterSwagger = {
         },
       },
     },
-    "/api/encounters/{id}/deactivate": {
+    "/api/invoices/{id}/deactivate": {
       patch: {
-        tags: ["Encounters"],
-        summary: "Eliminar atención (lógico)",
+        tags: ["Invoices"],
+        summary: "Eliminar factura (lógico)",
         description: "SIN AUTH — status = inactive",
         security: [],
         parameters: [
@@ -197,57 +197,58 @@ export const encounterSwagger = {
   },
   components: {
     schemas: {
-      Encounter: {
+      Invoice: {
         type: "object",
         properties: {
           id: { type: "integer", example: 1 },
-          appointment_id: { type: "integer", example: 1 },
-          clinical_record_id: { type: "integer", example: 1 },
-          service_id: { type: "integer", example: 1 },
-          start_date: { type: "string", format: "date-time" },
-          end_date: { type: "string", format: "date-time", nullable: true },
+          number: { type: "string", example: "FV-100001" },
+          invoice_date: { type: "string", format: "date-time" },
+          subtotal: { type: "number", example: 85000 },
+          tax: { type: "number", example: 0 },
           total: { type: "number", example: 85000 },
-          state: { type: "string", enum: ["in_progress", "completed", "cancelled"], example: "completed" },
-          observations: { type: "string", nullable: true },
-          invoice_id: { type: "integer", nullable: true, example: null },
+          state: { type: "string", enum: ["issued", "paid", "cancelled"], example: "issued" },
           status: { type: "string", enum: ["active", "inactive"], example: "active" },
+          encounters: {
+            type: "array",
+            items: { $ref: "#/components/schemas/Encounter" },
+          },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
         },
       },
-      EncounterCreate: {
+      InvoiceCreate: {
         type: "object",
-        required: ["appointment_id", "service_id"],
+        required: ["number", "encounter_ids"],
         properties: {
-          appointment_id: { type: "integer" },
-          service_id: { type: "integer" },
-          start_date: { type: "string", format: "date-time" },
-          end_date: { type: "string", format: "date-time" },
-          total: { type: "number", default: 0 },
-          state: { type: "string", enum: ["in_progress", "completed"], default: "in_progress" },
-          observations: { type: "string" },
+          number: { type: "string" },
+          invoice_date: { type: "string", format: "date-time" },
+          tax: { type: "number", default: 0 },
+          state: { type: "string", enum: ["issued", "paid", "cancelled"], default: "issued" },
           status: { type: "string", enum: ["active", "inactive"], default: "active" },
+          encounter_ids: {
+            type: "array",
+            items: { type: "integer" },
+            example: [1, 2],
+          },
         },
       },
-      EncounterUpdate: {
+      InvoiceUpdate: {
         type: "object",
         properties: {
-          start_date: { type: "string", format: "date-time" },
-          end_date: { type: "string", format: "date-time" },
-          total: { type: "number" },
-          state: { type: "string", enum: ["in_progress", "completed", "cancelled"] },
-          observations: { type: "string" },
+          number: { type: "string" },
+          invoice_date: { type: "string", format: "date-time" },
+          tax: { type: "number" },
+          state: { type: "string", enum: ["issued", "paid", "cancelled"] },
           status: { type: "string", enum: ["active", "inactive"] },
         },
       },
-      EncounterPatch: {
+      InvoicePatch: {
         type: "object",
         properties: {
-          start_date: { type: "string", format: "date-time" },
-          end_date: { type: "string", format: "date-time" },
-          total: { type: "number" },
-          state: { type: "string", enum: ["in_progress", "completed", "cancelled"] },
-          observations: { type: "string" },
+          number: { type: "string" },
+          invoice_date: { type: "string", format: "date-time" },
+          tax: { type: "number" },
+          state: { type: "string", enum: ["issued", "paid", "cancelled"] },
           status: { type: "string", enum: ["active", "inactive"] },
         },
       },

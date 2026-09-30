@@ -1,0 +1,12 @@
+### Feature Invoice — DELETE físico / DELETE lógico (status = inactive)
+### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+@baseUrl = http://localhost:4000
+@id = 1
+
+# @name deleteInvoicePhysical
+DELETE {{baseUrl}}/api/invoices/{{id}}
+
+###
+
+# @name deleteInvoiceLogical
+PATCH {{baseUrl}}/api/invoices/{{id}}/deactivate
