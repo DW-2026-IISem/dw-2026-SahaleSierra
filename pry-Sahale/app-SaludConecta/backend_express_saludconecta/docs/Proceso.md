@@ -4838,3 +4838,250 @@ npm run dev
 ```
 
 ![](images/clipboard-2554862730.png)
+
+## **36. ISS-18 — Feature Users (identidad y contraseña)**
+
+**Equivale a:** ISS-10 de la guía (§15.1–15.8). **Objetivo:** CRUD de usuarios con contraseña hasheada, unicidad de `username`/`email` (409), cambio de contraseña y seeder de usuarios canónicos. **Bloqueado por:** ISS-17. **API:** `/api/users…`
+
+### **DTOs**
+
+```         
+mkdir -p src/features/auth/users/dto src/features/auth/users/http
+```
+
+#### **36.1 `create-user.dto.ts`**
+
+#### ![](images/clipboard-778253290.png)
+
+#### **36.2 `update-user.dto.ts`**
+
+#### ![](images/clipboard-3212414033.png)
+
+#### **36.3 `patch-user.dto.ts`**
+
+#### ![](images/clipboard-1971752072.png)
+
+#### **36.4 `change-password.dto.ts`**
+
+#### ![](images/clipboard-3929355369.png)
+
+#### **36.5 `user-response.dto.ts`**
+
+#### ![](images/clipboard-3756701817.png)
+
+#### **36.6 `index.ts`**
+
+![](images/clipboard-2940061121.png)
+
+### **Repository**
+
+#### **36.7 `users.repository.ts`**
+
+![](images/clipboard-1517348935.png)
+
+### **Service**
+
+#### **36.8 `users.service.ts`**
+
+Versión de este ISS: sin `getEffectivePermissions` (se añade en ISS-20).
+
+![](images/clipboard-461478967.png)
+
+![](images/clipboard-3314334210.png)
+
+### **Controller**
+
+#### **36.9 `users.controller.ts`**
+
+Versión de este ISS: sin `getEffectivePermissions` (se añade en ISS-20).
+
+![](images/clipboard-3317675236.png)
+
+### **Rutas**
+
+#### **36.10 `users.routes.ts`**
+
+Versión de este ISS: sin middlewares de acceso y sin la ruta `/permissions`. ISS-21 la reemplaza por la definitiva.
+
+![](images/clipboard-186328472.png)
+
+### **Seeder de usuarios canónicos**
+
+#### **36.11 `users.seeder.ts`**
+
+![](images/clipboard-3735533716.png)
+
+### **Swagger**
+
+#### **36.12 `users.swagger.ts`**
+
+![](images/clipboard-2218445092.png)
+
+![](images/clipboard-3910485046.png)
+
+![](images/clipboard-4252113307.png)
+
+### **Pruebas HTTP**
+
+#### **36.13 `users.get.http`**
+
+Estos archivos usan `POST /api/session/login`, que existe desde ISS-23. Se crean ahora, como en la guía, y se usan al cerrar la Fase II.
+
+![](images/clipboard-2572970205.png)
+
+#### **36.14 `users.create.http`**
+
+![](images/clipboard-2133494401.png)
+
+## **Cableado**
+
+### **36.15 PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { InvoiceRoutes } from "../features/business/invoice/invoice.routes";`, **añadir:**
+
+``` typescript
+import { UsersRoutes } from "../features/auth/users/users.routes"; 
+```
+
+![](images/clipboard-2246377898.png)
+
+**2.** **Dentro de** `Routes`, **debajo de** `public invoiceRoutes: InvoiceRoutes = new InvoiceRoutes();`, **añadir:**
+
+``` typescript
+   // Fase II — Auth con RBAC   public usersRoutes: UsersRoutes = new UsersRoutes(); 
+```
+
+![](images/clipboard-3131964387.png)
+
+### **36.16 PARCHE — `src/config/index.ts`**
+
+**Dentro de** `routes()`, **debajo de** `this.routePrv.invoiceRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+     // Fase II — Auth con RBAC     this.routePrv.usersRoutes.routes(this.app); 
+```
+
+![](images/clipboard-4008325920.png)
+
+### **36.17 PARCHE — `src/database/seeders/counts.ts`**
+
+Solo `users` tiene conteo. Los catálogos de seguridad de los ISS siguientes (`roles`, `resources`, `role_users`, `resource_roles`) son deterministas: su contenido vive en el código, no en un número.
+
+**1.** **Dentro de** `SeedCounts`, **encima de** `patients: number;`, **añadir:**
+
+``` typescript
+  users: number; 
+```
+
+![](images/clipboard-159358185.png)
+
+**2.** **Dentro de** `DEFAULT_SEED_COUNTS`, **encima de** `patients: 10,`, **añadir:**
+
+``` typescript
+  // 5 usuarios canónicos, uno por rol.   users: 5, 
+```
+
+![](images/clipboard-1828443497.png)
+
+**3.** **Dentro de** `resolveSeedCounts`, **encima de** `const envPatients = process.env.SEED_PATIENTS;`, **añadir:**
+
+``` typescript
+  const envUsers = process.env.SEED_USERS;
+  if (envUsers !== undefined && envUsers !== "") {
+    counts.users = Number(envUsers);
+  }
+```
+
+![](images/clipboard-532779085.png)
+
+### **36.18 PARCHE — `src/database/seeders/index.ts` (runner)**
+
+La seguridad se siembra **antes** que el negocio, como en la guía.
+
+**1.** **Debajo de** `import "../../features/auth/rbac.associations";`, **añadir:**
+
+``` typescript
+import { seedUsers } from "../../features/auth/users/users.seeder"; 
+```
+
+![](images/clipboard-4175213051.png)
+
+**2.** **Dentro de** `runAllSeeders()`, **encima de** el comentario `// Orden: business (padres → hijos)`, **añadir:**
+
+``` typescript
+  // Fase II — Auth con RBAC (el orden respeta las dependencias de la cadena)   await seedUsers(counts.users);  
+```
+
+![](images/clipboard-4138794600.png)
+
+### **36.19 PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { invoiceSwagger } from "../features/business/invoice/invoice.swagger";`, **añadir:**
+
+``` typescript
+import { usersSwagger } from "../features/auth/users/users.swagger"; 
+```
+
+![](images/clipboard-2057690660.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **encima de** `patientSwagger,`, **añadir** (los módulos de seguridad van primero):
+
+``` typescript
+  usersSwagger, 
+```
+
+![](images/clipboard-1253696531.png)
+
+### **Verificación ISS-18**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> En `📊 Conteos` aparece `users: 5` y, antes de los seeders de negocio, `✅ users: insertados 5 usuario(s) (5 canónicos + 0 aleatorios)`.
+>
+> ![](images/clipboard-1720124178.png)
+
+Las contraseñas quedan hasheadas (bcrypt empieza por `$2`):
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SELECT id, username, email, LEFT(password, 7) AS hash, status FROM users;" 
+```
+
+![](images/clipboard-89136899.png)
+
+Con `npm run dev` corriendo (las rutas están abiertas hasta ISS-21):
+
+``` bash
+B=http://localhost:4000/api/users
+curl -s -w "\n%{http_code}\n" $B
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' \
+  -d '{"username":"Prueba.User","email":"PRUEBA@saludconecta.local","password":"Password123!"}'
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' \
+  -d '{"username":"admin","email":"otro@saludconecta.local","password":"x"}'
+```
+
+> - `200` con los 5 usuarios, **sin** campo `password`.
+>
+> - `201`: `username` y `email` quedan en minúsculas (los normaliza el modelo) y la respuesta no trae `password`.
+>
+> - `409` con `Username already in use`.
+
+![](images/clipboard-3771273455.png)
+
+Borra el usuario de prueba (usa el `id` que devolvió el POST):
+
+``` bash
+curl -s -w "\n%{http_code}\n" -X DELETE $B/ID 
+```
+
+![](images/clipboard-3732326558.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+#### ![](images/clipboard-1289238680.png)

@@ -11,6 +11,7 @@ import { clinicalRecordSwagger } from "../features/business/clinical-record/clin
 import { authorizationSwagger } from "../features/business/authorization/authorization.swagger";
 import { encounterSwagger } from "../features/business/encounter/encounter.swagger";
 import { invoiceSwagger } from "../features/business/invoice/invoice.swagger";
+import { usersSwagger } from "../features/auth/users/users.swagger";
 import {
   bearerSecurityScheme,
   forbiddenResponse,
@@ -31,6 +32,7 @@ export type FeatureSwaggerModule = {
  * (mismo patrón que SeedersRunner).
  */
 const featureSwaggerModules: FeatureSwaggerModule[] = [
+  usersSwagger, 
   patientSwagger,
   specialtySwagger,
   doctorSwagger,

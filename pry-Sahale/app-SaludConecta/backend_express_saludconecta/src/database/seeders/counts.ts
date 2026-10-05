@@ -16,10 +16,13 @@ export type SeedCounts = {
   authorizations: number;
   encounters: number;
   invoices: number;
+  users: number;
 
 };
 
 export const DEFAULT_SEED_COUNTS: SeedCounts = {
+    // 5 usuarios canónicos, uno por rol.
+  users: 5,
   patients: 10,
   specialties: 10,
   doctors: 15,
@@ -36,6 +39,11 @@ export const DEFAULT_SEED_COUNTS: SeedCounts = {
 
 export function resolveSeedCounts(argv: string[] = process.argv.slice(2)): SeedCounts {
   const counts: SeedCounts = { ...DEFAULT_SEED_COUNTS };
+  
+  const envUsers = process.env.SEED_USERS;
+  if (envUsers !== undefined && envUsers !== "") {
+    counts.users = Number(envUsers);
+  }
 
   const envPatients = process.env.SEED_PATIENTS;
   if (envPatients !== undefined && envPatients !== "") {

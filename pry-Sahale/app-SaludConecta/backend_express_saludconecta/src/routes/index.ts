@@ -9,6 +9,8 @@ import { ClinicalRecordRoutes } from "../features/business/clinical-record/clini
 import { AuthorizationRoutes } from "../features/business/authorization/authorization.routes";
 import { EncounterRoutes } from "../features/business/encounter/encounter.routes";
 import { InvoiceRoutes } from "../features/business/invoice/invoice.routes";
+import { UsersRoutes } from "../features/auth/users/users.routes";
+
 
 
 export class Routes {
@@ -23,6 +25,8 @@ export class Routes {
   public authorizationRoutes: AuthorizationRoutes = new AuthorizationRoutes();
   public encounterRoutes: EncounterRoutes = new EncounterRoutes();
   public invoiceRoutes: InvoiceRoutes = new InvoiceRoutes();
+  // Fase II — Auth con RBAC
+  public usersRoutes: UsersRoutes = new UsersRoutes();
 
 
 }

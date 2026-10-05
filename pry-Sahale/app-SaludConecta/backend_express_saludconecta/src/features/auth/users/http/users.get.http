@@ -1,0 +1,49 @@
+### Feature Users — GET ALL / GET ONE (modalidad JWT + RBAC)
+### JWT + RBAC: `authenticate` (401 si no hay identidad válida) +
+### `authorize` (403 si la matriz no concede el par method+path).
+@baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+@adminToken = {{loginAdmin.response.body.$.access_token}}
+@id = 1
+
+### getAll — recurso `GET /api/users` (solo ADMIN). Nunca devuelve `password`.
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{adminToken}}
+
+### getOne — recurso `GET /api/users/:id`
+GET {{baseUrl}}/api/users/{{id}}
+Authorization: Bearer {{adminToken}}
+
+### Permisos efectivos de un usuario — recurso `GET /api/users/:id/permissions`
+GET {{baseUrl}}/api/users/{{id}}/permissions
+Authorization: Bearer {{adminToken}}
+
+### 400 — id no es entero positivo (validado en BaseController.paramId)
+GET {{baseUrl}}/api/users/abc
+Authorization: Bearer {{adminToken}}
+
+### 401 — sin token
+GET {{baseUrl}}/api/users
+
+### 403 — el rol MEDICO no tiene concedido `GET /api/users`
+# @name loginMedico
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "medico",
+  "password": "Medico123!"
+}
+
+###
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{loginMedico.response.body.$.access_token}}

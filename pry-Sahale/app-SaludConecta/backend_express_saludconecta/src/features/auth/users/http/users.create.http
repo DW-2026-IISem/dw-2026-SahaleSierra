@@ -1,0 +1,87 @@
+### Feature Users — CREATE / UPDATE / DELETE (modalidad JWT + RBAC)
+@baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+
+### CREATE — recurso `POST /api/users`. El `password` se hashea (bcrypt, 12 rondas).
+# @name createUser
+POST {{baseUrl}}/api/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "nuevo.usuario",
+  "email": "nuevo.usuario@saludconecta.local",
+  "password": "Password123!",
+  "avatar": null
+}
+
+@id = {{createUser.response.body.$.user.id}}
+
+### 409 — username/email ya en uso
+POST {{baseUrl}}/api/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "email": "otro@saludconecta.local",
+  "password": "Password123!"
+}
+
+### UPDATE PUT — reemplazo completo. No cambia `password` ni `status`.
+PUT {{baseUrl}}/api/users/{{id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "nuevo.usuario",
+  "email": "nuevo.usuario@saludconecta.local",
+  "avatar": "https://example.com/avatar.png"
+}
+
+### UPDATE PATCH — parcial
+PATCH {{baseUrl}}/api/users/{{id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "avatar": null
+}
+
+### CAMBIO DE CONTRASEÑA — exige la contraseña actual
+PATCH {{baseUrl}}/api/users/{{id}}/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "current_password": "Password123!",
+  "new_password": "Password456!"
+}
+
+### 400 — contraseña actual incorrecta
+PATCH {{baseUrl}}/api/users/{{id}}/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "current_password": "no-es-la-actual",
+  "new_password": "Password789!"
+}
+
+### DELETE lógico — el usuario queda inactivo: sus tokens dejan de valer (401)
+PATCH {{baseUrl}}/api/users/{{id}}/deactivate
+Authorization: Bearer {{token}}
+
+### DELETE físico
+DELETE {{baseUrl}}/api/users/{{id}}
+Authorization: Bearer {{token}}
