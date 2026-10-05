@@ -3629,3 +3629,87 @@ npm run dev
 ```
 
 ![](images/clipboard-1911672227.png)
+
+## **25. ISS-16-D — Doctor a 4 capas**
+
+**Objetivo:** pasar Doctor a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-C.
+
+### **25.1 DTOs**
+
+``` bash
+mkdir -p src/features/business/doctor/dto
+```
+
+#### **25.1.a `create-doctor.dto.ts`**
+
+![](images/clipboard-2305293547.png)
+
+#### **25.1.b `update-doctor.dto.ts`**
+
+#### ![](images/clipboard-1211407338.png)
+
+#### **25.1.c `patch-doctor.dto.ts`**
+
+#### ![](images/clipboard-1372477385.png)
+
+#### **25.1.d `doctor-response.dto.ts`**
+
+#### ![](images/clipboard-1776076361.png)
+
+#### **25.1.e `index.ts`**
+
+![](images/clipboard-639400509.png)
+
+### **25.2 Repository**
+
+#### **`doctor.repository.ts`**
+
+![](images/clipboard-3902010453.png)
+
+### **25.3 Service**
+
+#### **`doctor.service.ts`**
+
+![](images/clipboard-3412804127.png)
+
+### **25.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+### `doctor.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`doctor.controller.ts`**
+
+![](images/clipboard-749691991.png)
+
+### **Verificación ISS-16-D**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/doctor/doctor.controller.ts 
+```
+
+![](images/clipboard-3980924682.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api/doctors
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"name":"Dr. Prueba 16D"}'
+curl -s -w "\n%{http_code}\n" $B/abc
+```
+
+> `201` con `{"doctor":{...}}` y `400`.
+>
+> ![](images/clipboard-3838502213.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-3832898732.png)
