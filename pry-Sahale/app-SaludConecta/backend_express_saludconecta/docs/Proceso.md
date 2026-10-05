@@ -3802,3 +3802,87 @@ npm run dev
 ```
 
 ![](images/clipboard-1175240038.png)
+
+## **27. ISS-16-F — Service a 4 capas**
+
+**Objetivo:** pasar Service a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-E.
+
+### **27.1 DTOs**
+
+```         
+mkdir -p src/features/business/service/dto
+```
+
+#### **27.1.a `create-service.dto.ts`**
+
+#### ![](images/clipboard-1111930769.png)
+
+#### **27.1.b `update-service.dto.ts`**
+
+#### ![](images/clipboard-597612996.png)
+
+#### **27.1.c `patch-service.dto.ts`**
+
+#### ![](images/clipboard-1042041244.png)
+
+#### **27.1.d `service-response.dto.ts`**
+
+#### ![](images/clipboard-2885608530.png)
+
+#### **27.1.e `index.ts`**
+
+![](images/clipboard-3804062988.png)
+
+### **27.2 Repository**
+
+#### **`service.repository.ts`**
+
+![](images/clipboard-2243063876.png)
+
+### **27.3 Service**
+
+#### **`service.service.ts`**
+
+![](images/clipboard-4172974812.png)
+
+### **27.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`service.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`service.controller.ts`**
+
+![](images/clipboard-499173492.png)
+
+### **Verificación ISS-16-F**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/service/service.controller.ts 
+```
+
+![](images/clipboard-2791229253.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api/services
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"name":"Servicio 16F"}'
+curl -s -w "\n%{http_code}\n" $B/abc
+```
+
+> `201` con `{"service":{...}}` y `400`.
+>
+> ![](images/clipboard-1796449166.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-995693445.png)

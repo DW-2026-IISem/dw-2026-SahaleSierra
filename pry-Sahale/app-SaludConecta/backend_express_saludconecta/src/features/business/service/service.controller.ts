@@ -1,127 +1,82 @@
 import { Request, Response } from "express";
-import { Service, ServiceI } from "./service.model";
+import { BaseController } from "../../../shared/http/base-controller";
+import { CreateServiceDto, PatchServiceDto, UpdateServiceDto } from "./dto";
+import { ServiceService } from "./service.service";
 
-function paramId(req: Request): number {
-  const raw = req.params.id;
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  return Number(value);
-}
-
-export class ServiceController {
-  // ================== READ ==================
-  public async getAll(req: Request, res: Response) {
-    try {
-      const services = await Service.findAll({
-        where: { status: "active" },
-      });
-      res.status(200).json({ services });
-    } catch (error) {
-      res.status(500).json({ error: "Error fetching services", detail: String(error) });
-    }
+/**
+ * Capa Controller del feature Service.
+ * Solo HTTP: lee `req`, llama al service y arma la respuesta.
+ * El manejo de errores se delega en `run()` (ver `BaseController`).
+ */
+export class ServiceController extends BaseController {
+  public constructor(
+    private readonly service: ServiceService = new ServiceService()
+  ) {
+    super();
   }
 
-  public async getOne(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const service = await Service.findByPk(id);
-      if (!service) {
-        res.status(404).json({ error: "Service not found" });
-        return;
-      }
+  // ================== READ ==================
+  public async getAll(_req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const services = await this.service.getAll();
+      res.status(200).json({ services });
+    });
+  }
+
+  public async getOne(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const service = await this.service.getOne(this.paramId(req));
       res.status(200).json({ service });
-    } catch (error) {
-      res.status(500).json({ error: "Error fetching service", detail: String(error) });
-    }
+    });
   }
 
   // ================== CREATE ==================
-  public async create(req: Request, res: Response) {
-    try {
-      const body = req.body as ServiceI;
-      const service = await Service.create({
-        name: body.name,
-        description: body.description ?? null,
-        status: body.status ?? "active",
-      });
+  public async create(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const service = await this.service.create(req.body as CreateServiceDto);
       res.status(201).json({ service });
-    } catch (error) {
-      res.status(500).json({ error: "Error creating service", detail: String(error) });
-    }
+    });
   }
 
   // ================== UPDATE ==================
-  public async updatePut(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const body = req.body as ServiceI;
-      const service = await Service.findByPk(id);
-      if (!service) {
-        res.status(404).json({ error: "Service not found" });
-        return;
-      }
-
-      await service.update({
-        name: body.name,
-        description: body.description ?? null,
-        status: body.status ?? service.status,
-      });
-
+  public async updatePut(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const service = await this.service.updatePut(
+        this.paramId(req),
+        req.body as UpdateServiceDto
+      );
       res.status(200).json({ service });
-    } catch (error) {
-      res.status(500).json({ error: "Error updating service (PUT)", detail: String(error) });
-    }
+    });
   }
 
-  public async updatePatch(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const body = req.body as Partial<ServiceI>;
-      const service = await Service.findByPk(id);
-      if (!service) {
-        res.status(404).json({ error: "Service not found" });
-        return;
-      }
-
-      await service.update(body);
+  public async updatePatch(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const service = await this.service.updatePatch(
+        this.paramId(req),
+        req.body as PatchServiceDto
+      );
       res.status(200).json({ service });
-    } catch (error) {
-      res.status(500).json({ error: "Error updating service (PATCH)", detail: String(error) });
-    }
+    });
   }
 
   // ================== DELETE ==================
   /** Eliminación física */
-  public async deletePhysical(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const service = await Service.findByPk(id);
-      if (!service) {
-        res.status(404).json({ error: "Service not found" });
-        return;
-      }
-      await service.destroy();
+  public async deletePhysical(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const id = this.paramId(req);
+      await this.service.deletePhysical(id);
       res.status(200).json({ message: "Service permanently deleted", id });
-    } catch (error) {
-      res.status(500).json({ error: "Error deleting service", detail: String(error) });
-    }
+    });
   }
 
   /** Eliminación lógica → status = inactive */
-  public async deleteLogical(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const service = await Service.findByPk(id);
-      if (!service) {
-        res.status(404).json({ error: "Service not found" });
-        return;
-      }
-      await service.update({ status: "inactive" });
+  public async deleteLogical(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const service = await this.service.deleteLogical(this.paramId(req));
       res.status(200).json({
         message: "Service deactivated (logical delete)",
         service,
       });
-    } catch (error) {
-      res.status(500).json({ error: "Error deactivating service", detail: String(error) });
-    }
+    });
   }
 }
