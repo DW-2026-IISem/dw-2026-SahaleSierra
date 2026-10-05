@@ -4161,3 +4161,92 @@ npm run dev
 ```
 
 ![](images/clipboard-2106648971.png)
+
+## **31. ISS-16-J — Authorization a 4 capas**
+
+**Objetivo:** pasar Authorization a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-I.
+
+0..1:1 con Appointment.
+
+### **31.1 DTOs**
+
+``` bash
+mkdir -p src/features/business/authorization/dto
+```
+
+#### **31.1.a `create-authorization.dto.ts`**
+
+#### ![](images/clipboard-1253373013.png)
+
+#### **31.1.b `update-authorization.dto.ts`**
+
+#### ![](images/clipboard-99139000.png)
+
+#### **31.1.c `patch-authorization.dto.ts`**
+
+#### ![](images/clipboard-884541877.png)
+
+#### **31.1.d `authorization-response.dto.ts`**
+
+#### ![](images/clipboard-4249259620.png)
+
+#### **31.1.e `index.ts`**
+
+![](images/clipboard-2772923439.png)
+
+### **31.2 Repository**
+
+#### **`authorization.repository.ts`**
+
+![](images/clipboard-986025790.png)
+
+### **31.3 Service**
+
+#### **`authorization.service.ts`**
+
+![](images/clipboard-2606080635.png)
+
+![](images/clipboard-3050785153.png)
+
+### **31.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`authorization.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`authorization.controller.ts`**
+
+![](images/clipboard-2530120573.png)
+
+### **Verificación ISS-16-J**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/authorization/authorization.controller.ts 
+```
+
+![](images/clipboard-1752695963.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api/authorizations
+curl -s -w "\n%{http_code}\n" $B | tail -c 150
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"name":"AUT"}'
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"name":"AUT","appointment_id":99999999}'
+```
+
+> `200`, `400` (`appointment_id is required`) y `404` (`Appointment not found`).
+>
+> ![](images/clipboard-2398678327.png)
+
+### **Cierre del ISS**
+
+```         
+npm run dev
+```
+
+![](images/clipboard-2851841037.png)
