@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Patient.
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const patientSwagger = {
   tags: [
     {
       name: "Patients",
-      description: "CRUD de pacientes — **SIN AUTH** (sin middleware JWT)",
+      description: "CRUD de pacientes — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const patientSwagger = {
       get: {
         tags: ["Patients"],
         summary: "Listar pacientes activos",
-        description: "SIN AUTH — retorna pacientes con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna pacientes con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de pacientes",
             content: {
@@ -41,8 +49,8 @@ export const patientSwagger = {
       post: {
         tags: ["Patients"],
         summary: "Crear paciente",
-        description: "SIN AUTH — document_number es único",
-        security: [],
+        description: "JWT + RBAC — document_number es único",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const patientSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Paciente creado",
             content: {
@@ -72,8 +82,8 @@ export const patientSwagger = {
       get: {
         tags: ["Patients"],
         summary: "Obtener paciente por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -83,6 +93,8 @@ export const patientSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Paciente encontrado",
             content: {
@@ -102,8 +114,8 @@ export const patientSwagger = {
       put: {
         tags: ["Patients"],
         summary: "Actualizar paciente (PUT — reemplazo)",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -121,6 +133,8 @@ export const patientSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -128,8 +142,8 @@ export const patientSwagger = {
       patch: {
         tags: ["Patients"],
         summary: "Actualizar paciente (PATCH — parcial)",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -147,6 +161,8 @@ export const patientSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -154,8 +170,8 @@ export const patientSwagger = {
       delete: {
         tags: ["Patients"],
         summary: "Eliminar paciente (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -165,6 +181,8 @@ export const patientSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -174,8 +192,8 @@ export const patientSwagger = {
       patch: {
         tags: ["Patients"],
         summary: "Eliminar paciente (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -185,6 +203,8 @@ export const patientSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

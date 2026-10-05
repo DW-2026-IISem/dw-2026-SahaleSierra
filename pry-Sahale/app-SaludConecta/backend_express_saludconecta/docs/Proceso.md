@@ -5684,3 +5684,258 @@ npm run dev
 ```
 
 ![](images/clipboard-3203012950.png)
+
+## **39. ISS-21 — Middlewares de acceso y las tres modalidades en rutas**
+
+**Equivale a:** ISS-13 de la guía (§18.1–18.6). **Objetivo:** crear `authenticate` y `authorize`, y pasar **todas** las rutas de administración y de negocio de *SIN AUTH* a **JWT + RBAC**. **Bloqueado por:** ISS-20 (`authorize` usa la consulta de autorización efectiva).
+
+``` bash
+mkdir -p src/features/auth/access
+```
+
+### **Middlewares de acceso**
+
+`authenticate` hace cuatro cosas, en orden: lee `Authorization: Bearer <token>`, verifica el JWT (algoritmo, emisor y audiencia fijos), **revalida en la BD** que el usuario exista y esté `active`, y deja la identidad en `req.auth`. No consulta permisos.
+
+`authorize` toma `req.auth`, consulta la cadena `role_users → roles → resource_roles → resources` (todo activo) y compara el `(method, path)` real con las concesiones, por patrón. Sin concesión, **403**. Como consulta en cada petición, revocar un permiso tiene efecto inmediato.
+
+#### **39.1 `authenticate.middleware.ts`**
+
+#### ![](images/clipboard-4008965161.png)
+
+#### **39.2 `authorize.middleware.ts`**
+
+#### ![](images/clipboard-43224034.png)
+
+#### **39.3 `index.ts`**
+
+![](images/clipboard-130090926.png)
+
+### **Rutas de administración: versión definitiva (JWT + RBAC)**
+
+Estos 5 archivos existen desde ISS-18 a 20 sin middlewares. Se reemplazan enteros por la versión de la guía.
+
+#### **39.4 `users.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-456864065.png)
+
+#### **39.5 `roles.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-3352515951.png)
+
+#### **39.6 `resources.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-1586273722.png)
+
+#### **39.7 `role-users.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-1155345306.png)
+
+#### **39.8 `resource-roles.routes.ts` — REEMPLAZO COMPLETO**
+
+![](images/clipboard-888041031.png)
+
+### **Rutas de negocio: de SIN AUTH a JWT + RBAC (las 11)**
+
+El cambio es quirúrgico, igual que en la guía (§18.4): se importa `authenticate, authorize` desde el barrel de auth y se insertan entre la ruta y el controller. Ni el contrato de la API ni las capas de negocio cambian.
+
+```         
+import { authenticate, authorize } from "../../auth/access"; // ... app   .route("/api/patients/:id")   .get(authenticate, authorize, this.patientController.getOne.bind(this.patientController)); 
+```
+
+Cada archivo se reemplaza entero.
+
+#### **39.9 `patient.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-909213984.png)
+
+#### **39.10 `specialty.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-3428285164.png)
+
+#### **39.11 `doctor.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-3116058182.png)
+
+#### **39.12 `doctor-specialty.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-2815986888.png)
+
+#### **39.13 `service.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-2383958001.png)
+
+#### **39.14 `agenda.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-2564243542.png)
+
+#### **39.15 `appointment.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-2269042591.png)
+
+#### **39.16 `clinical-record.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-2511828542.png)
+
+#### **39.17 `authorization.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-4143411663.png)
+
+#### **39.18 `encounter.routes.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-2792035078.png)
+
+#### **39.19 `invoice.routes.ts` — REEMPLAZO COMPLETO**
+
+![](images/clipboard-2708398110.png)
+
+### **Swagger y `.http` de negocio**
+
+#### **39.20 PARCHE — los 11 `*.swagger.ts` de negocio**
+
+Los 11 archivos tienen la misma forma y necesitan los mismos cuatro cambios, así que se aplican con `sed` en un solo bucle:
+
+1.  **Encima de** la primera línea: el `import` de `swagger-security`.
+
+2.  **Reemplazar** cada `security: [],` por `security: bearerSecurity,`.
+
+3.  **Debajo de** cada `responses: {` de operación: las respuestas `401` y `403`.
+
+4.  **Reemplazar** el texto `SIN AUTH` por `JWT + RBAC`.
+
+El `grep -q` hace que un archivo ya parchado no se toque dos veces.
+
+``` bash
+ for f in src/features/business/*/*.swagger.ts; do
+  grep -q "swagger-security" "$f" && continue
+  sed -i \
+    -e '1i import {\n  bearerSecurity,\n  forbiddenResponse,\n  unauthorizedResponse,\n} from "../../../shared/http/swagger-security";\n' \
+    -e 's/security: \[\],/security: bearerSecurity,/' \
+    -e 's/^        responses: {$/&\n          "401": unauthorizedResponse,\n          "403": forbiddenResponse,/' \
+    -e 's/\*\*SIN AUTH\*\* (sin middleware JWT)/**JWT + RBAC**/' \
+    -e 's/SIN AUTH (sin middleware JWT)/JWT + RBAC/' \
+    -e 's/SIN AUTH/JWT + RBAC/g' "$f"
+done
+```
+
+Comprobación:
+
+``` bash
+grep -c "security: bearerSecurity," src/features/business/*/*.swagger.ts
+grep -l "SIN AUTH\|security: \[\]" src/features/business/*/*.swagger.ts | wc -l
+npx tsc --noEmit
+```
+
+> Cada archivo debe mostrar `7` (y `clinical-record.swagger.ts`, `8`), el segundo comando `0` y `tsc` no debe imprimir nada.
+>
+> ![](images/clipboard-2791032013.png)
+
+### **39.21 PARCHE — los 44 `.http` de negocio**
+
+Cada archivo necesita tres cambios:
+
+1.  **Reemplazar** la línea `### Leyenda: SIN AUTH …` por la leyenda nueva.
+
+2.  **Debajo de** la línea `@baseUrl = …`: el login como admin y la variable `@token`.
+
+3.  **Debajo de** cada línea de petición (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`): la cabecera `Authorization: Bearer {{token}}`.
+
+Primero, un archivo temporal con el bloque de login (se borra al final):
+
+``` bash
+: > login-block.tmp
+cat >> login-block.tmp << 'EOF'
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+
+###
+EOF
+```
+
+``` bash
+for f in src/features/business/*/http/*.http; do
+  grep -q "loginAdmin" "$f" && continue
+  sed -i -E \
+    -e 's/^### Leyenda: SIN AUTH.*$/### Leyenda: JWT + RBAC (login como admin + Authorization: Bearer)/' \
+    -e 's/^(GET|POST|PUT|PATCH|DELETE) \{\{baseUrl\}\}.*$/&\nAuthorization: Bearer {{token}}/' \
+    -e '/^@baseUrl = /r login-block.tmp' "$f"
+done
+rm login-block.tmp
+```
+
+``` bash
+grep -L "loginAdmin" src/features/business/*/http/*.http | wc -l
+grep -c "Authorization: Bearer {{token}}" src/features/business/patient/http/*.http
+sed -n '1,22p' src/features/business/patient/http/patients.get.http
+```
+
+> `0` archivos sin login; `patients.get.http` y `patients.update.http` y `patients.delete.http` con `2` cabeceras y `patients.create.http` con `1`. El archivo debe empezar así:
+
+![](images/clipboard-2081767646.png)
+
+Estos `.http` funcionan desde ISS-23, cuando exista el login.
+
+### **Verificación ISS-21**
+
+``` bash
+npx tsc --noEmit 
+npm run dev 
+```
+
+En la segunda terminal. Sin token, todo responde 401:
+
+``` bash
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/patients
+curl -s -w "\n%{http_code}\n" http://localhost:4000/api/users
+curl -s -w "\n%{http_code}\n" -H "Authorization: Bearer no.es.un.jwt" http://localhost:4000/api/patients
+```
+
+> `401` con `Missing Bearer token` (dos veces) y `401` con `Invalid or expired access token`.
+>
+> ![](images/clipboard-546583073.png)
+
+Como el login llega en ISS-23, firma dos tokens a mano con la misma función que usará el login. Usuario 1 = `admin`, usuario 3 = `medico`:
+
+``` bash
+ADMIN=$(npx ts-node -e 'require("dotenv").config({ quiet: true }); const { signAccessToken } = require("./src/shared/auth/jwt"); console.log(signAccessToken({ id: 1, username: "admin" }).token)')
+MEDICO=$(npx ts-node -e 'require("dotenv").config({ quiet: true }); const { signAccessToken } = require("./src/shared/auth/jwt"); console.log(signAccessToken({ id: 3, username: "medico" }).token)')
+echo "$ADMIN" | cut -c1-40
+```
+
+> Debe imprimir el inicio de un JWT (`eyJhbGciOiJIUzI1NiIs…`). Los tokens duran 15 minutos.
+>
+> ![](images/clipboard-1983607712.png)
+
+``` bash
+B=http://localhost:4000/api
+curl -s -o /dev/null -w "admin  GET  /patients -> %{http_code}\n" -H "Authorization: Bearer $ADMIN" $B/patients
+curl -s -o /dev/null -w "admin  GET  /users    -> %{http_code}\n" -H "Authorization: Bearer $ADMIN" $B/users
+curl -s -o /dev/null -w "medico GET  /patients -> %{http_code}\n" -H "Authorization: Bearer $MEDICO" $B/patients
+curl -s -o /dev/null -w "medico GET  /users    -> %{http_code}\n" -H "Authorization: Bearer $MEDICO" $B/users
+curl -s -w "\nmedico POST /patients -> %{http_code}\n" -X POST -H "Authorization: Bearer $MEDICO" \
+  -H 'Content-Type: application/json' -d '{"document_number":"X21","name":"x"}' $B/patients
+curl -s -o /dev/null -w "admin  GET  /patients/abc -> %{http_code}\n" -H "Authorization: Bearer $ADMIN" $B/patients/abc
+```
+
+> `200`, `200`, `200`, `403`, `403` (con `Forbidden: no grant for POST /api/patients`) y `400`.
+>
+> ![](images/clipboard-1681162257.png)
+
+En **/api/docs**, las operaciones de negocio ahora muestran el candado y las respuestas 401 y 403.
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-1059227929.png)

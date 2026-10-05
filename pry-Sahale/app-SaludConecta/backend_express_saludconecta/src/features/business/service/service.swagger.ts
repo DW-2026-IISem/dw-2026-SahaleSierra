@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Service.
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const serviceSwagger = {
   tags: [
     {
       name: "Services",
-      description: "CRUD de servicios ambulatorios — **SIN AUTH** (sin middleware JWT)",
+      description: "CRUD de servicios ambulatorios — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const serviceSwagger = {
       get: {
         tags: ["Services"],
         summary: "Listar servicios activos",
-        description: "SIN AUTH — retorna servicios con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna servicios con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de servicios",
             content: {
@@ -41,8 +49,8 @@ export const serviceSwagger = {
       post: {
         tags: ["Services"],
         summary: "Crear servicio",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const serviceSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Servicio creado",
             content: {
@@ -72,8 +82,8 @@ export const serviceSwagger = {
       get: {
         tags: ["Services"],
         summary: "Obtener servicio por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -83,6 +93,8 @@ export const serviceSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Servicio encontrado",
             content: {
@@ -102,8 +114,8 @@ export const serviceSwagger = {
       put: {
         tags: ["Services"],
         summary: "Actualizar servicio (PUT — reemplazo)",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -121,6 +133,8 @@ export const serviceSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -128,8 +142,8 @@ export const serviceSwagger = {
       patch: {
         tags: ["Services"],
         summary: "Actualizar servicio (PATCH — parcial)",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -147,6 +161,8 @@ export const serviceSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -154,8 +170,8 @@ export const serviceSwagger = {
       delete: {
         tags: ["Services"],
         summary: "Eliminar servicio (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -165,6 +181,8 @@ export const serviceSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -174,8 +192,8 @@ export const serviceSwagger = {
       patch: {
         tags: ["Services"],
         summary: "Eliminar servicio (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -185,6 +203,8 @@ export const serviceSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Appointment (tabla appointments).
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const appointmentSwagger = {
   tags: [
     {
       name: "Appointments",
-      description: "CRUD de citas (agenda + paciente) — **SIN AUTH** (sin middleware JWT)",
+      description: "CRUD de citas (agenda + paciente) — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const appointmentSwagger = {
       get: {
         tags: ["Appointments"],
         summary: "Listar citas activas",
-        description: "SIN AUTH — retorna appointments con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna appointments con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de citas",
             content: {
@@ -41,8 +49,8 @@ export const appointmentSwagger = {
       post: {
         tags: ["Appointments"],
         summary: "Crear cita",
-        description: "SIN AUTH — transaccional: agenda activa (médico activo), paciente activo, end_date > start_date y sin cruce de horario en la agenda. Siempre nace en state=scheduled",
-        security: [],
+        description: "JWT + RBAC — transaccional: agenda activa (médico activo), paciente activo, end_date > start_date y sin cruce de horario en la agenda. Siempre nace en state=scheduled",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const appointmentSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Cita creada",
             content: {
@@ -74,8 +84,8 @@ export const appointmentSwagger = {
       get: {
         tags: ["Appointments"],
         summary: "Obtener cita por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -85,6 +95,8 @@ export const appointmentSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Cita encontrada",
             content: {
@@ -104,8 +116,8 @@ export const appointmentSwagger = {
       put: {
         tags: ["Appointments"],
         summary: "Actualizar cita (PUT — reemplazo)",
-        description: "SIN AUTH — no permite state=attended (solo POST /api/encounters)",
-        security: [],
+        description: "JWT + RBAC — no permite state=attended (solo POST /api/encounters)",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -123,6 +135,8 @@ export const appointmentSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "Validación (state attended, rango o cruce de horario)" },
           "404": { description: "No encontrado" },
@@ -131,8 +145,8 @@ export const appointmentSwagger = {
       patch: {
         tags: ["Appointments"],
         summary: "Actualizar cita (PATCH — parcial)",
-        description: "SIN AUTH — no permite state=attended (solo POST /api/encounters)",
-        security: [],
+        description: "JWT + RBAC — no permite state=attended (solo POST /api/encounters)",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -150,6 +164,8 @@ export const appointmentSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "Validación (state attended, rango o cruce de horario)" },
           "404": { description: "No encontrado" },
@@ -158,8 +174,8 @@ export const appointmentSwagger = {
       delete: {
         tags: ["Appointments"],
         summary: "Eliminar cita (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -169,6 +185,8 @@ export const appointmentSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -178,8 +196,8 @@ export const appointmentSwagger = {
       patch: {
         tags: ["Appointments"],
         summary: "Eliminar cita (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -189,6 +207,8 @@ export const appointmentSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

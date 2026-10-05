@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Doctor.
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const doctorSwagger = {
   tags: [
     {
       name: "Doctors",
-      description: "CRUD de médicos — **SIN AUTH** (sin middleware JWT)",
+      description: "CRUD de médicos — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const doctorSwagger = {
       get: {
         tags: ["Doctors"],
         summary: "Listar médicos activos",
-        description: "SIN AUTH — retorna médicos con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna médicos con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de médicos",
             content: {
@@ -41,8 +49,8 @@ export const doctorSwagger = {
       post: {
         tags: ["Doctors"],
         summary: "Crear médico",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const doctorSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Médico creado",
             content: {
@@ -72,8 +82,8 @@ export const doctorSwagger = {
       get: {
         tags: ["Doctors"],
         summary: "Obtener médico por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -83,6 +93,8 @@ export const doctorSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Médico encontrado",
             content: {
@@ -102,8 +114,8 @@ export const doctorSwagger = {
       put: {
         tags: ["Doctors"],
         summary: "Actualizar médico (PUT — reemplazo)",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -121,6 +133,8 @@ export const doctorSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -128,8 +142,8 @@ export const doctorSwagger = {
       patch: {
         tags: ["Doctors"],
         summary: "Actualizar médico (PATCH — parcial)",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -147,6 +161,8 @@ export const doctorSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -154,8 +170,8 @@ export const doctorSwagger = {
       delete: {
         tags: ["Doctors"],
         summary: "Eliminar médico (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -165,6 +181,8 @@ export const doctorSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -174,8 +192,8 @@ export const doctorSwagger = {
       patch: {
         tags: ["Doctors"],
         summary: "Eliminar médico (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -185,6 +203,8 @@ export const doctorSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

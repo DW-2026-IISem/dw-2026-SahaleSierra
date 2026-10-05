@@ -1,41 +1,77 @@
 import { Application } from "express";
 import { AuthorizationController } from "./authorization.controller";
+import { authenticate, authorize } from "../../auth/access";
 
+/**
+ * Rutas del feature Authorization.
+ *
+ * **Modalidad 3 — JWT + RBAC**: `authenticate` resuelve la identidad (401 si no
+ * hay token válido o el usuario está inactivo) y `authorize` decide sobre el par
+ * `(method, path)` (403 si no hay concesión activa en la matriz de permisos).
+ */
 export class AuthorizationRoutes {
   public authorizationController: AuthorizationController = new AuthorizationController();
 
   public routes(app: Application): void {
-    // ================== RUTAS SIN AUTENTICACIÓN / SIN MIDDLEWARE JWT ==================
+    // ================== RUTAS JWT + RBAC (authenticate + authorize) ==================
 
     // getAll
     app
       .route("/api/authorizations")
-      .get(this.authorizationController.getAll.bind(this.authorizationController));
+      .get(
+        authenticate,
+        authorize,
+        this.authorizationController.getAll.bind(this.authorizationController),
+      );
 
     // getOne
     app
       .route("/api/authorizations/:id")
-      .get(this.authorizationController.getOne.bind(this.authorizationController));
+      .get(
+        authenticate,
+        authorize,
+        this.authorizationController.getOne.bind(this.authorizationController),
+      );
 
     // create
     app
       .route("/api/authorizations")
-      .post(this.authorizationController.create.bind(this.authorizationController));
+      .post(
+        authenticate,
+        authorize,
+        this.authorizationController.create.bind(this.authorizationController),
+      );
 
     // update (PUT / PATCH)
     app
       .route("/api/authorizations/:id")
-      .put(this.authorizationController.updatePut.bind(this.authorizationController))
-      .patch(this.authorizationController.updatePatch.bind(this.authorizationController));
+      .put(
+        authenticate,
+        authorize,
+        this.authorizationController.updatePut.bind(this.authorizationController),
+      )
+      .patch(
+        authenticate,
+        authorize,
+        this.authorizationController.updatePatch.bind(this.authorizationController),
+      );
 
     // delete físico
     app
       .route("/api/authorizations/:id")
-      .delete(this.authorizationController.deletePhysical.bind(this.authorizationController));
+      .delete(
+        authenticate,
+        authorize,
+        this.authorizationController.deletePhysical.bind(this.authorizationController),
+      );
 
     // delete lógico
     app
       .route("/api/authorizations/:id/deactivate")
-      .patch(this.authorizationController.deleteLogical.bind(this.authorizationController));
+      .patch(
+        authenticate,
+        authorize,
+        this.authorizationController.deleteLogical.bind(this.authorizationController),
+      );
   }
 }

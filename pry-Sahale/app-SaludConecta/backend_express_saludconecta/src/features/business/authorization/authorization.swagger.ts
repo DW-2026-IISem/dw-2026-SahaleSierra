@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Authorization (tabla authorizations).
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const authorizationSwagger = {
   tags: [
     {
       name: "Authorizations",
-      description: "CRUD de autorizaciones (0..1:1 con cita) — **SIN AUTH** (sin middleware JWT)",
+      description: "CRUD de autorizaciones (0..1:1 con cita) — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const authorizationSwagger = {
       get: {
         tags: ["Authorizations"],
         summary: "Listar autorizaciones activas",
-        description: "SIN AUTH — retorna authorizations con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna authorizations con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de autorizaciones",
             content: {
@@ -41,8 +49,8 @@ export const authorizationSwagger = {
       post: {
         tags: ["Authorizations"],
         summary: "Crear autorización",
-        description: "SIN AUTH — cita activa y no cancelada; máximo una autorización por cita",
-        security: [],
+        description: "JWT + RBAC — cita activa y no cancelada; máximo una autorización por cita",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const authorizationSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Autorización creada",
             content: {
@@ -74,8 +84,8 @@ export const authorizationSwagger = {
       get: {
         tags: ["Authorizations"],
         summary: "Obtener autorización por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -85,6 +95,8 @@ export const authorizationSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Autorización encontrada",
             content: {
@@ -104,8 +116,8 @@ export const authorizationSwagger = {
       put: {
         tags: ["Authorizations"],
         summary: "Actualizar autorización (PUT — reemplazo)",
-        description: "SIN AUTH — reemplaza name, description y status; appointment_id no cambia",
-        security: [],
+        description: "JWT + RBAC — reemplaza name, description y status; appointment_id no cambia",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -123,6 +135,8 @@ export const authorizationSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -130,8 +144,8 @@ export const authorizationSwagger = {
       patch: {
         tags: ["Authorizations"],
         summary: "Actualizar autorización (PATCH — parcial)",
-        description: "SIN AUTH — name, description y/o status; appointment_id no cambia",
-        security: [],
+        description: "JWT + RBAC — name, description y/o status; appointment_id no cambia",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -149,6 +163,8 @@ export const authorizationSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -156,8 +172,8 @@ export const authorizationSwagger = {
       delete: {
         tags: ["Authorizations"],
         summary: "Eliminar autorización (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -167,6 +183,8 @@ export const authorizationSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -176,8 +194,8 @@ export const authorizationSwagger = {
       patch: {
         tags: ["Authorizations"],
         summary: "Eliminar autorización (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -187,6 +205,8 @@ export const authorizationSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Encounter (tabla encounters).
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const encounterSwagger = {
   tags: [
     {
       name: "Encounters",
-      description: "Atenciones: registro de la consulta (pasa la cita a attended) — **SIN AUTH** (sin middleware JWT)",
+      description: "Atenciones: registro de la consulta (pasa la cita a attended) — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const encounterSwagger = {
       get: {
         tags: ["Encounters"],
         summary: "Listar atenciones activas",
-        description: "SIN AUTH — retorna encounters con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna encounters con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de atenciones",
             content: {
@@ -41,8 +49,8 @@ export const encounterSwagger = {
       post: {
         tags: ["Encounters"],
         summary: "Crear atención",
-        description: "SIN AUTH — transaccional (regla del PDF): cita activa en state=scheduled, médico de la agenda activo, paciente activo, historia clínica activa del paciente y servicio activo. Al crear, la cita pasa a state=attended",
-        security: [],
+        description: "JWT + RBAC — transaccional (regla del PDF): cita activa en state=scheduled, médico de la agenda activo, paciente activo, historia clínica activa del paciente y servicio activo. Al crear, la cita pasa a state=attended",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const encounterSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Atención creada",
             content: {
@@ -74,8 +84,8 @@ export const encounterSwagger = {
       get: {
         tags: ["Encounters"],
         summary: "Obtener atención por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -85,6 +95,8 @@ export const encounterSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Atención encontrada",
             content: {
@@ -104,8 +116,8 @@ export const encounterSwagger = {
       put: {
         tags: ["Encounters"],
         summary: "Actualizar atención (PUT — reemplazo)",
-        description: "SIN AUTH — reemplaza datos de la atención; appointment_id, clinical_record_id y service_id no cambian",
-        security: [],
+        description: "JWT + RBAC — reemplaza datos de la atención; appointment_id, clinical_record_id y service_id no cambian",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -123,6 +135,8 @@ export const encounterSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "Validación (total o fechas)" },
           "404": { description: "No encontrado" },
@@ -131,8 +145,8 @@ export const encounterSwagger = {
       patch: {
         tags: ["Encounters"],
         summary: "Actualizar atención (PATCH — parcial)",
-        description: "SIN AUTH — datos parciales; las FKs no cambian",
-        security: [],
+        description: "JWT + RBAC — datos parciales; las FKs no cambian",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -150,6 +164,8 @@ export const encounterSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "Validación (total o fechas)" },
           "404": { description: "No encontrado" },
@@ -158,8 +174,8 @@ export const encounterSwagger = {
       delete: {
         tags: ["Encounters"],
         summary: "Eliminar atención (físico)",
-        description: "SIN AUTH — borra la atención y la cita vuelve a state=scheduled",
-        security: [],
+        description: "JWT + RBAC — borra la atención y la cita vuelve a state=scheduled",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -169,6 +185,8 @@ export const encounterSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -178,8 +196,8 @@ export const encounterSwagger = {
       patch: {
         tags: ["Encounters"],
         summary: "Eliminar atención (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -189,6 +207,8 @@ export const encounterSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

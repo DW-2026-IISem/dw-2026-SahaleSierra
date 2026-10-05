@@ -1,10 +1,24 @@
 ### Feature Agenda — UPDATE (PUT) / UPDATE (PATCH)
-### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+### Leyenda: JWT + RBAC (login como admin + Authorization: Bearer)
 @baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+
+###
 @id = 1
 
 # @name updateAgendaPut
 PUT {{baseUrl}}/api/agendas/{{id}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -18,6 +32,7 @@ Content-Type: application/json
 
 # @name updateAgendaPatch
 PATCH {{baseUrl}}/api/agendas/{{id}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {

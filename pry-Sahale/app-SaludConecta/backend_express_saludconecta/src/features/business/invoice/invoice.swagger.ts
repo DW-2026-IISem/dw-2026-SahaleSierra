@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Invoice (tabla invoices).
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const invoiceSwagger = {
   tags: [
     {
       name: "Invoices",
-      description: "Facturas: agrupan atenciones facturables — **SIN AUTH** (sin middleware JWT)",
+      description: "Facturas: agrupan atenciones facturables — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const invoiceSwagger = {
       get: {
         tags: ["Invoices"],
         summary: "Listar facturas activas",
-        description: "SIN AUTH — retorna invoices con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna invoices con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de facturas",
             content: {
@@ -41,8 +49,8 @@ export const invoiceSwagger = {
       post: {
         tags: ["Invoices"],
         summary: "Crear factura",
-        description: "SIN AUTH — transaccional: number único; encounter_ids de atenciones activas, completed, sin factura y del mismo paciente. subtotal = suma de totales; total = subtotal + tax",
-        security: [],
+        description: "JWT + RBAC — transaccional: number único; encounter_ids de atenciones activas, completed, sin factura y del mismo paciente. subtotal = suma de totales; total = subtotal + tax",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const invoiceSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Factura creada",
             content: {
@@ -74,8 +84,8 @@ export const invoiceSwagger = {
       get: {
         tags: ["Invoices"],
         summary: "Obtener factura por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -85,6 +95,8 @@ export const invoiceSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Factura encontrada",
             content: {
@@ -104,8 +116,8 @@ export const invoiceSwagger = {
       put: {
         tags: ["Invoices"],
         summary: "Actualizar factura (PUT — reemplazo)",
-        description: "SIN AUTH — cabecera; total = subtotal + tax",
-        security: [],
+        description: "JWT + RBAC — cabecera; total = subtotal + tax",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -123,6 +135,8 @@ export const invoiceSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "tax inválido" },
           "404": { description: "No encontrado" },
@@ -131,8 +145,8 @@ export const invoiceSwagger = {
       patch: {
         tags: ["Invoices"],
         summary: "Actualizar factura (PATCH — parcial)",
-        description: "SIN AUTH — cabecera parcial; si cambia tax se recalcula total",
-        security: [],
+        description: "JWT + RBAC — cabecera parcial; si cambia tax se recalcula total",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -150,6 +164,8 @@ export const invoiceSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "tax inválido" },
           "404": { description: "No encontrado" },
@@ -158,8 +174,8 @@ export const invoiceSwagger = {
       delete: {
         tags: ["Invoices"],
         summary: "Eliminar factura (físico)",
-        description: "SIN AUTH — libera las atenciones (invoice_id = null) y borra la factura",
-        security: [],
+        description: "JWT + RBAC — libera las atenciones (invoice_id = null) y borra la factura",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -169,6 +185,8 @@ export const invoiceSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -178,8 +196,8 @@ export const invoiceSwagger = {
       patch: {
         tags: ["Invoices"],
         summary: "Eliminar factura (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -189,6 +207,8 @@ export const invoiceSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

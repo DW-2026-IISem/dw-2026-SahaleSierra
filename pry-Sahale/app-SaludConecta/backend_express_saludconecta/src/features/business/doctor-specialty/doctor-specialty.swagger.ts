@@ -1,8 +1,14 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature DoctorSpecialty (tabla doctor_specialties).
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const doctorSpecialtySwagger = {
@@ -10,7 +16,7 @@ export const doctorSpecialtySwagger = {
     {
       name: "DoctorSpecialties",
       description:
-        "CRUD de la relación N:M Doctor↔Specialty (tabla doctor_specialties) — **SIN AUTH** (sin middleware JWT)",
+        "CRUD de la relación N:M Doctor↔Specialty (tabla doctor_specialties) — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -18,9 +24,11 @@ export const doctorSpecialtySwagger = {
       get: {
         tags: ["DoctorSpecialties"],
         summary: "Listar relaciones médico-especialidad activas",
-        description: "SIN AUTH — retorna doctor_specialties con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna doctor_specialties con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de relaciones",
             content: {
@@ -43,8 +51,8 @@ export const doctorSpecialtySwagger = {
         tags: ["DoctorSpecialties"],
         summary: "Asignar especialidad a un médico",
         description:
-          "SIN AUTH — médico y especialidad deben existir y estar active; el par (doctor_id, specialty_id) no puede repetirse",
-        security: [],
+          "JWT + RBAC — médico y especialidad deben existir y estar active; el par (doctor_id, specialty_id) no puede repetirse",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -54,6 +62,8 @@ export const doctorSpecialtySwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Relación creada",
             content: {
@@ -76,8 +86,8 @@ export const doctorSpecialtySwagger = {
       get: {
         tags: ["DoctorSpecialties"],
         summary: "Obtener relación por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -87,6 +97,8 @@ export const doctorSpecialtySwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Relación encontrada",
             content: {
@@ -107,8 +119,8 @@ export const doctorSpecialtySwagger = {
         tags: ["DoctorSpecialties"],
         summary: "Actualizar relación (PUT)",
         description:
-          "SIN AUTH — reemplaza relation_data y status; el par doctor/specialty no cambia",
-        security: [],
+          "JWT + RBAC — reemplaza relation_data y status; el par doctor/specialty no cambia",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -126,6 +138,8 @@ export const doctorSpecialtySwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "Padres inactivos al reactivar" },
           "404": { description: "No encontrado" },
@@ -134,8 +148,8 @@ export const doctorSpecialtySwagger = {
       patch: {
         tags: ["DoctorSpecialties"],
         summary: "Actualizar relación (PATCH — parcial)",
-        description: "SIN AUTH — relation_data y/o status",
-        security: [],
+        description: "JWT + RBAC — relation_data y/o status",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -153,6 +167,8 @@ export const doctorSpecialtySwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "Padres inactivos al reactivar" },
           "404": { description: "No encontrado" },
@@ -161,8 +177,8 @@ export const doctorSpecialtySwagger = {
       delete: {
         tags: ["DoctorSpecialties"],
         summary: "Eliminar relación (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -172,6 +188,8 @@ export const doctorSpecialtySwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -181,8 +199,8 @@ export const doctorSpecialtySwagger = {
       patch: {
         tags: ["DoctorSpecialties"],
         summary: "Eliminar relación (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -192,6 +210,8 @@ export const doctorSpecialtySwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

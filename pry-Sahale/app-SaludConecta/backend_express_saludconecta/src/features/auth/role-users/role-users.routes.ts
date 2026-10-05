@@ -1,12 +1,15 @@
 import { Application } from "express";
 import { RoleUsersController } from "./role-users.controller";
+import { authenticate, authorize } from "../access";
 
 /**
- * Rutas del feature RoleUsers.
+ * Rutas del feature RoleUsers — **modalidad 3 (JWT + RBAC)**.
  *
- * Versión de construcción: todavía **sin middlewares de acceso**. `authenticate`
- * y `authorize` se insertan en ISS-21, cuando existan; ese ISS reemplaza
- * este archivo por su versión definitiva (**JWT + RBAC**).
+ * Es la vía administrativa para **asignar un rol a un usuario**:
+ * `POST /api/role-users` con `{ user_id, role_id }`.
+ *
+ * No hay borrado físico: retirar un rol es un borrado lógico (`/deactivate`) y
+ * es reversible (`/reactivate`). La auditoría de quién tuvo qué rol se conserva.
  */
 export class RoleUsersRoutes {
   public roleUsersController: RoleUsersController = new RoleUsersController();
@@ -15,26 +18,38 @@ export class RoleUsersRoutes {
     // getAll
     app
       .route("/api/role-users")
-      .get(this.roleUsersController.getAll.bind(this.roleUsersController));
+      .get(authenticate, authorize, this.roleUsersController.getAll.bind(this.roleUsersController));
 
     // getOne
     app
       .route("/api/role-users/:id")
-      .get(this.roleUsersController.getOne.bind(this.roleUsersController));
+      .get(authenticate, authorize, this.roleUsersController.getOne.bind(this.roleUsersController));
 
     // asignar rol (create)
     app
       .route("/api/role-users")
-      .post(this.roleUsersController.assign.bind(this.roleUsersController));
+      .post(
+        authenticate,
+        authorize,
+        this.roleUsersController.assign.bind(this.roleUsersController),
+      );
 
     // retirar rol (delete lógico)
     app
       .route("/api/role-users/:id/deactivate")
-      .patch(this.roleUsersController.deactivate.bind(this.roleUsersController));
+      .patch(
+        authenticate,
+        authorize,
+        this.roleUsersController.deactivate.bind(this.roleUsersController),
+      );
 
     // reactivar asignación
     app
       .route("/api/role-users/:id/reactivate")
-      .patch(this.roleUsersController.reactivate.bind(this.roleUsersController));
+      .patch(
+        authenticate,
+        authorize,
+        this.roleUsersController.reactivate.bind(this.roleUsersController),
+      );
   }
 }

@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Agenda (tabla agendas).
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const agendaSwagger = {
   tags: [
     {
       name: "Agendas",
-      description: "CRUD de agendas de médicos — **SIN AUTH** (sin middleware JWT)",
+      description: "CRUD de agendas de médicos — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const agendaSwagger = {
       get: {
         tags: ["Agendas"],
         summary: "Listar agendas activas",
-        description: "SIN AUTH — retorna agendas con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna agendas con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de agendas",
             content: {
@@ -41,8 +49,8 @@ export const agendaSwagger = {
       post: {
         tags: ["Agendas"],
         summary: "Crear agenda",
-        description: "SIN AUTH — doctor_id debe existir y estar active",
-        security: [],
+        description: "JWT + RBAC — doctor_id debe existir y estar active",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const agendaSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Agenda creada",
             content: {
@@ -74,8 +84,8 @@ export const agendaSwagger = {
       get: {
         tags: ["Agendas"],
         summary: "Obtener agenda por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -85,6 +95,8 @@ export const agendaSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Agenda encontrada",
             content: {
@@ -104,8 +116,8 @@ export const agendaSwagger = {
       put: {
         tags: ["Agendas"],
         summary: "Actualizar agenda (PUT — reemplazo)",
-        description: "SIN AUTH — doctor_id debe existir y estar active",
-        security: [],
+        description: "JWT + RBAC — doctor_id debe existir y estar active",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -123,6 +135,8 @@ export const agendaSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "Médico inactivo" },
           "404": { description: "No encontrado" },
@@ -131,8 +145,8 @@ export const agendaSwagger = {
       patch: {
         tags: ["Agendas"],
         summary: "Actualizar agenda (PATCH — parcial)",
-        description: "SIN AUTH — si envía doctor_id, debe existir y estar active",
-        security: [],
+        description: "JWT + RBAC — si envía doctor_id, debe existir y estar active",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -150,6 +164,8 @@ export const agendaSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "400": { description: "Médico inactivo" },
           "404": { description: "No encontrado" },
@@ -158,8 +174,8 @@ export const agendaSwagger = {
       delete: {
         tags: ["Agendas"],
         summary: "Eliminar agenda (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -169,6 +185,8 @@ export const agendaSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -178,8 +196,8 @@ export const agendaSwagger = {
       patch: {
         tags: ["Agendas"],
         summary: "Eliminar agenda (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -189,6 +207,8 @@ export const agendaSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

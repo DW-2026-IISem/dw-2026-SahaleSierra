@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature Specialty.
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const specialtySwagger = {
   tags: [
     {
       name: "Specialties",
-      description: "CRUD de especialidades médicas — **SIN AUTH** (sin middleware JWT)",
+      description: "CRUD de especialidades médicas — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const specialtySwagger = {
       get: {
         tags: ["Specialties"],
         summary: "Listar especialidades activas",
-        description: "SIN AUTH — retorna especialidades con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna especialidades con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de especialidades",
             content: {
@@ -41,8 +49,8 @@ export const specialtySwagger = {
       post: {
         tags: ["Specialties"],
         summary: "Crear especialidad",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const specialtySwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Especialidad creada",
             content: {
@@ -72,8 +82,8 @@ export const specialtySwagger = {
       get: {
         tags: ["Specialties"],
         summary: "Obtener especialidad por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -83,6 +93,8 @@ export const specialtySwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Especialidad encontrada",
             content: {
@@ -102,8 +114,8 @@ export const specialtySwagger = {
       put: {
         tags: ["Specialties"],
         summary: "Actualizar especialidad (PUT — reemplazo)",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -121,6 +133,8 @@ export const specialtySwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -128,8 +142,8 @@ export const specialtySwagger = {
       patch: {
         tags: ["Specialties"],
         summary: "Actualizar especialidad (PATCH — parcial)",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -147,6 +161,8 @@ export const specialtySwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -154,8 +170,8 @@ export const specialtySwagger = {
       delete: {
         tags: ["Specialties"],
         summary: "Eliminar especialidad (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -165,6 +181,8 @@ export const specialtySwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -174,8 +192,8 @@ export const specialtySwagger = {
       patch: {
         tags: ["Specialties"],
         summary: "Eliminar especialidad (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -185,6 +203,8 @@ export const specialtySwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },

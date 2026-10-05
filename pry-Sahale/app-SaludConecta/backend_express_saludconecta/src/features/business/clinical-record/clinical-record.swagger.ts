@@ -1,15 +1,21 @@
+import {
+  bearerSecurity,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../../../shared/http/swagger-security";
+
 /**
  * Documentación OpenAPI del feature ClinicalRecord (tabla clinical_records).
  * Se agrega desde `src/swagger` (registry externo), no se monta aquí.
  *
- * Leyenda: endpoints documentados como SIN AUTH (sin middleware JWT).
+ * Leyenda: endpoints documentados como JWT + RBAC.
  */
 
 export const clinicalRecordSwagger = {
   tags: [
     {
       name: "ClinicalRecords",
-      description: "CRUD de historias clínicas (1:1 con paciente) — **SIN AUTH** (sin middleware JWT)",
+      description: "CRUD de historias clínicas (1:1 con paciente) — **JWT + RBAC**",
     },
   ],
   paths: {
@@ -17,9 +23,11 @@ export const clinicalRecordSwagger = {
       get: {
         tags: ["ClinicalRecords"],
         summary: "Listar historias clínicas activas",
-        description: "SIN AUTH — retorna clinical_records con status=active",
-        security: [],
+        description: "JWT + RBAC — retorna clinical_records con status=active",
+        security: bearerSecurity,
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Lista de historias clínicas",
             content: {
@@ -41,8 +49,8 @@ export const clinicalRecordSwagger = {
       post: {
         tags: ["ClinicalRecords"],
         summary: "Crear historia clínica",
-        description: "SIN AUTH — paciente activo y sin historia previa (1:1)",
-        security: [],
+        description: "JWT + RBAC — paciente activo y sin historia previa (1:1)",
+        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -52,6 +60,8 @@ export const clinicalRecordSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "201": {
             description: "Historia clínica creada",
             content: {
@@ -74,8 +84,8 @@ export const clinicalRecordSwagger = {
       get: {
         tags: ["ClinicalRecords"],
         summary: "Obtener historia clínica por id",
-        description: "SIN AUTH",
-        security: [],
+        description: "JWT + RBAC",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -85,6 +95,8 @@ export const clinicalRecordSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Historia clínica encontrada",
             content: {
@@ -104,8 +116,8 @@ export const clinicalRecordSwagger = {
       put: {
         tags: ["ClinicalRecords"],
         summary: "Actualizar historia clínica (PUT — reemplazo)",
-        description: "SIN AUTH — reemplaza name, description y status; patient_id no cambia",
-        security: [],
+        description: "JWT + RBAC — reemplaza name, description y status; patient_id no cambia",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -123,6 +135,8 @@ export const clinicalRecordSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -130,8 +144,8 @@ export const clinicalRecordSwagger = {
       patch: {
         tags: ["ClinicalRecords"],
         summary: "Actualizar historia clínica (PATCH — parcial)",
-        description: "SIN AUTH — name, description y/o status; patient_id no cambia",
-        security: [],
+        description: "JWT + RBAC — name, description y/o status; patient_id no cambia",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -149,6 +163,8 @@ export const clinicalRecordSwagger = {
           },
         },
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Actualizado" },
           "404": { description: "No encontrado" },
         },
@@ -156,8 +172,8 @@ export const clinicalRecordSwagger = {
       delete: {
         tags: ["ClinicalRecords"],
         summary: "Eliminar historia clínica (físico)",
-        description: "SIN AUTH — borra la fila",
-        security: [],
+        description: "JWT + RBAC — borra la fila",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -167,6 +183,8 @@ export const clinicalRecordSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Eliminado" },
           "404": { description: "No encontrado" },
         },
@@ -176,8 +194,8 @@ export const clinicalRecordSwagger = {
       patch: {
         tags: ["ClinicalRecords"],
         summary: "Eliminar historia clínica (lógico)",
-        description: "SIN AUTH — status = inactive",
-        security: [],
+        description: "JWT + RBAC — status = inactive",
+        security: bearerSecurity,
         parameters: [
           {
             name: "id",
@@ -187,6 +205,8 @@ export const clinicalRecordSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": { description: "Desactivado" },
           "404": { description: "No encontrado" },
         },
@@ -196,8 +216,8 @@ export const clinicalRecordSwagger = {
       get: {
         tags: ["ClinicalRecords"],
         summary: "Obtener la historia clínica de un paciente",
-        description: "SIN AUTH — PDF: GET /historias/:pacienteId",
-        security: [],
+        description: "JWT + RBAC — PDF: GET /historias/:pacienteId",
+        security: bearerSecurity,
         parameters: [
           {
             name: "patientId",
@@ -207,6 +227,8 @@ export const clinicalRecordSwagger = {
           },
         ],
         responses: {
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
           "200": {
             description: "Historia clínica del paciente",
             content: {

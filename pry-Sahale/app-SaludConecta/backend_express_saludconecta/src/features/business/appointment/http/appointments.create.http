@@ -1,9 +1,23 @@
 ### Feature Appointment — CREATE
-### Leyenda: SIN AUTH (sin middleware JWT / sin autenticación)
+### Leyenda: JWT + RBAC (login como admin + Authorization: Bearer)
 @baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+
+###
 
 # @name createAppointment
 POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {

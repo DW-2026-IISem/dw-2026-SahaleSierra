@@ -1,12 +1,16 @@
 import { Application } from "express";
 import { ResourceRolesController } from "./resource-roles.controller";
+import { authenticate, authorize } from "../access";
 
 /**
- * Rutas del feature ResourceRoles.
+ * Rutas del feature ResourceRoles — **modalidad 3 (JWT + RBAC)**.
  *
- * Versión de construcción: todavía **sin middlewares de acceso**. `authenticate`
- * y `authorize` se insertan en ISS-21, cuando existan; ese ISS reemplaza
- * este archivo por su versión definitiva (**JWT + RBAC**).
+ * Es la vía administrativa para **conceder un recurso a un rol** (crear un
+ * permiso):
+ * `POST /api/resource-roles` con `{ role_id, resource_id }`.
+ *
+ * El efecto es inmediato y por datos: la siguiente petición del usuario afectado
+ * ya consulta la nueva matriz. No se reinicia el servidor ni se despliega nada.
  */
 export class ResourceRolesRoutes {
   public resourceRolesController: ResourceRolesController = new ResourceRolesController();
@@ -15,26 +19,46 @@ export class ResourceRolesRoutes {
     // getAll (filtros ?role_id= y ?resource_id=)
     app
       .route("/api/resource-roles")
-      .get(this.resourceRolesController.getAll.bind(this.resourceRolesController));
+      .get(
+        authenticate,
+        authorize,
+        this.resourceRolesController.getAll.bind(this.resourceRolesController),
+      );
 
     // getOne
     app
       .route("/api/resource-roles/:id")
-      .get(this.resourceRolesController.getOne.bind(this.resourceRolesController));
+      .get(
+        authenticate,
+        authorize,
+        this.resourceRolesController.getOne.bind(this.resourceRolesController),
+      );
 
     // conceder recurso a rol (create)
     app
       .route("/api/resource-roles")
-      .post(this.resourceRolesController.grant.bind(this.resourceRolesController));
+      .post(
+        authenticate,
+        authorize,
+        this.resourceRolesController.grant.bind(this.resourceRolesController),
+      );
 
     // retirar permiso (delete lógico)
     app
       .route("/api/resource-roles/:id/deactivate")
-      .patch(this.resourceRolesController.deactivate.bind(this.resourceRolesController));
+      .patch(
+        authenticate,
+        authorize,
+        this.resourceRolesController.deactivate.bind(this.resourceRolesController),
+      );
 
     // reactivar permiso
     app
       .route("/api/resource-roles/:id/reactivate")
-      .patch(this.resourceRolesController.reactivate.bind(this.resourceRolesController));
+      .patch(
+        authenticate,
+        authorize,
+        this.resourceRolesController.reactivate.bind(this.resourceRolesController),
+      );
   }
 }
