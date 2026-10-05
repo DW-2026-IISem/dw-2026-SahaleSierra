@@ -1,127 +1,82 @@
 import { Request, Response } from "express";
-import { Specialty, SpecialtyI } from "./specialty.model";
+import { BaseController } from "../../../shared/http/base-controller";
+import { CreateSpecialtyDto, PatchSpecialtyDto, UpdateSpecialtyDto } from "./dto";
+import { SpecialtyService } from "./specialty.service";
 
-function paramId(req: Request): number {
-  const raw = req.params.id;
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  return Number(value);
-}
-
-export class SpecialtyController {
-  // ================== READ ==================
-  public async getAll(req: Request, res: Response) {
-    try {
-      const specialties = await Specialty.findAll({
-        where: { status: "active" },
-      });
-      res.status(200).json({ specialties });
-    } catch (error) {
-      res.status(500).json({ error: "Error fetching specialties", detail: String(error) });
-    }
+/**
+ * Capa Controller del feature Specialty.
+ * Solo HTTP: lee `req`, llama al service y arma la respuesta.
+ * El manejo de errores se delega en `run()` (ver `BaseController`).
+ */
+export class SpecialtyController extends BaseController {
+  public constructor(
+    private readonly service: SpecialtyService = new SpecialtyService()
+  ) {
+    super();
   }
 
-  public async getOne(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const specialty = await Specialty.findByPk(id);
-      if (!specialty) {
-        res.status(404).json({ error: "Specialty not found" });
-        return;
-      }
+  // ================== READ ==================
+  public async getAll(_req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const specialties = await this.service.getAll();
+      res.status(200).json({ specialties });
+    });
+  }
+
+  public async getOne(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const specialty = await this.service.getOne(this.paramId(req));
       res.status(200).json({ specialty });
-    } catch (error) {
-      res.status(500).json({ error: "Error fetching specialty", detail: String(error) });
-    }
+    });
   }
 
   // ================== CREATE ==================
-  public async create(req: Request, res: Response) {
-    try {
-      const body = req.body as SpecialtyI;
-      const specialty = await Specialty.create({
-        name: body.name,
-        description: body.description ?? null,
-        status: body.status ?? "active",
-      });
+  public async create(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const specialty = await this.service.create(req.body as CreateSpecialtyDto);
       res.status(201).json({ specialty });
-    } catch (error) {
-      res.status(500).json({ error: "Error creating specialty", detail: String(error) });
-    }
+    });
   }
 
   // ================== UPDATE ==================
-  public async updatePut(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const body = req.body as SpecialtyI;
-      const specialty = await Specialty.findByPk(id);
-      if (!specialty) {
-        res.status(404).json({ error: "Specialty not found" });
-        return;
-      }
-
-      await specialty.update({
-        name: body.name,
-        description: body.description ?? null,
-        status: body.status ?? specialty.status,
-      });
-
+  public async updatePut(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const specialty = await this.service.updatePut(
+        this.paramId(req),
+        req.body as UpdateSpecialtyDto
+      );
       res.status(200).json({ specialty });
-    } catch (error) {
-      res.status(500).json({ error: "Error updating specialty (PUT)", detail: String(error) });
-    }
+    });
   }
 
-  public async updatePatch(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const body = req.body as Partial<SpecialtyI>;
-      const specialty = await Specialty.findByPk(id);
-      if (!specialty) {
-        res.status(404).json({ error: "Specialty not found" });
-        return;
-      }
-
-      await specialty.update(body);
+  public async updatePatch(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const specialty = await this.service.updatePatch(
+        this.paramId(req),
+        req.body as PatchSpecialtyDto
+      );
       res.status(200).json({ specialty });
-    } catch (error) {
-      res.status(500).json({ error: "Error updating specialty (PATCH)", detail: String(error) });
-    }
+    });
   }
 
   // ================== DELETE ==================
   /** Eliminación física */
-  public async deletePhysical(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const specialty = await Specialty.findByPk(id);
-      if (!specialty) {
-        res.status(404).json({ error: "Specialty not found" });
-        return;
-      }
-      await specialty.destroy();
+  public async deletePhysical(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const id = this.paramId(req);
+      await this.service.deletePhysical(id);
       res.status(200).json({ message: "Specialty permanently deleted", id });
-    } catch (error) {
-      res.status(500).json({ error: "Error deleting specialty", detail: String(error) });
-    }
+    });
   }
 
   /** Eliminación lógica → status = inactive */
-  public async deleteLogical(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const specialty = await Specialty.findByPk(id);
-      if (!specialty) {
-        res.status(404).json({ error: "Specialty not found" });
-        return;
-      }
-      await specialty.update({ status: "inactive" });
+  public async deleteLogical(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const specialty = await this.service.deleteLogical(this.paramId(req));
       res.status(200).json({
         message: "Specialty deactivated (logical delete)",
         specialty,
       });
-    } catch (error) {
-      res.status(500).json({ error: "Error deactivating specialty", detail: String(error) });
-    }
+    });
   }
 }

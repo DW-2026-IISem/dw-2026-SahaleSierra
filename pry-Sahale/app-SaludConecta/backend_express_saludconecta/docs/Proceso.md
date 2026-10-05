@@ -3544,3 +3544,88 @@ npm run dev
 ```
 
 ![](images/clipboard-1564554328.png)
+
+## **24. ISS-16-C — Specialty a 4 capas**
+
+**Objetivo:** pasar Specialty a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-B.
+
+### **24.1 DTOs**
+
+``` bash
+mkdir -p src/features/business/specialty/dto
+```
+
+#### **24.1.a `create-specialty.dto.ts`**
+
+![](images/clipboard-1096782335.png)
+
+#### **24.1.b `update-specialty.dto.ts`** 
+
+![](images/clipboard-3693774361.png)
+
+#### **24.1.c `patch-specialty.dto.ts`**
+
+![](images/clipboard-916816849.png)
+
+#### **24.1.d `specialty-response.dto.ts`**
+
+![](images/clipboard-539983091.png)
+
+#### **24.1.e `index.ts`**
+
+![](images/clipboard-3013903802.png)
+
+### **24.2 Repository**
+
+#### **`specialty.repository.ts`**
+
+![](images/clipboard-2977531555.png)
+
+### **24.3 Service**
+
+#### **`specialty.service.ts`**
+
+![](images/clipboard-3549350378.png)
+
+### **24.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`specialty.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`specialty.controller.ts`**
+
+![](images/clipboard-166139485.png)
+
+### **Verificación ISS-16-C**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/specialty/specialty.controller.ts 
+```
+
+![](images/clipboard-3922262478.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api/specialties
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"name":"Prueba 16C","description":"capas"}'
+curl -s -w "\n%{http_code}\n" $B/abc
+curl -s -w "\n%{http_code}\n" $B/99999999
+```
+
+> `201` con `{"specialty":{...}}`, luego `400` (`Invalid id…`) y `404` (`Specialty not found`).
+>
+> ![](images/clipboard-3800606604.png)
+
+### **Cierre del ISS**
+
+```         
+npm run dev
+```
+
+![](images/clipboard-1911672227.png)
