@@ -5939,3 +5939,132 @@ npm run dev
 ```
 
 ![](images/clipboard-1059227929.png)
+
+### **40. ISS-22 — Feature RefreshTokens (sesiones renovables y revocables)**
+
+**Equivale a:** ISS-14 de la guía (§19.1–19.6). **Objetivo:** persistir las sesiones como tokens opacos hasheados, con rotación, detección de reutilización y revocación. **Bloqueado por:** ISS-21 (`authenticate`). **API:** `/api/sessions…`, modalidad **JWT** (sin `authorize`).
+
+``` bash
+login  → family_id nuevo + refresh token (se guarda su SHA-256) + access token (15 min)
+uso    → POST /api/session/refresh con el refresh token
+         ├─ válido y vigente → ROTA: el viejo pasa a inactive y nace uno nuevo (misma familia)
+         └─ ya rotado        → REUSE DETECTION: se revoca toda la familia
+logout → revoca el refresh token
+```
+
+``` bash
+mkdir -p src/features/auth/refresh-tokens/dto src/features/auth/refresh-tokens/http
+```
+
+#### **40.1 `refresh-token-response.dto.ts`**
+
+#### ![](images/clipboard-2057371649.png)
+
+#### **40.2 `index.ts`**
+
+#### ![](images/clipboard-3704546203.png)
+
+#### **40.3 `refresh-tokens.repository.ts`**
+
+#### ![](images/clipboard-991931014.png)
+
+#### **40.4 `refresh-tokens.service.ts`**
+
+#### ![](images/clipboard-2858705785.png)
+
+![](images/clipboard-982172581.png)
+
+#### **40.5 `refresh-tokens.controller.ts`**
+
+#### ![](images/clipboard-238190774.png)
+
+#### **40.6 `refresh-tokens.routes.ts`**
+
+#### ![](images/clipboard-61934072.png)
+
+#### **40.7 `refresh-tokens.swagger.ts`**
+
+#### ![](images/clipboard-623374576.png)
+
+#### **40.8 `sessions.get.http`**
+
+![](images/clipboard-3193375201.png)
+
+## **Cableado**
+
+#### **40.9 PARCHE — `src/routes/index.ts`**
+
+**1.** **Encima de** `import { UsersRoutes } from "../features/auth/users/users.routes";`, **añadir:**
+
+``` typescript
+import { RefreshTokensRoutes } from "../features/auth/refresh-tokens/refresh-tokens.routes"; 
+```
+
+![](images/clipboard-1818929769.png)
+
+**2.** **Encima de** `public usersRoutes: UsersRoutes = new UsersRoutes();`, **añadir:**
+
+``` typescript
+  public refreshTokensRoutes: RefreshTokensRoutes = new RefreshTokensRoutes(); 
+```
+
+![](images/clipboard-2898646755.png)
+
+#### **40.10 PARCHE — `src/config/index.ts`**
+
+**Dentro de** `routes()`, **encima de** `this.routePrv.usersRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.refreshTokensRoutes.routes(this.app); 
+```
+
+![](images/clipboard-3512532200.png)
+
+#### **40.11 PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Encima de** `import { usersSwagger } from "../features/auth/users/users.swagger";`, **añadir:**
+
+``` typescript
+import { refreshTokensSwagger } from "../features/auth/refresh-tokens/refresh-tokens.swagger"; 
+```
+
+![](images/clipboard-39763656.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **encima de** `usersSwagger,`, **añadir:**
+
+``` typescript
+  refreshTokensSwagger, 
+```
+
+![](images/clipboard-1498157118.png)
+
+> Este feature no tiene seeder: `refresh_tokens` la puebla el login.
+
+### **Verificación ISS-22**
+
+``` bash
+npx tsc --noEmit 
+npm run dev 
+```
+
+En la segunda terminal:
+
+``` bash
+MEDICO=$(npx ts-node -e 'require("dotenv").config({ quiet: true }); const { signAccessToken } = require("./src/shared/auth/jwt"); console.log(signAccessToken({ id: 3, username: "medico" }).token)')
+B=http://localhost:4000/api/sessions
+curl -s -w "\n%{http_code}\n" $B
+curl -s -w "\n%{http_code}\n" -H "Authorization: Bearer $MEDICO" $B
+curl -s -w "\n%{http_code}\n" -H "Authorization: Bearer $MEDICO" $B/999
+```
+
+> `401` sin token; `200` con `{"sessions":[]}` (todavía nadie ha iniciado sesión); y `404` con `Session not found`. El médico entra sin que exista ninguna concesión para `/api/sessions`: es modalidad JWT, no RBAC.
+>
+> ![](images/clipboard-650251265.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-2004061663.png)

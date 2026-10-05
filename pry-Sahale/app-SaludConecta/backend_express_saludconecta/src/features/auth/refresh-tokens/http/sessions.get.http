@@ -1,0 +1,41 @@
+### Feature RefreshTokens — SESIONES PROPIAS (modalidad JWT, sin RBAC)
+### Ver y revocar las propias sesiones deriva de estar autenticado, no de un permiso.
+### Un id de sesión ajeno responde 404 (no se filtra su existencia).
+@baseUrl = http://localhost:4000
+
+# @name loginMedico
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "medico",
+  "password": "Medico123!"
+}
+
+@token = {{loginMedico.response.body.$.access_token}}
+
+### Listar mis sesiones activas (nunca expone `token_hash`)
+# @name mySessions
+GET {{baseUrl}}/api/sessions
+Authorization: Bearer {{token}}
+
+@sessionId = {{mySessions.response.body.$.sessions[0].id}}
+
+### Consultar una sesión propia
+GET {{baseUrl}}/api/sessions/{{sessionId}}
+Authorization: Bearer {{token}}
+
+### Revocar una sesión concreta
+PATCH {{baseUrl}}/api/sessions/{{sessionId}}/deactivate
+Authorization: Bearer {{token}}
+
+### Revocar TODAS mis sesiones (ruta literal; se registra antes que /:id)
+PATCH {{baseUrl}}/api/sessions/deactivate-all
+Authorization: Bearer {{token}}
+
+### Purgar (borrado físico) mis sesiones revocadas/expiradas
+DELETE {{baseUrl}}/api/sessions
+Authorization: Bearer {{token}}
+
+### Modalidad JWT: sin token -> 401
+GET {{baseUrl}}/api/sessions
