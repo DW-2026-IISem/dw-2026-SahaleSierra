@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import express, { Application } from "express";
+import express, { Application, ErrorRequestHandler } from "express";
 import morgan from "morgan";
 var cors = require("cors");
 import { sequelize, getDatabaseInfo, testConnection } from "../database/db";
@@ -21,6 +21,15 @@ import "../features/business/clinical-record/clinical-record.associations";
 import "../features/business/authorization/authorization.associations";
 import "../features/business/encounter/encounter.associations";
 import "../features/business/invoice/invoice.associations";
+// Fase II — Auth con RBAC: primero los seis modelos, después las asociaciones
+// (las asociaciones referencian los modelos, no al revés).
+import "../features/auth/users/user.model";
+import "../features/auth/roles/role.model";
+import "../features/auth/resources/resource.model";
+import "../features/auth/role-users/role-user.model";
+import "../features/auth/resource-roles/resource-role.model";
+import "../features/auth/refresh-tokens/refresh-token.model";
+import "../features/auth/rbac.associations";
 import { Routes } from "../routes/index";
 import { setupSwagger } from "../swagger/index";
 
@@ -36,8 +45,9 @@ export class App {
     this.middlewares();
     this.routes();
     this.docs();
-    this.dbConnection();
+    this.errorHandling();
   }
+
 
   private settings(): void {
     this.app.set('port', this.port || process.env.PORT || 4000);
@@ -68,6 +78,29 @@ export class App {
   private docs(): void {
     setupSwagger(this.app);
   }
+  
+  /**
+   * Errores que ocurren **antes** de llegar a un controller o middleware.
+   *
+   * El caso típico es un cuerpo JSON malformado: `express.json()` lanza un
+   * `SyntaxError` que, sin manejador, cae en el de Express por defecto y responde
+   * 400 con un HTML que incluye el **stack trace y rutas absolutas del servidor**
+   * (fuga de información). Aquí se traduce a un 400 JSON limpio.
+   *
+   * Debe registrarse **después** de las rutas: Express reconoce un middleware de
+   * error por su aridad de 4 argumentos.
+   */
+  private errorHandling(): void {
+    const bodyErrorHandler: ErrorRequestHandler = (err, _req, res, next) => {
+      if (err instanceof SyntaxError && "body" in err) {
+        res.status(400).json({ error: "Malformed JSON body" });
+        return;
+      }
+      next(err);
+    };
+    this.app.use(bodyErrorHandler);
+  }
+
 
   private async dbConnection(): Promise<void> {
       try {
@@ -110,7 +143,12 @@ export class App {
     }
   }
 
-  async listen() {
+    async listen() {
+    // Orden de arranque: primero la BD (conexión + `sync`), después abrir el puerto.
+    // Si se abre el puerto antes de terminar `sync({ alter: true })`, las sentencias
+    // DDL (ALTER TABLE, DROP/ADD FOREIGN KEY) compiten con las peticiones que ya
+    // están entrando y provocan deadlocks y errores de FK intermitentes.
+    await this.dbConnection();
     await this.app.listen(this.app.get('port'));
     console.log(`🚀 Servidor ejecutándose en puerto ${this.app.get('port')}`);
   }

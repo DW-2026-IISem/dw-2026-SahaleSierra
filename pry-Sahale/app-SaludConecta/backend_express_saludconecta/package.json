@@ -13,9 +13,11 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "morgan": "^1.12.1",
     "mysql2": "^3.24.4",
     "oracledb": "^7.0.1",
@@ -27,8 +29,10 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.6.0",
+    "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/node": "^22.20.4",
     "@types/sequelize": "^6.12.0",

@@ -11,6 +11,12 @@ import { clinicalRecordSwagger } from "../features/business/clinical-record/clin
 import { authorizationSwagger } from "../features/business/authorization/authorization.swagger";
 import { encounterSwagger } from "../features/business/encounter/encounter.swagger";
 import { invoiceSwagger } from "../features/business/invoice/invoice.swagger";
+import {
+  bearerSecurityScheme,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../shared/http/swagger-security";
+
 
 
 
@@ -68,7 +74,20 @@ export function buildOpenApiDocument() {
     ],
     tags,
     paths,
-    components: { schemas },
+    // Postura *secure by default*: cualquier operación que no declare su propio
+    // `security` exige el access token. Los endpoints OPEN (login/refresh/logout)
+    // lo anulan explícitamente con `security: []`.
+    security: [{ bearerAuth: [] }],
+    components: {
+      // Esquema único de seguridad: `Authorization: Bearer <access_token>` (RFC 6750).
+      securitySchemes: bearerSecurityScheme,
+      // Respuestas reutilizables (referenciables con `$ref`).
+      responses: {
+        Unauthorized: unauthorizedResponse,
+        Forbidden: forbiddenResponse,
+      },
+      schemas,
+    },
   };
 }
 

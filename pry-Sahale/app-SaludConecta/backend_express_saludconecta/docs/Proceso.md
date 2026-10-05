@@ -4457,3 +4457,384 @@ npm run dev
 ```
 
 ![](images/clipboard-2277490722.png)
+
+## **34. Cierre de ISS-16**
+
+### **34.1 Estado del proyecto**
+
+``` bash
+src/
+├── shared/                                   # ISS-16-A
+│   ├── errors/app-error.ts
+│   ├── database/with-transaction.ts
+│   └── http/{base-controller,error-response}.ts
+└── features/business/<entidad>/              # x 11 (ISS-16-B … L)
+    ├── <entidad>.model.ts                    # sin cambios
+    ├── dto/                                  # NUEVO: create, update, patch, response, index
+    ├── <entidad>.repository.ts               # NUEVO: única capa con Sequelize
+    ├── <entidad>.service.ts                  # NUEVO: reglas de negocio, lanza AppError
+    ├── <entidad>.controller.ts               # REEMPLAZADO: extiende BaseController
+    ├── <entidad>.routes.ts                   # sin cambios
+    ├── <entidad>.associations.ts             # sin cambios (si existía)
+    ├── <entidad>.seeder.ts                   # sin cambios
+    ├── <entidad>.swagger.ts                  # sin cambios
+    └── http/                                 # sin cambios
+```
+
+Archivos nuevos: 4 de `shared` + 77 de negocio (11 × 7). Archivos reemplazados: 11 controllers. No se tocó ningún `routes`, `model`, `seeder`, `swagger`, `.http` ni `config`.
+
+### **34.2 Diferencias de respuesta respecto a Fase I**
+
+Todas las respuestas 200, 201 y 404, y los 400 de reglas de negocio, quedan con el mismo código y el mismo cuerpo. Cambian solo estos casos:
+
+| Caso | Antes | Después |
+|:---|:---|:---|
+| `:id` no numérico o `0` | `500` o `404` | `400` `Invalid id: must be a positive integer` |
+| Error no controlado (validación del modelo, duplicado en BD, FK) | `500` con `"error":"Error creating …"` | `500` con `"error":"Internal server error"` y el mismo `detail` |
+| 400 que llevaban un campo extra (`id`, `status`, `invoice_id`) | campo aparte en el JSON | el dato va dentro del mensaje `error` |
+
+La tercera fila afecta a 7 mensajes: par repetido (DoctorSpecialty), historia duplicada (ClinicalRecord), cita ya autorizada (Authorization), cita ya atendida y atención facturada (Encounter), y número repetido y atención ya facturada (Invoice). El motivo es que `sendError` de la guía solo envía `{ "error": mensaje }`.
+
+### **34.3 Verificación global**
+
+``` bash
+npx tsc --noEmit 
+```
+
+Ningún controller de negocio debe importar un modelo ni `sequelize`. Este comando no debe imprimir nada:
+
+``` bash
+grep -ln '\.model"\|database/db' src/features/business/*/*.controller.ts 
+```
+
+![](images/clipboard-2554030836.png)
+
+Cada feature debe tener sus 3 capas nuevas. Este comando debe imprimir `11`, `11` y `11`:
+
+``` bash
+ls src/features/business/*/*.repository.ts | wc -l 
+ls src/features/business/*/*.service.ts | wc -l ls -d src/features/business/*/dto | wc -l 
+```
+
+![](images/clipboard-3265240423.png)
+
+El seeder y Swagger no dependen de los controllers, así que siguen igual:
+
+``` bash
+npm run db:seed 
+```
+
+![](images/clipboard-3904716217.png)
+
+Con `npm run dev` corriendo:
+
+``` bash
+for r in patients specialties doctors doctor-specialties services agendas appointments clinical-records authorizations encounters invoices; do
+  curl -s -o /dev/null -w "$r %{http_code}  " http://localhost:4000/api/$r
+  curl -s -o /dev/null -w "abc %{http_code}\n" http://localhost:4000/api/$r/abc
+done
+```
+
+> Las 11 líneas deben mostrar `200` y `abc 400`.
+
+![](images/clipboard-1208156565.png)
+
+# **Fase II: Auth con RBAC (ISS-17 a ISS-24)**
+
+## **35. ISS-17 — Base de seguridad compartida y modelos Auth**
+
+**Equivale a:** ISS-09 de la guía (§14.1–14.10). **Objetivo:** dejar listas las primitivas de seguridad (hash de contraseña, hash de tokens opacos, firma y verificación de JWT, *matcher* de rutas) y las **seis tablas** del modelo RBAC con sus asociaciones. **Bloqueado por:** ISS-16 (capa `shared` y 4 capas en negocio). **API:** ninguna todavía. La API de negocio sigue **SIN AUTH** hasta ISS-21.
+
+### **35.1 Dependencias y variables de entorno**
+
+`bcryptjs` hashea la contraseña de `users` y `jsonwebtoken` firma el access token:
+
+``` bash
+npm install bcryptjs@^3.0.3 jsonwebtoken@^9.0.3 npm install -D @types/bcryptjs@^3.0.0 @types/jsonwebtoken@^9.0.10 
+```
+
+``` bash
+npm ls bcryptjs jsonwebtoken --depth=0
+```
+
+![**PARCHE** — `.env` (ya existe; se **añade al final**, por eso es `cat >>` sin `: >`). Confirma antes que git lo ignora:](images/clipboard-3394550133.png)
+
+``` bash
+git check-ignore -v .env 
+```
+
+``` bash
+cat >> .env << 'EOF'  # ───────────────────────────────────────────────────────────── # Fase II — Seguridad (JWT + RBAC) # ───────────────────────────────────────────────────────────── # Secreto de firma del access token (HMAC SHA-256). Mínimo 32 caracteres. JWT_SECRET=saludconecta-lab-secret-change-me-0123456789abcdef # Vida útil del access token en segundos (900 = 15 min). JWT_ACCESS_TTL=900 # Vida útil del refresh token en días. JWT_REFRESH_TTL_DAYS=7 EOF 
+```
+
+``` bash
+grep -c '^JWT_' .env git status --short | grep -c '\.env' || true 
+```
+
+> Debe imprimir `3` y `0`. Si imprime `6`, ejecutaste el bloque dos veces: borra las líneas repetidas del `.env`. El valor de `JWT_SECRET` es de laboratorio; para algo real genera uno con `openssl rand -base64 48`.
+
+![](images/clipboard-1565377504.png)
+
+### **35.2–35.5 Primitivas de seguridad (`src/shared/auth/`)**
+
+``` bash
+mkdir -p src/shared/auth 
+```
+
+#### **35.2 `password.ts`**
+
+#### ![](images/clipboard-4132927126.png)
+
+#### **35.3 `jwt.ts`**
+
+#### ![](images/clipboard-4084890630.png)
+
+#### **35.4 `resource-match.ts`**
+
+#### ![](images/clipboard-4169293626.png)
+
+#### **35.5 `auth-user.ts`**
+
+![](images/clipboard-3001277621.png)
+
+### **35.6–35.8 HTTP compartido (`src/shared/http/`)**
+
+`error-response.ts` y `base-controller.ts` ya existen desde ISS-16-A. Se **reemplazan** por los de la guía: el código es el mismo, con sus comentarios. `swagger-security.ts` es nuevo.
+
+#### **35.6 `error-response.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-2261034241.png)
+
+#### **35.7 `base-controller.ts` — REEMPLAZO COMPLETO**
+
+#### ![](images/clipboard-632767660.png)
+
+#### **35.8 `swagger-security.ts`**
+
+![](images/clipboard-2377330579.png)
+
+``` bash
+npx tsc --noEmit
+```
+
+### **35.9–35.14 Los seis modelos Sequelize**
+
+| Entidad | Tabla | Responsabilidad |
+|:---|:---|:---|
+| `User` | `users` | identidad (contraseña **hasheada** por hooks) |
+| `Role` | `roles` | agrupación de responsabilidades |
+| `Resource` | `resources` | endpoint protegible: par `(method, path)` |
+| `RoleUser` | `role_users` | asignación `User ↔ Role` (N:M) |
+| `ResourceRole` | `resource_roles` | **el permiso**: concesión `Role ↔ Resource` (N:M) |
+| `RefreshToken` | `refresh_tokens` | sesión renovable y revocable |
+
+Las 6 carpetas son nuevas:
+
+``` bash
+mkdir -p src/features/auth/users src/features/auth/roles src/features/auth/resources src/features/auth/role-users src/features/auth/resource-roles src/features/auth/refresh-tokens 
+```
+
+#### **35.9 `user.model.ts`**
+
+#### ![](images/clipboard-955963563.png)
+
+#### **35.10 `role.model.ts`**
+
+#### ![](images/clipboard-1529225572.png)
+
+#### **35.11 `resource.model.ts`**
+
+#### ![](images/clipboard-2409153484.png)
+
+#### **35.12 `role-user.model.ts`**
+
+#### ![](images/clipboard-20543649.png)
+
+#### **35.13 `resource-role.model.ts`**
+
+#### ![](images/clipboard-2613760793.png)
+
+#### **35.14 `refresh-token.model.ts`**
+
+![](images/clipboard-300548712.png)
+
+### **35.15 Asociaciones**
+
+#### **35.15 `rbac.associations.ts`**
+
+![](images/clipboard-266200194.png)
+
+### **35.16–35.18 Cableado en config, seeders y swagger**
+
+### **35.16 PARCHE — `src/config/index.ts`**
+
+`dbConnection()` deja de llamarse en el constructor y pasa a `listen()`: primero se conecta y sincroniza la BD, y solo después se abre el puerto. Además se añade `errorHandling()`.
+
+**1.** **Reemplazar** `import express, { Application } from "express";` por:
+
+``` typescript
+import express, { Application, ErrorRequestHandler } from "express"; 
+```
+
+![](images/clipboard-11283119.png)
+
+**2.** **Debajo de** `import "../features/business/invoice/invoice.associations";` (y **encima de** `import { Routes } ...`), **añadir:**
+
+``` typescript
+// Fase II — Auth con RBAC: primero los seis modelos, después las asociaciones
+// (las asociaciones referencian los modelos, no al revés).
+import "../features/auth/users/user.model";
+import "../features/auth/roles/role.model";
+import "../features/auth/resources/resource.model";
+import "../features/auth/role-users/role-user.model";
+import "../features/auth/resource-roles/resource-role.model";
+import "../features/auth/refresh-tokens/refresh-token.model";
+import "../features/auth/rbac.associations";
+```
+
+![](images/clipboard-1741174909.png)
+
+**3.** **Dentro del** `constructor`, **reemplazar** la llamada `this.dbConnection();` (la que está debajo de `this.docs();`) por `this.errorHandling();`. El tramo queda así:
+
+``` typescript
+    this.docs();
+    this.errorHandling();
+  }
+```
+
+![](images/clipboard-2494896845.png)
+
+**4.** **Debajo de** el método `docs()` completo (después de su llave de cierre `}`) y **encima de** `private async dbConnection()`, **añadir:**
+
+``` typescript
+
+  /**
+   * Errores que ocurren **antes** de llegar a un controller o middleware.
+   *
+   * El caso típico es un cuerpo JSON malformado: `express.json()` lanza un
+   * `SyntaxError` que, sin manejador, cae en el de Express por defecto y responde
+   * 400 con un HTML que incluye el **stack trace y rutas absolutas del servidor**
+   * (fuga de información). Aquí se traduce a un 400 JSON limpio.
+   *
+   * Debe registrarse **después** de las rutas: Express reconoce un middleware de
+   * error por su aridad de 4 argumentos.
+   */
+  private errorHandling(): void {
+    const bodyErrorHandler: ErrorRequestHandler = (err, _req, res, next) => {
+      if (err instanceof SyntaxError && "body" in err) {
+        res.status(400).json({ error: "Malformed JSON body" });
+        return;
+      }
+      next(err);
+    };
+    this.app.use(bodyErrorHandler);
+  }
+```
+
+![](images/clipboard-2308454659.png)
+
+**5.** **Dentro de** `listen()`, **reemplazar** las dos primeras líneas (`async listen() {` y `await this.app.listen(...)`) por:
+
+``` typescript
+  async listen() {
+    // Orden de arranque: primero la BD (conexión + `sync`), después abrir el puerto.
+    // Si se abre el puerto antes de terminar `sync({ alter: true })`, las sentencias
+    // DDL (ALTER TABLE, DROP/ADD FOREIGN KEY) compiten con las peticiones que ya
+    // están entrando y provocan deadlocks y errores de FK intermitentes.
+    await this.dbConnection();
+    await this.app.listen(this.app.get('port'));
+```
+
+![](images/clipboard-3525061437.png)
+
+### **35.17 PARCHE — `src/database/seeders/index.ts`**
+
+Mismo bloque de imports (los seeders de auth se añaden en sus ISS). Sequelize solo conoce los modelos y asociaciones que se han importado.
+
+**Debajo de** `import "../../features/business/invoice/invoice.associations";`, **añadir:**
+
+``` typescript
+import "../../features/auth/users/user.model";
+import "../../features/auth/roles/role.model";
+import "../../features/auth/resources/resource.model";
+import "../../features/auth/role-users/role-user.model";
+import "../../features/auth/resource-roles/resource-role.model";
+import "../../features/auth/refresh-tokens/refresh-token.model";
+import "../../features/auth/rbac.associations";
+```
+
+![](images/clipboard-1292554158.png)
+
+### **35.18 PARCHE — `src/swagger/index.ts`**
+
+Se declara el esquema `bearerAuth`. Los swagger de negocio siguen funcionando igual: todavía declaran `security: []` en cada operación (se actualizan en ISS-21).
+
+**1.** **Debajo de** `import { invoiceSwagger } from "../features/business/invoice/invoice.swagger";`, **añadir:**
+
+``` typescript
+ import {
+  bearerSecurityScheme,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../shared/http/swagger-security";
+```
+
+![](images/clipboard-3526119523.png)
+
+**2.** **Dentro de** `buildOpenApiDocument()`, en el objeto que se retorna, **reemplazar** las tres líneas `tags,` / `paths,` / `components: { schemas },` por:
+
+``` typescript
+    tags,
+    paths,
+    // Postura *secure by default*: cualquier operación que no declare su propio
+    // `security` exige el access token. Los endpoints OPEN (login/refresh/logout)
+    // lo anulan explícitamente con `security: []`.
+    security: [{ bearerAuth: [] }],
+    components: {
+      // Esquema único de seguridad: `Authorization: Bearer <access_token>` (RFC 6750).
+      securitySchemes: bearerSecurityScheme,
+      // Respuestas reutilizables (referenciables con `$ref`).
+      responses: {
+        Unauthorized: unauthorizedResponse,
+        Forbidden: forbiddenResponse,
+      },
+      schemas,
+    },
+```
+
+![](images/clipboard-3205230325.png)
+
+### **Verificación ISS-17**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> El `sync({ alter: true })` del runner crea las 6 tablas vacías. Los conteos todavía no incluyen `users`.
+>
+> ![](images/clipboard-3354657077.png)
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SHOW TABLES;" 
+```
+
+> Además de las 11 de negocio deben aparecer `users`, `roles`, `resources`, `role_users`, `resource_roles` y `refresh_tokens`.
+>
+> ![](images/clipboard-3111987569.png)
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SELECT TABLE_NAME, INDEX_NAME FROM information_schema.STATISTICS WHERE TABLE_SCHEMA='backend_express' AND INDEX_NAME LIKE 'uq\_%' GROUP BY TABLE_NAME, INDEX_NAME;" 
+```
+
+> Seis índices únicos con nombre: `uq_users_username`, `uq_users_email`, `uq_roles_name`, `uq_resources_method_path`, `uq_role_users_user_role`, `uq_resource_roles_role_resource` y `uq_refresh_tokens_token_hash` (siete filas).
+>
+> ![](images/clipboard-625957896.png)
+
+### **Cierre del ISS**
+
+```         
+npm run dev
+```
+
+![](images/clipboard-2554862730.png)
