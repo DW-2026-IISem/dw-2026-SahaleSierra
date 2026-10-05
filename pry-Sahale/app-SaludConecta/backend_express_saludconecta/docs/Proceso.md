@@ -3886,3 +3886,87 @@ npm run dev
 ```
 
 ![](images/clipboard-995693445.png)
+
+## **28. ISS-16-G — Agenda a 4 capas**
+
+**Objetivo:** pasar Agenda a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-F.
+
+### **28.1 DTOs**
+
+```         
+mkdir -p src/features/business/agenda/dto
+```
+
+#### **28.1.a `create-agenda.dto.ts`**
+
+#### ![](images/clipboard-3810436655.png)
+
+#### **28.1.b `update-agenda.dto.ts`**
+
+#### ![](images/clipboard-605527694.png)
+
+#### **28.1.c `patch-agenda.dto.ts`**
+
+#### ![](images/clipboard-988641416.png)
+
+#### **28.1.d `agenda-response.dto.ts`**
+
+#### ![](images/clipboard-1292535854.png)
+
+#### **28.1.e `index.ts`**
+
+![](images/clipboard-719923500.png)
+
+### **28.2 Repository**
+
+#### **`agenda.repository.ts`**
+
+![](images/clipboard-2335537068.png)
+
+### **28.3 Service**
+
+#### **`agenda.service.ts`**
+
+![](images/clipboard-3766524737.png)
+
+### **28.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`agenda.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`agenda.controller.ts`**
+
+![](images/clipboard-2111552659.png)
+
+### **Verificación ISS-16-G**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/agenda/agenda.controller.ts 
+```
+
+![](images/clipboard-2855358419.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api/agendas
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"name":"Agenda 16G","doctor_id":99999999}'
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"name":"Agenda 16G","doctor_id":1}'
+```
+
+> `404` (`Doctor not found`) y `201` (si el médico 1 existe y está activo).
+>
+> ![](images/clipboard-1060924117.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-2144991773.png)
