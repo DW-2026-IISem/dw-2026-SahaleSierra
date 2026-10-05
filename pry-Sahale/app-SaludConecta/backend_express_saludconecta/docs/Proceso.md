@@ -3713,3 +3713,92 @@ npm run dev
 ```
 
 ![](images/clipboard-3832898732.png)
+
+## **26. ISS-16-E — DoctorSpecialty a 4 capas**
+
+**Objetivo:** pasar DoctorSpecialty a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-D.
+
+Pivote N:M. Primer service que usa **repositories de otros features** (`DoctorRepository`, `SpecialtyRepository`), igual que `RoleUsersService` usa `UsersRepository` y `RolesRepository` en la guía.
+
+## **26.1 DTOs**
+
+``` bash
+mkdir -p src/features/business/doctor-specialty/dto
+```
+
+#### **26.1.a `create-doctor-specialty.dto.ts`**
+
+#### ![](images/clipboard-4217551984.png)
+
+#### **26.1.b `update-doctor-specialty.dto.ts`**
+
+#### ![](images/clipboard-1444097785.png)
+
+#### **26.1.c `patch-doctor-specialty.dto.ts`**
+
+#### ![](images/clipboard-594122052.png)
+
+#### **26.1.d `doctor-specialty-response.dto.ts`**
+
+#### ![](images/clipboard-1787915897.png)
+
+#### **26.1.e `index.ts`**
+
+![](images/clipboard-1825386127.png)
+
+### **26.2 Repository**
+
+#### **`doctor-specialty.repository.ts`**
+
+![](images/clipboard-4273443378.png)
+
+### **26.3 Service**
+
+#### **`doctor-specialty.service.ts`**
+
+![](images/clipboard-2654619413.png)
+
+![](images/clipboard-650327211.png)
+
+### **26.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`doctor-specialty.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`doctor-specialty.controller.ts`**
+
+![](images/clipboard-4198475000.png)
+
+### **Verificación ISS-16-E**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/doctor-specialty/doctor-specialty.controller.ts 
+```
+
+![](images/clipboard-997111181.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api/doctor-specialties
+curl -s -w "\n%{http_code}\n" $B | tail -c 150
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"doctor_id":1}'
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"doctor_id":99999999,"specialty_id":1}'
+```
+
+> `200`, luego `400` (`doctor_id and specialty_id are required`) y `404` (`Doctor not found`). Si repites un par que ya exista en el primer listado, obtienes `400` con el `id` dentro del mensaje.
+>
+> ![](images/clipboard-2404639102.png)
+
+### **Cierre del ISS**
+
+```         
+npm run dev
+```
+
+![](images/clipboard-1175240038.png)
