@@ -6295,3 +6295,702 @@ npm run dev
 ```
 
 ![](images/clipboard-3725840749.png)
+
+## **42. ISS-24 — Cierre Fase II: Auth con RBAC**
+
+**Equivale a:** el cierre de la guía. **Objetivo:** comprobar que el backend queda completo: 18 features, 17 tablas, 3 modalidades de acceso.
+
+Este ISS no crea archivos. Trae el estado final de los archivos compartidos, para comparar, y la verificación global.
+
+#### **`src/config/index.ts`**
+
+``` typescript
+: > src/config/index.ts
+cat >> src/config/index.ts << 'EOF'
+import dotenv from "dotenv";
+import express, { Application, ErrorRequestHandler } from "express";
+import morgan from "morgan";
+var cors = require("cors");
+import { sequelize, getDatabaseInfo, testConnection } from "../database/db";
+import "../features/business/patient/patient.model";
+import "../features/business/specialty/specialty.model";
+import "../features/business/doctor/doctor.model";
+import "../features/business/doctor-specialty/doctor-specialty.model";
+import "../features/business/service/service.model";
+import "../features/business/agenda/agenda.model";
+import "../features/business/appointment/appointment.model";
+import "../features/business/clinical-record/clinical-record.model";
+import "../features/business/authorization/authorization.model";
+import "../features/business/encounter/encounter.model";
+import "../features/business/invoice/invoice.model";
+import "../features/business/doctor-specialty/doctor-specialty.associations";
+import "../features/business/agenda/agenda.associations";
+import "../features/business/appointment/appointment.associations";
+import "../features/business/clinical-record/clinical-record.associations";
+import "../features/business/authorization/authorization.associations";
+import "../features/business/encounter/encounter.associations";
+import "../features/business/invoice/invoice.associations";
+// Fase II — Auth con RBAC: primero los seis modelos, después las asociaciones
+// (las asociaciones referencian los modelos, no al revés).
+import "../features/auth/users/user.model";
+import "../features/auth/roles/role.model";
+import "../features/auth/resources/resource.model";
+import "../features/auth/role-users/role-user.model";
+import "../features/auth/resource-roles/resource-role.model";
+import "../features/auth/refresh-tokens/refresh-token.model";
+import "../features/auth/rbac.associations";
+import { Routes } from "../routes/index";
+import { setupSwagger } from "../swagger/index";
+
+dotenv.config();
+
+export class App {
+  public app: Application;
+  public routePrv: Routes = new Routes();
+
+  constructor(private port?: number | string) {
+    this.app = express();
+    this.settings();
+    this.middlewares();
+    this.routes();
+    this.docs();
+    this.errorHandling();
+  }
+
+  private settings(): void {
+    this.app.set('port', this.port || process.env.PORT || 4000);
+  }
+
+  private middlewares(): void {
+    this.app.use(morgan('dev'));
+    this.app.use(cors());
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: false }));
+  }
+
+  private routes(): void {
+    this.routePrv.patientRoutes.routes(this.app);
+    this.routePrv.specialtyRoutes.routes(this.app);
+    this.routePrv.doctorRoutes.routes(this.app);
+    this.routePrv.doctorSpecialtyRoutes.routes(this.app);
+    this.routePrv.serviceRoutes.routes(this.app);
+    this.routePrv.agendaRoutes.routes(this.app);
+    this.routePrv.appointmentRoutes.routes(this.app);
+    this.routePrv.clinicalRecordRoutes.routes(this.app);
+    this.routePrv.authorizationRoutes.routes(this.app);
+    this.routePrv.encounterRoutes.routes(this.app);
+    this.routePrv.invoiceRoutes.routes(this.app);
+
+    // Fase II — Auth con RBAC
+    // `sessionRoutes` registra los endpoints OPEN/JWT (login, refresh, logout,
+    // perfil, permisos); el resto son modalidad JWT + RBAC.
+    this.routePrv.sessionRoutes.routes(this.app);
+    this.routePrv.refreshTokensRoutes.routes(this.app);
+    this.routePrv.usersRoutes.routes(this.app);
+    this.routePrv.rolesRoutes.routes(this.app);
+    this.routePrv.resourcesRoutes.routes(this.app);
+    this.routePrv.roleUsersRoutes.routes(this.app);
+    this.routePrv.resourceRolesRoutes.routes(this.app);
+  }
+
+  private docs(): void {
+    setupSwagger(this.app);
+  }
+
+  /**
+   * Errores que ocurren **antes** de llegar a un controller o middleware.
+   *
+   * El caso típico es un cuerpo JSON malformado: `express.json()` lanza un
+   * `SyntaxError` que, sin manejador, cae en el de Express por defecto y responde
+   * 400 con un HTML que incluye el **stack trace y rutas absolutas del servidor**
+   * (fuga de información). Aquí se traduce a un 400 JSON limpio.
+   *
+   * Debe registrarse **después** de las rutas: Express reconoce un middleware de
+   * error por su aridad de 4 argumentos.
+   */
+  private errorHandling(): void {
+    const bodyErrorHandler: ErrorRequestHandler = (err, _req, res, next) => {
+      if (err instanceof SyntaxError && "body" in err) {
+        res.status(400).json({ error: "Malformed JSON body" });
+        return;
+      }
+      next(err);
+    };
+    this.app.use(bodyErrorHandler);
+  }
+
+  private async dbConnection(): Promise<void> {
+    try {
+      // Mostrar información de la base de datos seleccionada
+      const dbInfo = getDatabaseInfo();
+      console.log(`🔗 Intentando conectar a: ${dbInfo.engine.toUpperCase()}`);
+
+      // Probar la conexión
+      const isConnected = await testConnection();
+
+      if (!isConnected) {
+        throw new Error(`No se pudo conectar a la base de datos ${dbInfo.engine.toUpperCase()}`);
+      }
+
+      // Lab: sync crea/altera tablas desde los modelos (BD limpia → snake_case desde cero).
+      const force = process.env.DB_SYNC_FORCE === "true";
+      const isMysql =
+        sequelize.getDialect() === "mysql" || sequelize.getDialect() === "mariadb";
+
+      if (isMysql) {
+        await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+      }
+      try {
+        await sequelize.sync({ force, alter: !force });
+      } finally {
+        if (isMysql) {
+          await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+        }
+      }
+
+      console.log(
+        force
+          ? "📦 Base de datos recreada (DB_SYNC_FORCE=true)"
+          : "📦 Base de datos sincronizada exitosamente"
+      );
+    } catch (error) {
+      console.error("❌ Error al conectar con la base de datos:", error);
+      process.exit(1); // Terminar la aplicación si no se puede conectar
+    }
+  }
+
+  async listen() {
+    // Orden de arranque: primero la BD (conexión + `sync`), después abrir el puerto.
+    // Si se abre el puerto antes de terminar `sync({ alter: true })`, las sentencias
+    // DDL (ALTER TABLE, DROP/ADD FOREIGN KEY) compiten con las peticiones que ya
+    // están entrando y provocan deadlocks y errores de FK intermitentes.
+    await this.dbConnection();
+    await this.app.listen(this.app.get('port'));
+    console.log(`🚀 Servidor ejecutándose en puerto ${this.app.get('port')}`);
+  }
+}
+EOF
+```
+
+#### **`src/routes/index.ts`**
+
+``` typescript
+: > src/routes/index.ts
+cat >> src/routes/index.ts << 'EOF'
+import { PatientRoutes } from "../features/business/patient/patient.routes";
+import { SpecialtyRoutes } from "../features/business/specialty/specialty.routes";
+import { DoctorRoutes } from "../features/business/doctor/doctor.routes";
+import { DoctorSpecialtyRoutes } from "../features/business/doctor-specialty/doctor-specialty.routes";
+import { ServiceRoutes } from "../features/business/service/service.routes";
+import { AgendaRoutes } from "../features/business/agenda/agenda.routes";
+import { AppointmentRoutes } from "../features/business/appointment/appointment.routes";
+import { ClinicalRecordRoutes } from "../features/business/clinical-record/clinical-record.routes";
+import { AuthorizationRoutes } from "../features/business/authorization/authorization.routes";
+import { EncounterRoutes } from "../features/business/encounter/encounter.routes";
+import { InvoiceRoutes } from "../features/business/invoice/invoice.routes";
+import { SessionRoutes } from "../features/auth/session/session.routes";
+import { RefreshTokensRoutes } from "../features/auth/refresh-tokens/refresh-tokens.routes";
+import { UsersRoutes } from "../features/auth/users/users.routes";
+import { RolesRoutes } from "../features/auth/roles/roles.routes";
+import { ResourcesRoutes } from "../features/auth/resources/resources.routes";
+import { RoleUsersRoutes } from "../features/auth/role-users/role-users.routes";
+import { ResourceRolesRoutes } from "../features/auth/resource-roles/resource-roles.routes";
+
+export class Routes {
+  public patientRoutes: PatientRoutes = new PatientRoutes();
+  public specialtyRoutes: SpecialtyRoutes = new SpecialtyRoutes();
+  public doctorRoutes: DoctorRoutes = new DoctorRoutes();
+  public doctorSpecialtyRoutes: DoctorSpecialtyRoutes = new DoctorSpecialtyRoutes();
+  public serviceRoutes: ServiceRoutes = new ServiceRoutes();
+  public agendaRoutes: AgendaRoutes = new AgendaRoutes();
+  public appointmentRoutes: AppointmentRoutes = new AppointmentRoutes();
+  public clinicalRecordRoutes: ClinicalRecordRoutes = new ClinicalRecordRoutes();
+  public authorizationRoutes: AuthorizationRoutes = new AuthorizationRoutes();
+  public encounterRoutes: EncounterRoutes = new EncounterRoutes();
+  public invoiceRoutes: InvoiceRoutes = new InvoiceRoutes();
+
+  // Fase II — Auth con RBAC
+  public sessionRoutes: SessionRoutes = new SessionRoutes();
+  public refreshTokensRoutes: RefreshTokensRoutes = new RefreshTokensRoutes();
+  public usersRoutes: UsersRoutes = new UsersRoutes();
+  public rolesRoutes: RolesRoutes = new RolesRoutes();
+  public resourcesRoutes: ResourcesRoutes = new ResourcesRoutes();
+  public roleUsersRoutes: RoleUsersRoutes = new RoleUsersRoutes();
+  public resourceRolesRoutes: ResourceRolesRoutes = new ResourceRolesRoutes();
+}
+EOF
+```
+
+#### **`src/swagger/index.ts`**
+
+``` typescript
+: > src/swagger/index.ts
+cat >> src/swagger/index.ts << 'EOF'
+import { Application } from "express";
+import swaggerUi from "swagger-ui-express";
+import { patientSwagger } from "../features/business/patient/patient.swagger";
+import { specialtySwagger } from "../features/business/specialty/specialty.swagger";
+import { doctorSwagger } from "../features/business/doctor/doctor.swagger";
+import { doctorSpecialtySwagger } from "../features/business/doctor-specialty/doctor-specialty.swagger";
+import { serviceSwagger } from "../features/business/service/service.swagger";
+import { agendaSwagger } from "../features/business/agenda/agenda.swagger";
+import { appointmentSwagger } from "../features/business/appointment/appointment.swagger";
+import { clinicalRecordSwagger } from "../features/business/clinical-record/clinical-record.swagger";
+import { authorizationSwagger } from "../features/business/authorization/authorization.swagger";
+import { encounterSwagger } from "../features/business/encounter/encounter.swagger";
+import { invoiceSwagger } from "../features/business/invoice/invoice.swagger";
+import { sessionSwagger } from "../features/auth/session/session.swagger";
+import { refreshTokensSwagger } from "../features/auth/refresh-tokens/refresh-tokens.swagger";
+import { usersSwagger } from "../features/auth/users/users.swagger";
+import { rolesSwagger } from "../features/auth/roles/roles.swagger";
+import { resourcesSwagger } from "../features/auth/resources/resources.swagger";
+import { roleUsersSwagger } from "../features/auth/role-users/role-users.swagger";
+import { resourceRolesSwagger } from "../features/auth/resource-roles/resource-roles.swagger";
+import {
+  bearerSecurityScheme,
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../shared/http/swagger-security";
+
+export type FeatureSwaggerModule = {
+  tags: unknown[];
+  paths: Record<string, unknown>;
+  components?: { schemas?: Record<string, unknown> };
+};
+
+/**
+ * Registry externo: importa la documentación OpenAPI de cada feature
+ * (mismo patrón que SeedersRunner).
+ */
+const featureSwaggerModules: FeatureSwaggerModule[] = [
+  sessionSwagger,
+  refreshTokensSwagger,
+  usersSwagger,
+  rolesSwagger,
+  resourcesSwagger,
+  roleUsersSwagger,
+  resourceRolesSwagger,
+  patientSwagger,
+  specialtySwagger,
+  doctorSwagger,
+  doctorSpecialtySwagger,
+  serviceSwagger,
+  agendaSwagger,
+  appointmentSwagger,
+  clinicalRecordSwagger,
+  authorizationSwagger,
+  encounterSwagger,
+  invoiceSwagger,
+];
+
+export function buildOpenApiDocument() {
+  const tags: unknown[] = [];
+  const paths: Record<string, unknown> = {};
+  const schemas: Record<string, unknown> = {};
+
+  for (const mod of featureSwaggerModules) {
+    tags.push(...mod.tags);
+    Object.assign(paths, mod.paths);
+    if (mod.components?.schemas) {
+      Object.assign(schemas, mod.components.schemas);
+    }
+  }
+
+  return {
+    openapi: "3.0.3",
+    info: {
+      title: "SaludConecta API",
+      version: "2.0.0",
+      description: [
+        "API SaludConecta — centro médico ambulatorio (Express + Sequelize) con **Auth con RBAC**.",
+        "",
+        "**Las tres modalidades de acceso** (se declaran por operación, no globalmente):",
+        "",
+        "- **OPEN** — sin identidad previa: `POST /api/session/login`, `/refresh`, `/logout`.",
+        "- **JWT** — token de acceso válido: `/api/session/profile`, `/api/permissions`, `/api/sessions/*`.",
+        "- **JWT + RBAC** — token válido **y** concesión activa de `(method, path)`: todo el CRUD de negocio y de administración de seguridad.",
+        "",
+        "Autenticación: obtener el `access_token` en `POST /api/session/login` y pulsar **Authorize** con " +
+          "`Bearer <access_token>`. La autorización aplica **deny by default**: sin concesión explícita, 403.",
+        "",
+        "Credenciales de laboratorio: `admin / Admin123!`, `admisiones / Admisiones123!`, " +
+          "`medico / Medico123!`, `facturacion / Facturacion123!` y `auditor / Auditor123!`.",
+      ].join("\n"),
+    },
+    servers: [
+      {
+        url: `http://localhost:${process.env.PORT || 4000}`,
+        description: "Local",
+      },
+    ],
+    tags,
+    paths,
+    // Postura *secure by default*: cualquier operación que no declare su propio
+    // `security` exige el access token. Los endpoints OPEN (login/refresh/logout)
+    // lo anulan explícitamente con `security: []`.
+    security: [{ bearerAuth: [] }],
+    components: {
+      // Esquema único de seguridad: `Authorization: Bearer <access_token>` (RFC 6750).
+      securitySchemes: bearerSecurityScheme,
+      // Respuestas reutilizables (referenciables con `$ref`).
+      responses: {
+        Unauthorized: unauthorizedResponse,
+        Forbidden: forbiddenResponse,
+      },
+      schemas,
+    },
+  };
+}
+
+/** Monta Swagger UI y el JSON OpenAPI */
+export function setupSwagger(app: Application): void {
+  const document = buildOpenApiDocument();
+  app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(document));
+  app.get("/api/docs.json", (_req, res) => {
+    res.json(document);
+  });
+  console.log("📘 Swagger UI: /api/docs  |  OpenAPI JSON: /api/docs.json");
+}
+EOF
+```
+
+#### **`src/database/seeders/index.ts`**
+
+``` typescript
+: > src/database/seeders/index.ts
+cat >> src/database/seeders/index.ts << 'EOF'
+import dotenv from "dotenv";
+import { sequelize, testConnection } from "../db";
+import "../../features/business/patient/patient.model";
+import "../../features/business/specialty/specialty.model";
+import "../../features/business/doctor/doctor.model";
+import "../../features/business/doctor-specialty/doctor-specialty.model";
+import "../../features/business/service/service.model";
+import "../../features/business/agenda/agenda.model";
+import "../../features/business/appointment/appointment.model";
+import "../../features/business/clinical-record/clinical-record.model";
+import "../../features/business/authorization/authorization.model";
+import "../../features/business/encounter/encounter.model";
+import "../../features/business/invoice/invoice.model";
+import "../../features/business/doctor-specialty/doctor-specialty.associations";
+import "../../features/business/agenda/agenda.associations";
+import "../../features/business/appointment/appointment.associations";
+import "../../features/business/clinical-record/clinical-record.associations";
+import "../../features/business/authorization/authorization.associations";
+import "../../features/business/encounter/encounter.associations";
+import "../../features/business/invoice/invoice.associations";
+import "../../features/auth/users/user.model";
+import "../../features/auth/roles/role.model";
+import "../../features/auth/resources/resource.model";
+import "../../features/auth/role-users/role-user.model";
+import "../../features/auth/resource-roles/resource-role.model";
+import "../../features/auth/refresh-tokens/refresh-token.model";
+import "../../features/auth/rbac.associations";
+import { seedRoles } from "../../features/auth/roles/roles.seeder";
+import { seedResources } from "../../features/auth/resources/resources.seeder";
+import { seedUsers } from "../../features/auth/users/users.seeder";
+import { seedRoleUsers } from "../../features/auth/role-users/role-users.seeder";
+import { seedResourceRoles } from "../../features/auth/resource-roles/resource-roles.seeder";
+import { seedPatients } from "../../features/business/patient/patient.seeder";
+import { seedSpecialties } from "../../features/business/specialty/specialty.seeder";
+import { seedDoctors } from "../../features/business/doctor/doctor.seeder";
+import { seedDoctorSpecialties } from "../../features/business/doctor-specialty/doctor-specialty.seeder";
+import { seedServices } from "../../features/business/service/service.seeder";
+import { seedAgendas } from "../../features/business/agenda/agenda.seeder";
+import { seedAppointments } from "../../features/business/appointment/appointment.seeder";
+import { seedClinicalRecords } from "../../features/business/clinical-record/clinical-record.seeder";
+import { seedAuthorizations } from "../../features/business/authorization/authorization.seeder";
+import { seedEncounters } from "../../features/business/encounter/encounter.seeder";
+import { seedInvoices } from "../../features/business/invoice/invoice.seeder";
+import { resolveSeedCounts } from "./counts";
+
+dotenv.config();
+
+/**
+ * SeedersRunner — ejecuta TODOS los seeders de features.
+ *
+ * Ubicación: `src/database/seeders/` (orquestación fuera de cada feature).
+ * Cada feature exporta su seeder (ej. `features/business/patient/patient.seeder.ts`).
+ *
+ * Uso:
+ *   npm run db:seed
+ *   npm run db:seed -- --patients=20
+ *   SEED_PATIENTS=5 npm run db:seed
+ */
+export async function runAllSeeders(): Promise<void> {
+  const counts = resolveSeedCounts();
+  console.log("🌱 Iniciando SeedersRunner...");
+  console.log("📊 Conteos:", counts);
+
+  const ok = await testConnection();
+  if (!ok) {
+    throw new Error("No hay conexión a la base de datos");
+  }
+
+  const isMysql =
+    sequelize.getDialect() === "mysql" || sequelize.getDialect() === "mariadb";
+  if (isMysql) {
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+  }
+  try {
+    await sequelize.sync({ force: false, alter: true });
+  } finally {
+    if (isMysql) {
+      await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+    }
+  }
+
+  // Fase II — Auth con RBAC (el orden respeta las dependencias de la cadena)
+  await seedRoles();
+  await seedResources();
+  await seedUsers(counts.users);
+  await seedRoleUsers();
+  await seedResourceRoles();
+
+  // Orden: business (padres → hijos)
+  await seedPatients(counts.patients);
+  await seedSpecialties(counts.specialties);
+  await seedDoctors(counts.doctors);
+  await seedDoctorSpecialties(counts.doctor_specialties);
+  await seedServices(counts.services);
+  await seedAgendas(counts.agendas);
+  await seedAppointments(counts.appointments);
+  await seedClinicalRecords(counts.clinical_records);
+  await seedAuthorizations(counts.authorizations);
+  await seedEncounters(counts.encounters);
+  await seedInvoices(counts.invoices);
+
+  console.log("🌱 SeedersRunner finalizado");
+}
+
+if (require.main === module) {
+  runAllSeeders()
+    .then(async () => {
+      await sequelize.close();
+      process.exit(0);
+    })
+    .catch(async (err) => {
+      console.error("❌ Error en seeders:", err);
+      await sequelize.close();
+      process.exit(1);
+    });
+}
+EOF
+```
+
+#### **`src/database/seeders/counts.ts`**
+
+``` typescript
+: > src/database/seeders/counts.ts
+cat >> src/database/seeders/counts.ts << 'EOF'
+/**
+ * Cantidad de registros por feature/entidad.
+ * Prioridad: CLI (--patients=N) > env (SEED_PATIENTS) > default de este archivo.
+ *
+ * Cuando agregues features, suma aquí la clave y léela en el runner.
+ */
+export type SeedCounts = {
+  users: number;
+  patients: number;
+  specialties: number;
+  doctors: number;
+  doctor_specialties: number;
+  services: number;
+  agendas: number;
+  appointments: number;
+  clinical_records: number;
+  authorizations: number;
+  encounters: number;
+  invoices: number;
+};
+
+export const DEFAULT_SEED_COUNTS: SeedCounts = {
+  // 5 usuarios canónicos, uno por rol.
+  users: 5,
+  patients: 10,
+  specialties: 10,
+  doctors: 15,
+  doctor_specialties: 12,
+  services: 10,
+  agendas: 15,
+  appointments: 20,
+  clinical_records: 10,
+  authorizations: 8,
+  encounters: 10,
+  invoices: 5,
+};
+
+export function resolveSeedCounts(argv: string[] = process.argv.slice(2)): SeedCounts {
+  const counts: SeedCounts = { ...DEFAULT_SEED_COUNTS };
+
+  const envUsers = process.env.SEED_USERS;
+  if (envUsers !== undefined && envUsers !== "") {
+    counts.users = Number(envUsers);
+  }
+
+  const envPatients = process.env.SEED_PATIENTS;
+  if (envPatients !== undefined && envPatients !== "") {
+    counts.patients = Number(envPatients);
+  }
+
+  const envSpecialties = process.env.SEED_SPECIALTIES;
+  if (envSpecialties !== undefined && envSpecialties !== "") {
+    counts.specialties = Number(envSpecialties);
+  }
+
+  const envDoctors = process.env.SEED_DOCTORS;
+  if (envDoctors !== undefined && envDoctors !== "") {
+    counts.doctors = Number(envDoctors);
+  }
+
+  const envDoctorSpecialties = process.env.SEED_DOCTOR_SPECIALTIES;
+  if (envDoctorSpecialties !== undefined && envDoctorSpecialties !== "") {
+    counts.doctor_specialties = Number(envDoctorSpecialties);
+  }
+
+  const envServices = process.env.SEED_SERVICES;
+  if (envServices !== undefined && envServices !== "") {
+    counts.services = Number(envServices);
+  }
+
+  const envAgendas = process.env.SEED_AGENDAS;
+  if (envAgendas !== undefined && envAgendas !== "") {
+    counts.agendas = Number(envAgendas);
+  }
+
+  const envAppointments = process.env.SEED_APPOINTMENTS;
+  if (envAppointments !== undefined && envAppointments !== "") {
+    counts.appointments = Number(envAppointments);
+  }
+
+  const envClinicalRecords = process.env.SEED_CLINICAL_RECORDS;
+  if (envClinicalRecords !== undefined && envClinicalRecords !== "") {
+    counts.clinical_records = Number(envClinicalRecords);
+  }
+
+  const envAuthorizations = process.env.SEED_AUTHORIZATIONS;
+  if (envAuthorizations !== undefined && envAuthorizations !== "") {
+    counts.authorizations = Number(envAuthorizations);
+  }
+
+  const envEncounters = process.env.SEED_ENCOUNTERS;
+  if (envEncounters !== undefined && envEncounters !== "") {
+    counts.encounters = Number(envEncounters);
+  }
+
+  const envInvoices = process.env.SEED_INVOICES;
+  if (envInvoices !== undefined && envInvoices !== "") {
+    counts.invoices = Number(envInvoices);
+  }
+
+  for (const arg of argv) {
+    const m = arg.match(/^--([a-zA-Z_]+)=(\d+)$/);
+    if (!m) continue;
+    const key = m[1] as keyof SeedCounts;
+    const value = Number(m[2]);
+    if (key in counts) {
+      counts[key] = value;
+    }
+  }
+
+  return counts;
+}
+EOF
+```
+
+### **42.2 Las tres modalidades — mapa definitivo de rutas**
+
+| Modalidad | Middlewares | Rutas |
+|:---|:---|:---|
+| **OPEN** | — | `POST /api/session/login` · `/refresh` · `/logout` · `GET /api/docs` · `/api/docs.json` |
+| **JWT** | `authenticate` | `GET /api/session/profile` · `GET /api/permissions` · `GET /api/sessions` · `GET /api/sessions/:id` · `PATCH /api/sessions/:id/deactivate` · `PATCH /api/sessions/deactivate-all` · `DELETE /api/sessions` |
+| **JWT + RBAC** | `authenticate, authorize` | `/api/users…` · `/api/roles…` · `/api/resources…` · `/api/role-users…` · `/api/resource-roles…` · `/api/patients…` · `/api/specialties…` · `/api/doctors…` · `/api/doctor-specialties…` · `/api/services…` · `/api/agendas…` · `/api/appointments…` · `/api/clinical-records…` · `/api/authorizations…` · `/api/encounters…` · `/api/invoices…` |
+
+### **42.3 Roles, usuarios y matriz**
+
+| Usuario | Contraseña | Rol | Recursos | Alcance |
+|:---|:---|:---|---:|:---|
+| `admin` | `Admin123!` | `ADMIN` | 111 | Todo. Único que borra, desactiva y administra la seguridad |
+| `admisiones` | `Admisiones123!` | `ADMISIONES` | 25 | Pacientes, citas y autorizaciones (leer y escribir); catálogos (leer) |
+| `medico` | `Medico123!` | `MEDICO` | 21 | Historias clínicas y atenciones (leer y escribir); agenda, citas, pacientes (leer) |
+| `facturacion` | `Facturacion123!` | `FACTURACION` | 15 | Facturas (leer y escribir); atenciones, citas, servicios, pacientes (leer) |
+| `auditor` | `Auditor123!` | `AUDITOR_CLINICO` | 15 | Solo lectura de datos asistenciales |
+
+Total: **187** concesiones. La matriz vive en `src/features/auth/resources/resource-catalog.ts` (campo `roles` de cada recurso). Para cambiarla, edita ese archivo y corre `npm run db:seed`.
+
+**Alta de un permiso en caliente** (sin desplegar código):
+
+``` texinfo
+1. POST /api/resources         { method, path, description }   → alta del punto de acceso
+2. POST /api/resource-roles    { role_id, resource_id }        → concesión a un rol
+3. GET  /api/resource-roles?role_id=N                          → verificación
+```
+
+El efecto es inmediato: `authorize` consulta la matriz en cada petición y no cachea. Lo que concedas así se pierde al correr `npm run db:seed`, porque el seeder reconcilia contra el catálogo del código.
+
+## **42.4 Estructura final**
+
+``` bash
+src/
+├── config/index.ts
+├── database/
+│   ├── db.ts
+│   └── seeders/{counts,index}.ts
+├── routes/index.ts
+├── shared/
+│   ├── auth/{password,jwt,resource-match,auth-user}.ts            # Fase II
+│   ├── http/{base-controller,error-response,swagger-security}.ts
+│   ├── database/with-transaction.ts
+│   └── errors/app-error.ts
+├── features/
+│   ├── business/                                                  # Fase I (11 features)
+│   │   ├── patient/ specialty/ doctor/ doctor-specialty/ service/ agenda/
+│   │   ├── appointment/ clinical-record/ authorization/ encounter/ invoice/
+│   │   └── (cada uno: model, dto/, repository, service, controller, routes, seeder, swagger, http/)
+│   └── auth/                                                      # Fase II (7 features)
+│       ├── access/{authenticate,authorize}.middleware.ts
+│       ├── rbac.associations.ts
+│       ├── users/ roles/ resources/ role-users/ resource-roles/ refresh-tokens/ session/
+│       └── (cada uno: dto/, repository, service, controller, routes, [seeder], swagger, http/)
+├── swagger/index.ts
+└── server.ts
+```
+
+## **42.5 Verificación global**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SELECT (SELECT COUNT(*) FROM roles) AS roles, (SELECT COUNT(*) FROM resources) AS resources, (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM role_users WHERE status='active') AS role_users, (SELECT COUNT(*) FROM resource_roles WHERE status='active') AS resource_roles;" 
+```
+
+> `5`, `111`, `5`, `5` y `187`.
+
+![](images/clipboard-3349139054.png)
+
+Con `npm run dev` corriendo, las 16 rutas JWT + RBAC sin token y con token de admin:
+
+``` bash
+B=http://localhost:4000/api
+ADMIN=$(curl -s -X POST $B/session/login -H 'Content-Type: application/json' -d '{"identifier":"admin","password":"Admin123!"}' | node -pe "JSON.parse(require('fs').readFileSync(0)).access_token")
+for r in users roles resources role-users resource-roles patients specialties doctors doctor-specialties services agendas appointments clinical-records authorizations encounters invoices; do
+  echo "$r  sin token: $(curl -s -o /dev/null -w '%{http_code}' $B/$r)  admin: $(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $ADMIN" $B/$r)"
+done
+```
+
+> Las 16 líneas deben mostrar `sin token: 401` y `admin: 200`.
+
+![](images/clipboard-114311240.png)
+
+``` bash
+git ls-files | grep -c "^\.env$" 
+```
+
+> `0`: el `.env`, que ahora también tiene `JWT_SECRET`, sigue fuera de git.
+
+![](images/clipboard-2420583640.png)
+
+**Borrado físico de usuarios, roles y recursos.** Igual que en negocio, las FKs impiden borrar un padre con hijos: `DELETE /api/users/:id` de un usuario que ya inició sesión o tiene un rol asignado responde `500` (`SequelizeForeignKeyConstraintError`) y no borra nada. Para esos casos usa `PATCH …/:id/deactivate`, que además invalida sus tokens al instante.
