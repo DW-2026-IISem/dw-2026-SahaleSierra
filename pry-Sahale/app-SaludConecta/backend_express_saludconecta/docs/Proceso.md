@@ -3970,3 +3970,105 @@ npm run dev
 ```
 
 ![](images/clipboard-2144991773.png)
+
+## **29. ISS-16-H — Appointment a 4 capas**
+
+**Objetivo:** pasar Appointment a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-G.
+
+Primer feature **transaccional**. El alta pasa de `sequelize.transaction()` + `t.rollback()` manual a `withTransaction` + `throw new AppError(...)`.
+
+### **29.1 DTOs**
+
+```         
+mkdir -p src/features/business/appointment/dto
+```
+
+#### **29.1.a `create-appointment.dto.ts`**
+
+#### ![](images/clipboard-3232874144.png)
+
+#### **29.1.b `update-appointment.dto.ts`**
+
+#### ![](images/clipboard-3684105436.png)
+
+#### **29.1.c `patch-appointment.dto.ts`**
+
+#### ![](images/clipboard-134406024.png)
+
+#### **29.1.d `appointment-response.dto.ts`**
+
+#### ![](images/clipboard-417584429.png)
+
+#### **29.1.e `index.ts`**
+
+### ![](images/clipboard-2700497245.png)
+
+### **29.2 Repository**
+
+#### **`appointment.repository.ts`**
+
+![](images/clipboard-2424294283.png)
+
+### **29.3 Service**
+
+#### **`appointment.service.ts`**
+
+![](images/clipboard-3155204431.png)
+
+![](images/clipboard-1020916575.png)
+
+![](images/clipboard-3723896799.png)
+
+### **29.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`appointment.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`appointment.controller.ts`**
+
+![](images/clipboard-27570779.png)
+
+### **Verificación ISS-16-H**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/appointment/appointment.controller.ts 
+```
+
+![](images/clipboard-95811607.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+Usa un `agenda_id` y un `patient_id` activos:
+
+``` bash
+B=http://localhost:4000/api/appointments
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' \
+  -d '{"agenda_id":1,"patient_id":1,"start_date":"2027-02-01T10:00:00","end_date":"2027-02-01T10:30:00","reason":"16H"}'
+```
+
+> `201` con `"state":"scheduled"`. Repite **el mismo** comando:
+
+> `400` con `Agenda already has an appointment in that time range (id N)`. Eso confirma que la transacción y el cruce funcionan en la capa nueva.
+>
+> ![](images/clipboard-3018316203.png)
+
+``` bash
+curl -s -w "\n%{http_code}\n" -X PATCH $B/ID_DE_LA_CITA -H 'Content-Type: application/json' -d '{"state":"attended"}'
+```
+
+> `400` con `State 'attended' is set only by POST /api/encounters (requires clinical record)`.
+>
+> ![](images/clipboard-2849141710.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-705172957.png)
