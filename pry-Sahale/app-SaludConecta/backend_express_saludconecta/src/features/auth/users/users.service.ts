@@ -10,19 +10,25 @@ import { UsersRepository } from "./users.repository";
 import { User } from "./user.model";
 import { AppError } from "../../../shared/errors/app-error";
 import { comparePassword } from "../../../shared/auth/password";
+import { ResourceRolesService } from "../resource-roles/resource-roles.service";
+import { EffectivePermissionDto } from "../resource-roles/dto";
 
 /**
  * Capa Service del feature Users.
  *
  * Reglas de negocio: unicidad de `username`/`email`, default de `status`,
- * política de borrado lógico y cambio de credencial. (La consulta de permisos
- * efectivos se añade en ISS-20, cuando exista el feature `resource-roles`.)
+ * política de borrado lógico, cambio de credencial y consulta de permisos
+ * efectivos (que delega en el feature `resource-roles`: el permiso es una
+ * concesión rol-recurso, no un atributo del usuario).
+
  *
  * No conoce `req`/`res` ni escribe Sequelize directamente.
  */
 export class UsersService {
   public constructor(
     private readonly repository: UsersRepository = new UsersRepository(),
+    private readonly resourceRolesService: ResourceRolesService = new ResourceRolesService(),
+
   ) {}
 
   // ================== READ ==================
@@ -34,6 +40,13 @@ export class UsersService {
   public async getOne(id: number): Promise<UserResponseDto> {
     return toUserResponse(await this.findOrFail(id));
   }
+  
+  /** Permisos efectivos del usuario (cadena RBAC completa). 404 si no existe. */
+  public async getEffectivePermissions(id: number): Promise<EffectivePermissionDto[]> {
+    await this.findOrFail(id);
+    return this.resourceRolesService.findEffectiveForUser(id);
+  }
+
 
   // ================== CREATE ==================
   public async create(body: CreateUserDto): Promise<UserResponseDto> {

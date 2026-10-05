@@ -1,0 +1,114 @@
+### Feature ResourceRoles — CONCEDER / RETIRAR PERMISOS (modalidad JWT + RBAC)
+### Aquí se ve el principio de diseño: NO existe entidad `Permission`.
+### El permiso es la tupla (rol, recurso) materializada en `resource_roles`.
+### resource_id 3 = `POST /api/patients` (3.ª entrada del catálogo semilla).
+### role_id 3 = MEDICO (lee pacientes, pero no los crea).
+@baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+###
+
+# @name loginMedico
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "medico",
+  "password": "Medico123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+@medicoToken = {{loginMedico.response.body.$.access_token}}
+@medicoRoleId = 3
+
+### getAll — concesiones activas (ADMIN 111 + ADMISIONES 25 + MEDICO 21 + FACTURACION 15 + AUDITOR_CLINICO 15 = 187)
+GET {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+
+### Filtro: permisos de un rol (?role_id=)
+GET {{baseUrl}}/api/resource-roles?role_id={{medicoRoleId}}
+Authorization: Bearer {{token}}
+
+### Filtro inverso: qué roles conceden un recurso (?resource_id=)
+GET {{baseUrl}}/api/resource-roles?resource_id=1
+Authorization: Bearer {{token}}
+
+### getOne
+GET {{baseUrl}}/api/resource-roles/1
+Authorization: Bearer {{token}}
+
+### ESTADO INICIAL — MEDICO no puede crear pacientes -> 403 (deny by default)
+POST {{baseUrl}}/api/patients
+Authorization: Bearer {{medicoToken}}
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "RBAC0001",
+  "name": "Prueba RBAC",
+  "birth_date": "1990-01-01",
+  "contact": "3000000000"
+}
+
+### CONCEDER — `POST /api/resource-roles` con { role_id: 3 (MEDICO), resource_id: 3 (POST /api/patients) }
+# @name grantCreate
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": 3,
+  "resource_id": 3
+}
+
+@grantId = {{grantCreate.response.body.$.grant.id}}
+
+### EFECTO INMEDIATO — el mismo médico ahora sí puede (201), sin reiniciar el servidor
+POST {{baseUrl}}/api/patients
+Authorization: Bearer {{medicoToken}}
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "RBAC0002",
+  "name": "Prueba RBAC 2",
+  "birth_date": "1990-01-01",
+  "contact": "3000000001"
+}
+
+### RETIRAR EL PERMISO (borrado lógico) — solo se pierde esa operación
+PATCH {{baseUrl}}/api/resource-roles/{{grantId}}/deactivate
+Authorization: Bearer {{token}}
+
+### El médico vuelve a 403
+POST {{baseUrl}}/api/patients
+Authorization: Bearer {{medicoToken}}
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "RBAC0003",
+  "name": "Prueba RBAC 3",
+  "birth_date": "1990-01-01",
+  "contact": "3000000002"
+}
+
+### REACTIVAR EL PERMISO (reversible, la auditoría se conserva)
+PATCH {{baseUrl}}/api/resource-roles/{{grantId}}/reactivate
+Authorization: Bearer {{token}}
+
+### Dejar la matriz como estaba (`npm run db:seed` también la reconcilia)
+PATCH {{baseUrl}}/api/resource-roles/{{grantId}}/deactivate
+Authorization: Bearer {{token}}
+
+### 403 — el propio MEDICO no puede administrar la matriz de permisos
+GET {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{medicoToken}}

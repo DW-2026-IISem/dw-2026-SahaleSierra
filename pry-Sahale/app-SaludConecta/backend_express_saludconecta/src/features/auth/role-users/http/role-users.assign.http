@@ -1,0 +1,78 @@
+### Feature RoleUsers — ASIGNAR ROL A USUARIO (modalidad JWT + RBAC)
+### Primer eslabón de la cadena: sin asignación activa NO hay permisos.
+### Datos semilla: users 1..5 = admin, admisiones, medico, facturacion, auditor
+###                roles 1..5 = ADMIN, ADMISIONES, MEDICO, FACTURACION, AUDITOR_CLINICO
+@baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+
+### getAll — asignaciones activas (con resumen de usuario y rol)
+GET {{baseUrl}}/api/role-users
+Authorization: Bearer {{token}}
+
+### getOne
+GET {{baseUrl}}/api/role-users/1
+Authorization: Bearer {{token}}
+
+### ASIGNAR — `POST /api/role-users` con { user_id, role_id }
+### (auditor = user_id 5 recibe MEDICO = role_id 3; no lo tiene todavía -> 201)
+# @name assignCreate
+POST {{baseUrl}}/api/role-users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": 5,
+  "role_id": 3
+}
+
+@assignmentId = {{assignCreate.response.body.$.assignment.id}}
+
+### 409 — ese rol ya está asignado a ese usuario (la tupla es única)
+POST {{baseUrl}}/api/role-users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": 5,
+  "role_id": 3
+}
+
+### 404 — usuario o rol inexistente/inactivo
+POST {{baseUrl}}/api/role-users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": 9999,
+  "role_id": 2
+}
+
+### Comprobación: el auditor ahora suma los permisos de MEDICO
+GET {{baseUrl}}/api/users/5/permissions
+Authorization: Bearer {{token}}
+
+### RETIRAR ROL (borrado lógico) — el usuario pierde los permisos de ese rol de inmediato
+PATCH {{baseUrl}}/api/role-users/{{assignmentId}}/deactivate
+Authorization: Bearer {{token}}
+
+### Comprobación del efecto: los permisos efectivos cambian sin reiniciar nada
+GET {{baseUrl}}/api/users/5/permissions
+Authorization: Bearer {{token}}
+
+### REACTIVAR asignación (reversible, la auditoría se conserva)
+PATCH {{baseUrl}}/api/role-users/{{assignmentId}}/reactivate
+Authorization: Bearer {{token}}
+
+### Dejar el laboratorio como estaba (el auditor vuelve a tener solo su rol)
+PATCH {{baseUrl}}/api/role-users/{{assignmentId}}/deactivate
+Authorization: Bearer {{token}}

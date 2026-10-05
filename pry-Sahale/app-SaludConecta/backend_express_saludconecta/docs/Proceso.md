@@ -3395,7 +3395,7 @@ Después: Routes -> Controller (BaseController) -> Service -> Repository -> Mode
 **Objetivo:** crear las 4 piezas que la guía de Auth da por hechas y que tu Fase I no tiene. **Bloqueado por:** ISS-15.
 
 | Archivo | Para qué | Quién lo usa después |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | `shared/errors/app-error.ts` | Error con `statusCode` | Todos los services y middlewares |
 | `shared/database/with-transaction.ts` | Envolver una transacción | Services transaccionales |
 | `shared/http/error-response.ts` | Único mapeo error → HTTP | `BaseController`, `authenticate`, `authorize` |
@@ -3559,7 +3559,7 @@ mkdir -p src/features/business/specialty/dto
 
 ![](images/clipboard-1096782335.png)
 
-#### **24.1.b `update-specialty.dto.ts`** 
+#### **24.1.b `update-specialty.dto.ts`**
 
 ![](images/clipboard-3693774361.png)
 
@@ -4488,7 +4488,7 @@ Archivos nuevos: 4 de `shared` + 77 de negocio (11 × 7). Archivos reemplazados:
 Todas las respuestas 200, 201 y 404, y los 400 de reglas de negocio, quedan con el mismo código y el mismo cuerpo. Cambian solo estos casos:
 
 | Caso | Antes | Después |
-|:---|:---|:---|
+|:-----------------------|:-----------------------|:-----------------------|
 | `:id` no numérico o `0` | `500` o `404` | `400` `Invalid id: must be a positive integer` |
 | Error no controlado (validación del modelo, duplicado en BD, FK) | `500` con `"error":"Error creating …"` | `500` con `"error":"Internal server error"` y el mismo `detail` |
 | 400 que llevaban un campo extra (`id`, `status`, `invoice_id`) | campo aparte en el JSON | el dato va dentro del mensaje `error` |
@@ -4620,7 +4620,7 @@ npx tsc --noEmit
 ### **35.9–35.14 Los seis modelos Sequelize**
 
 | Entidad | Tabla | Responsabilidad |
-|:---|:---|:---|
+|:-----------------------|:-----------------------|:-----------------------|
 | `User` | `users` | identidad (contraseña **hasheada** por hooks) |
 | `Role` | `roles` | agrupación de responsabilidades |
 | `Resource` | `resources` | endpoint protegible: par `(method, path)` |
@@ -5122,7 +5122,7 @@ mkdir -p src/features/auth/roles/dto src/features/auth/roles/http src/features/a
 
 #### ![](images/clipboard-943611270.png)
 
-#### **37.7 `roles.service.ts`** 
+#### **37.7 `roles.service.ts`**
 
 #### ![](images/clipboard-114394345.png)
 
@@ -5347,3 +5347,340 @@ npm run dev
 ```
 
 ![](images/clipboard-3549162360.png)
+
+## **38. ISS-20 — Features RoleUsers y ResourceRoles (asignar roles y conceder permisos)**
+
+**Equivale a:** ISS-12 de la guía (§17.1–17.8). **Objetivo:** las dos tablas pivote que convierten el modelo en autorización real, `reconcileRole` y el seeder que construye la matriz. **Bloqueado por:** ISS-19. **API:** `/api/role-users…` y `/api/resource-roles…`
+
+``` bash
+User ──(RoleUser)──▶ Role ──(ResourceRole)──▶ Resource      «quién tiene qué rol»   «qué se concede: el permiso»
+```
+
+``` bash
+mkdir -p src/features/auth/role-users/dto src/features/auth/role-users/http src/features/auth/resource-roles/dto src/features/auth/resource-roles/http
+```
+
+### **Feature RoleUsers — DTOs**
+
+#### **38.1 `create-role-user.dto.ts`**
+
+#### ![](images/clipboard-1383699610.png)
+
+#### **38.2 `role-user-response.dto.ts`**
+
+#### ![](images/clipboard-1078888666.png)
+
+#### **38.3 `index.ts`**
+
+#### ![](images/clipboard-2151877531.png)
+
+### **Feature RoleUsers — repository, service, controller y rutas**
+
+#### **38.4 `role-users.repository.ts`**
+
+#### ![](images/clipboard-3843680063.png)
+
+#### **38.5 `role-users.service.ts`**
+
+#### ![](images/clipboard-4238514587.png)
+
+#### **38.6 `role-users.controller.ts`**
+
+#### ![](images/clipboard-3860546643.png)
+
+#### **38.7 `role-users.routes.ts`**
+
+Versión de este ISS, sin middlewares de acceso. ISS-21 la reemplaza por la definitiva.
+
+![](images/clipboard-2202711616.png)
+
+### **Feature RoleUsers — seeder y swagger**
+
+#### **38.8 `role-users.seeder.ts`**
+
+#### ![](images/clipboard-1981295039.png)
+
+#### **38.9 `role-users.swagger.ts`**
+
+![](images/clipboard-2130584269.png)
+
+![](images/clipboard-1381765612.png)
+
+### **Feature ResourceRoles — DTOs**
+
+#### **38.10 `create-resource-role.dto.ts`**
+
+#### ![](images/clipboard-3184503831.png)
+
+#### **38.11 `list-resource-roles.dto.ts`**
+
+#### ![](images/clipboard-2257579097.png)
+
+#### **38.12 `resource-role-response.dto.ts`**
+
+#### ![](images/clipboard-501868847.png)
+
+#### **38.13 `index.ts`**
+
+![](images/clipboard-909725698.png)
+
+### **Feature ResourceRoles — repository, service, controller y rutas**
+
+#### **38.14 `resource-roles.repository.ts`**
+
+Aquí vive `findEffectiveForUser`, la consulta que recorre la cadena completa `role_users → roles → resource_roles → resources` con todos los eslabones activos. Es la misma que usará `authorize` en ISS-21.
+
+![](images/clipboard-2384112665.png)
+
+![](images/clipboard-2039456247.png)
+
+#### **38.15 `resource-roles.service.ts`**
+
+Incluye `reconcileRole`, que usa `withTransaction` (de ISS-16-A).
+
+![](images/clipboard-97595579.png)
+
+![](images/clipboard-3291697071.png)
+
+![](images/clipboard-192645456.png)
+
+#### **38.16 `resource-roles.controller.ts`**
+
+![](images/clipboard-1595128141.png)
+
+#### **38.17 `resource-roles.routes.ts`**
+
+Versión de este ISS, sin middlewares de acceso. ISS-21 la reemplaza por la definitiva.
+
+![](images/clipboard-2271571862.png)
+
+### **Feature ResourceRoles — seeder y swagger**
+
+#### **38.18 `resource-roles.seeder.ts`**
+
+#### ![](images/clipboard-4245840660.png)
+
+#### **38.19 `resource-roles.swagger.ts`**
+
+![](images/clipboard-1507389262.png)
+
+![](images/clipboard-3309527628.png)
+
+### **Pruebas HTTP**
+
+#### **38.20 `role-users.assign.http`**
+
+#### ![](images/clipboard-1306112967.png)
+
+#### **38.21 `resource-roles.grant.http`**
+
+![](images/clipboard-3826517932.png)
+
+![](images/clipboard-929342250.png)
+
+### **Permisos efectivos en Users (lo pendiente de ISS-18)**
+
+#### **38.22 PARCHE — `src/features/auth/users/users.service.ts`**
+
+**1.** **Debajo de** `import { comparePassword } from "../../../shared/auth/password";`, **añadir:**
+
+``` typescript
+import { ResourceRolesService } from "../resource-roles/resource-roles.service"; import { EffectivePermissionDto } from "../resource-roles/dto"; 
+```
+
+![](images/clipboard-44952698.png)
+
+**2.** **Dentro del** `constructor`, **debajo de** `private readonly repository: UsersRepository = new UsersRepository(),`, **añadir:**
+
+``` typescript
+    private readonly resourceRolesService: ResourceRolesService = new ResourceRolesService(),
+```
+
+![](images/clipboard-2932271651.png)
+
+**3.** **Debajo de** el método `getOne` completo (después de su llave de cierre) y **encima de** `// ================== CREATE ==================`, **añadir:**
+
+``` typescript
+
+  /** Permisos efectivos del usuario (cadena RBAC completa). 404 si no existe. */
+  public async getEffectivePermissions(id: number): Promise<EffectivePermissionDto[]> {
+    await this.findOrFail(id);
+    return this.resourceRolesService.findEffectiveForUser(id);
+  }
+```
+
+![](images/clipboard-1262806203.png)
+
+**4.** **En el** comentario de la clase, **reemplazar** las dos líneas que empiezan por `* política de borrado lógico y cambio de credencial.` por:
+
+``` typescript
+ * política de borrado lógico, cambio de credencial y consulta de permisos
+ * efectivos (que delega en el feature `resource-roles`: el permiso es una
+ * concesión rol-recurso, no un atributo del usuario).
+```
+
+![](images/clipboard-3063025267.png)
+
+#### **38.23 PARCHE — `src/features/auth/users/users.controller.ts`**
+
+**Debajo de** el método `changePassword` completo (el último de la clase, después de su llave de cierre) y **encima de** la llave `}` que cierra la clase, **añadir:**
+
+``` typescript
+
+  /** Permisos efectivos del usuario: recursos concedidos por sus roles activos. */
+  public async getEffectivePermissions(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const permissions = await this.service.getEffectivePermissions(this.paramId(req));
+      res.status(200).json({ permissions });
+    });
+  }
+```
+
+![](images/clipboard-3701780427.png)
+
+#### **38.24 PARCHE — `src/features/auth/users/users.routes.ts`**
+
+Todavía sin middlewares, como el resto del archivo.
+
+**Debajo de** el bloque de la ruta `/api/users/:id/password` (el último de `routes()`) y **encima de** la llave `}` que cierra `routes()`, **añadir:**
+
+``` typescript
+
+    // permisos efectivos del usuario
+    app
+      .route("/api/users/:id/permissions")
+      .get(this.usersController.getEffectivePermissions.bind(this.usersController));
+```
+
+![](images/clipboard-3649796403.png)
+
+### **Cableado**
+
+#### **38.25 PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { ResourcesRoutes } from "../features/auth/resources/resources.routes";`, **añadir:**
+
+``` typescript
+import { RoleUsersRoutes } from "../features/auth/role-users/role-users.routes"; import { ResourceRolesRoutes } from "../features/auth/resource-roles/resource-roles.routes"; 
+```
+
+![](images/clipboard-2314182446.png)
+
+**2.** **Debajo de** `public resourcesRoutes: ResourcesRoutes = new ResourcesRoutes();`, **añadir:**
+
+``` typescript
+  public roleUsersRoutes: RoleUsersRoutes = new RoleUsersRoutes();
+  public resourceRolesRoutes: ResourceRolesRoutes = new ResourceRolesRoutes();
+```
+
+![](images/clipboard-504913483.png)
+
+#### **38.26 PARCHE — `src/config/index.ts`**
+
+**Dentro de** `routes()`, **debajo de** `this.routePrv.resourcesRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.roleUsersRoutes.routes(this.app);
+    this.routePrv.resourceRolesRoutes.routes(this.app);
+```
+
+![](images/clipboard-3592378062.png)
+
+#### **38.27 PARCHE — `src/database/seeders/index.ts` (runner)**
+
+Orden final de la seguridad: `roles → resources → users → role_users → resource_roles`.
+
+**1.** **Debajo de** `import { seedUsers } from "../../features/auth/users/users.seeder";`, **añadir:**
+
+``` typescript
+import { seedRoleUsers } from "../../features/auth/role-users/role-users.seeder";
+import { seedResourceRoles } from "../../features/auth/resource-roles/resource-roles.seeder";
+```
+
+![](images/clipboard-3141057222.png)
+
+**2.** **Dentro de** `runAllSeeders()`, **debajo de** `await seedUsers(counts.users);`, **añadir:**
+
+``` typescript
+  await seedRoleUsers();
+  await seedResourceRoles();
+```
+
+![](images/clipboard-2122601544.png)
+
+#### **38.28 PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { resourcesSwagger } from "../features/auth/resources/resources.swagger";`, **añadir:**
+
+``` typescript
+import { roleUsersSwagger } from "../features/auth/role-users/role-users.swagger"; import { resourceRolesSwagger } from "../features/auth/resource-roles/resource-roles.swagger"; 
+```
+
+![](images/clipboard-1656786893.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **debajo de** `resourcesSwagger,`, **añadir:**
+
+``` typescript
+  roleUsersSwagger,   
+  resourceRolesSwagger, 
+```
+
+![](images/clipboard-609835172.png)
+
+### **Verificación ISS-20**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> ![](images/clipboard-4280048888.png)
+>
+> Antes de los seeders de negocio deben salir estas líneas:
+>
+> ```         
+> ✅ role_users: asignaciones reconciliadas (5, 5 nuevas)
+> ✅ resource_roles: ADMIN -> 111 recursos (111 altas, 0 bajas)
+> ✅ resource_roles: ADMISIONES -> 25 recursos (25 altas, 0 bajas)
+> ✅ resource_roles: MEDICO -> 21 recursos (21 altas, 0 bajas)
+> ✅ resource_roles: FACTURACION -> 15 recursos (15 altas, 0 bajas)
+> ✅ resource_roles: AUDITOR_CLINICO -> 15 recursos (15 altas, 0 bajas)
+> ```
+>
+> Si lo corres de nuevo, todas dicen `(0 altas, 0 bajas)`.
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SELECT r.name AS rol, COUNT(*) AS concesiones FROM resource_roles rr JOIN roles r ON r.id = rr.role_id WHERE rr.status='active' GROUP BY r.id;" 
+```
+
+> Cinco filas que suman **187**.
+
+![](images/clipboard-2139577754.png)
+
+Con `npm run dev` corriendo, los permisos efectivos de cada usuario canónico (ids 1 a 5):
+
+``` bash
+for id in 1 2 3 4 5; do
+  curl -s http://localhost:4000/api/users/$id/permissions | grep -o '"method"' | wc -l
+done
+```
+
+> `111`, `25`, `21`, `15` y `15`.
+>
+> ![](images/clipboard-720901791.png)
+
+``` bash
+curl -s "http://localhost:4000/api/resource-roles?role_id=3" | grep -o '"path":"[^"]*"' | sort -u
+```
+
+> Las rutas que recibe MEDICO: `clinical-records`, `encounters` y las lecturas de `patients`, `agendas`, `appointments`, `services` y `authorizations`.
+>
+> ![](images/clipboard-88129266.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-3203012950.png)

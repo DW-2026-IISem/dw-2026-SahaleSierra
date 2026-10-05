@@ -41,5 +41,11 @@ export class UsersRoutes {
     app
       .route("/api/users/:id/password")
       .patch(this.usersController.changePassword.bind(this.usersController));
+  
+    // permisos efectivos del usuario
+    app
+      .route("/api/users/:id/permissions")
+      .get(this.usersController.getEffectivePermissions.bind(this.usersController));
+    
   }
 }
