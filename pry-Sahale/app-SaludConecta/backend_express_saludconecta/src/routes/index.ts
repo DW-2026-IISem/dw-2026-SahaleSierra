@@ -10,6 +10,8 @@ import { AuthorizationRoutes } from "../features/business/authorization/authoriz
 import { EncounterRoutes } from "../features/business/encounter/encounter.routes";
 import { InvoiceRoutes } from "../features/business/invoice/invoice.routes";
 import { UsersRoutes } from "../features/auth/users/users.routes";
+import { RolesRoutes } from "../features/auth/roles/roles.routes";
+import { ResourcesRoutes } from "../features/auth/resources/resources.routes";
 
 
 
@@ -27,6 +29,8 @@ export class Routes {
   public invoiceRoutes: InvoiceRoutes = new InvoiceRoutes();
   // Fase II — Auth con RBAC
   public usersRoutes: UsersRoutes = new UsersRoutes();
+  public rolesRoutes: RolesRoutes = new RolesRoutes();
+  public resourcesRoutes: ResourcesRoutes = new ResourcesRoutes();
 
 
 }

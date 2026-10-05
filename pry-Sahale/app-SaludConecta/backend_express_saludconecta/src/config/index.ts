@@ -74,6 +74,8 @@ export class App {
     this.routePrv.invoiceRoutes.routes(this.app);
     // Fase II — Auth con RBAC
     this.routePrv.usersRoutes.routes(this.app);
+    this.routePrv.rolesRoutes.routes(this.app);
+    this.routePrv.resourcesRoutes.routes(this.app);
 
   }
   

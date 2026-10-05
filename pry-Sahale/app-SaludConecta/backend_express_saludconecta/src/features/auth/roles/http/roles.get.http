@@ -1,0 +1,71 @@
+### Feature Roles — CRUD (modalidad JWT + RBAC)
+### El NOMBRE del rol no autoriza nada: la autorización son las filas de `resource_roles`.
+@baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+
+### getAll — recurso `GET /api/roles` (ADMIN, ADMISIONES, MEDICO, FACTURACION, AUDITOR_CLINICO)
+GET {{baseUrl}}/api/roles
+Authorization: Bearer {{token}}
+
+### getOne
+GET {{baseUrl}}/api/roles/1
+Authorization: Bearer {{token}}
+
+### CREATE — nace SIN permisos
+# @name createRole
+POST {{baseUrl}}/api/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "RECEPCION",
+  "description": "Solo lectura de agenda"
+}
+
+@id = {{createRole.response.body.$.role.id}}
+
+### 409 — el nombre del rol ya existe
+POST {{baseUrl}}/api/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "medico"
+}
+
+### UPDATE PUT
+PUT {{baseUrl}}/api/roles/{{id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "RECEPCION",
+  "description": "Solo lectura de agenda y citas"
+}
+
+### UPDATE PATCH
+PATCH {{baseUrl}}/api/roles/{{id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "description": "Recepción del centro médico"
+}
+
+### DELETE lógico — efecto inmediato: todos sus usuarios pierden esos permisos (403)
+PATCH {{baseUrl}}/api/roles/{{id}}/deactivate
+Authorization: Bearer {{token}}
+
+### DELETE físico
+DELETE {{baseUrl}}/api/roles/{{id}}
+Authorization: Bearer {{token}}

@@ -1,0 +1,68 @@
+### Feature Resources — catálogo de puntos de acceso (modalidad JWT + RBAC)
+### Un recurso es el par (method, path) con la ruta EN PATRÓN: /api/patients/:id
+### GET y POST sobre la misma ruta son DOS recursos distintos.
+@baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+
+### getAll — el catálogo completo (111 recursos sembrados)
+GET {{baseUrl}}/api/resources
+Authorization: Bearer {{token}}
+
+### getOne
+GET {{baseUrl}}/api/resources/25
+Authorization: Bearer {{token}}
+
+### CREATE — alta de un punto de acceso nuevo
+### Concederlo después a un rol no requiere desplegar código.
+# @name createResource
+POST {{baseUrl}}/api/resources
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "path": "/api/reports/invoices/:id",
+  "description": "Consultar reporte de facturación"
+}
+
+@id = {{createResource.response.body.$.resource.id}}
+
+### 409 — la tupla (method, path) ya existe
+POST {{baseUrl}}/api/resources
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "path": "/api/patients",
+  "description": "Duplicado"
+}
+
+### UPDATE PUT
+PUT {{baseUrl}}/api/resources/{{id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "path": "/api/reports/invoices/:id",
+  "description": "Reporte de facturación por id"
+}
+
+### DELETE lógico — ningún rol puede ya autorizar ese endpoint (403 para todos)
+PATCH {{baseUrl}}/api/resources/{{id}}/deactivate
+Authorization: Bearer {{token}}
+
+### DELETE físico
+DELETE {{baseUrl}}/api/resources/{{id}}
+Authorization: Bearer {{token}}

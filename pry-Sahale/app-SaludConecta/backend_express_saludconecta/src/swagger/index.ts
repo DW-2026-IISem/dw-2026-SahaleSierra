@@ -12,6 +12,8 @@ import { authorizationSwagger } from "../features/business/authorization/authori
 import { encounterSwagger } from "../features/business/encounter/encounter.swagger";
 import { invoiceSwagger } from "../features/business/invoice/invoice.swagger";
 import { usersSwagger } from "../features/auth/users/users.swagger";
+import { rolesSwagger } from "../features/auth/roles/roles.swagger";
+import { resourcesSwagger } from "../features/auth/resources/resources.swagger";
 import {
   bearerSecurityScheme,
   forbiddenResponse,
@@ -33,6 +35,8 @@ export type FeatureSwaggerModule = {
  */
 const featureSwaggerModules: FeatureSwaggerModule[] = [
   usersSwagger, 
+  rolesSwagger,
+  resourcesSwagger,
   patientSwagger,
   specialtySwagger,
   doctorSwagger,

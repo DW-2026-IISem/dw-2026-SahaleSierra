@@ -25,7 +25,8 @@ import "../../features/auth/role-users/role-user.model";
 import "../../features/auth/resource-roles/resource-role.model";
 import "../../features/auth/refresh-tokens/refresh-token.model";
 import "../../features/auth/rbac.associations";
-import { seedUsers } from "../../features/auth/users/users.seeder";
+import { seedRoles } from "../../features/auth/roles/roles.seeder";
+import { seedResources } from "../../features/auth/resources/resources.seeder";import { seedUsers } from "../../features/auth/users/users.seeder";
 import { seedPatients } from "../../features/business/patient/patient.seeder";
 import { seedSpecialties } from "../../features/business/specialty/specialty.seeder";
 import { seedDoctors } from "../../features/business/doctor/doctor.seeder";
@@ -75,7 +76,9 @@ export async function runAllSeeders(): Promise<void> {
     }
   }
 
-   // Fase II — Auth con RBAC (el orden respeta las dependencias de la cadena)
+  // Fase II — Auth con RBAC (el orden respeta las dependencias de la cadena)
+  await seedRoles();
+  await seedResources();
   await seedUsers(counts.users);
   
   // Orden: business (padres → hijos)

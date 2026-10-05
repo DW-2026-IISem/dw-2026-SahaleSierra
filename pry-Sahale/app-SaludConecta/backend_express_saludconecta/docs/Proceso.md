@@ -5085,3 +5085,265 @@ npm run dev
 ```
 
 #### ![](images/clipboard-1289238680.png)
+
+## **37. ISS-19 — Features Roles y Resources (catálogo de autorización)**
+
+**Equivale a:** ISS-11 de la guía (§16.1–16.7). **Objetivo:** CRUD administrativo de roles y de recursos, y el **catálogo semilla** de los 111 recursos del sistema. **Bloqueado por:** ISS-18. **API:** `/api/roles…` y `/api/resources…`
+
+### **Feature Roles — DTOs**
+
+``` bash
+mkdir -p src/features/auth/roles/dto src/features/auth/roles/http src/features/auth/resources/dto src/features/auth/resources/http
+```
+
+#### **37.1 `create-role.dto.ts`**
+
+#### ![](images/clipboard-2662699908.png)
+
+#### **37.2 `update-role.dto.ts`**
+
+#### ![](images/clipboard-3363651073.png)
+
+#### **37.3 `patch-role.dto.ts`**
+
+#### ![](images/clipboard-275144207.png)
+
+#### **37.4 `role-response.dto.ts`**
+
+#### ![](images/clipboard-3829299459.png)
+
+#### **37.5 `index.ts`**
+
+![](images/clipboard-2885209462.png)
+
+### **Feature Roles — repository, service, controller y rutas**
+
+#### **37.6 `roles.repository.ts`**
+
+#### ![](images/clipboard-943611270.png)
+
+#### **37.7 `roles.service.ts`** 
+
+#### ![](images/clipboard-114394345.png)
+
+#### **37.8 `roles.controller.ts`**
+
+#### ![](images/clipboard-2325864342.png)
+
+#### **37.9 `roles.routes.ts`**
+
+Versión de este ISS, sin middlewares de acceso. ISS-21 la reemplaza por la definitiva.
+
+![](images/clipboard-2896594224.png)
+
+### **Feature Roles — seeder y swagger**
+
+#### **37.10 `roles.seeder.ts`**
+
+#### ![](images/clipboard-2669823224.png)
+
+#### **37.11 `roles.swagger.ts`**
+
+![](images/clipboard-3990862386.png)
+
+![](images/clipboard-3143944813.png)
+
+![](images/clipboard-4086746814.png)
+
+### **Feature Resources — DTOs**
+
+#### **37.12 `create-resource.dto.ts`**
+
+#### ![](images/clipboard-3612046073.png)
+
+#### **37.13 `update-resource.dto.ts`**
+
+#### ![](images/clipboard-2212345889.png)
+
+#### **37.14 `patch-resource.dto.ts`**
+
+#### ![](images/clipboard-1453580645.png)
+
+#### **37.15 `resource-response.dto.ts`**
+
+#### ![](images/clipboard-1047247945.png)
+
+#### **37.16 `index.ts`**
+
+![](images/clipboard-4175883357.png)
+
+### **Feature Resources — catálogo semilla**
+
+#### **37.17 `resource-catalog.ts`**
+
+Es el archivo que más cambia respecto a la guía: los 111 recursos de SaludConecta y qué roles operativos recibe cada uno.
+
+![](images/clipboard-752928917.png)
+
+![](images/clipboard-44580573.png)
+
+![](images/clipboard-3791051129.png)
+
+![](images/clipboard-4101974896.png)
+
+![](images/clipboard-932879508.png)
+
+### **Feature Resources — repository, service, controller y rutas**
+
+#### **37.18 `resources.repository.ts`**
+
+#### ![](images/clipboard-3265417703.png)
+
+#### **37.19 `resources.service.ts`**
+
+#### ![](images/clipboard-444003188.png)
+
+#### **37.20 `resources.controller.ts`**
+
+![](images/clipboard-3767140790.png)
+
+#### **37.21 `resources.routes.ts`**
+
+Versión de este ISS, sin middlewares de acceso. ISS-21 la reemplaza por la definitiva.
+
+![](images/clipboard-4188013832.png)
+
+### **Feature Resources — seeder y swagger**
+
+#### **37.22 `resources.seeder.ts`**
+
+![](images/clipboard-1807118436.png)
+
+#### **37.23 `resources.swagger.ts`**
+
+![](images/clipboard-1071706258.png)
+
+![](images/clipboard-4112020048.png)
+
+![](images/clipboard-968203268.png)
+
+### **Pruebas HTTP**
+
+#### **37.24 `roles.get.http`**
+
+Como en ISS-18, los `.http` usan el login de ISS-23.
+
+![](images/clipboard-144958325.png)
+
+#### **37.25 `resources.get.http`**
+
+![](images/clipboard-3139837381.png)
+
+## **Cableado**
+
+### **37.26 PARCHE — `src/routes/index.ts`**
+
+**1.** **Debajo de** `import { UsersRoutes } from "../features/auth/users/users.routes";`, **añadir:**
+
+``` typescript
+import { RolesRoutes } from "../features/auth/roles/roles.routes";
+import { ResourcesRoutes } from "../features/auth/resources/resources.routes";
+```
+
+![](images/clipboard-736341967.png)
+
+**2.** **Debajo de** `public usersRoutes: UsersRoutes = new UsersRoutes();`, **añadir:**
+
+``` typescript
+  public rolesRoutes: RolesRoutes = new RolesRoutes();
+  public resourcesRoutes: ResourcesRoutes = new ResourcesRoutes();
+```
+
+![](images/clipboard-4011337365.png)
+
+### **37.27 PARCHE — `src/config/index.ts`**
+
+**Dentro de** `routes()`, **debajo de** `this.routePrv.usersRoutes.routes(this.app);`, **añadir:**
+
+``` typescript
+    this.routePrv.rolesRoutes.routes(this.app);
+    this.routePrv.resourcesRoutes.routes(this.app);
+```
+
+![](images/clipboard-1850362603.png)
+
+### **37.28 PARCHE — `src/database/seeders/index.ts` (runner)**
+
+Estos dos seeders no reciben conteo: siembran el catálogo que está en el código.
+
+**1.** **Encima de** `import { seedUsers } from "../../features/auth/users/users.seeder";`, **añadir:**
+
+``` typescript
+import { seedRoles } from "../../features/auth/roles/roles.seeder";
+import { seedResources } from "../../features/auth/resources/resources.seeder";
+```
+
+![](images/clipboard-1141896907.png)
+
+**2.** **Dentro de** `runAllSeeders()`, **encima de** `await seedUsers(counts.users);`, **añadir:**
+
+``` typescript
+  await seedRoles();   await seedResources(); 
+```
+
+![](images/clipboard-478092695.png)
+
+### **37.29 PARCHE — `src/swagger/index.ts` (registry)**
+
+**1.** **Debajo de** `import { usersSwagger } from "../features/auth/users/users.swagger";`, **añadir:**
+
+``` typescript
+import { rolesSwagger } from "../features/auth/roles/roles.swagger";
+import { resourcesSwagger } from "../features/auth/resources/resources.swagger";
+```
+
+![](images/clipboard-1855986699.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **debajo de** `usersSwagger,`, **añadir:**
+
+``` typescript
+  rolesSwagger,
+  resourcesSwagger,
+```
+
+![](images/clipboard-2644190108.png)
+
+### **Verificación ISS-19**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed 
+```
+
+> Deben salir `✅ roles: catálogo reconciliado (5 roles, 5 nuevos)` y `✅ resources: catálogo reconciliado (111 recursos, 111 nuevos)`. Si lo corres otra vez, dice `0 nuevos`: es determinista.
+
+![](images/clipboard-2638555826.png)
+
+Con `npm run dev` corriendo:
+
+``` bash
+curl -s http://localhost:4000/api/roles | grep -o '"name":"[A-Z_]*"'
+curl -s http://localhost:4000/api/resources | grep -o '"id":' | wc -l
+curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/resources -H 'Content-Type: application/json' \
+  -d '{"method":"GET","path":"/api/patients"}'
+```
+
+> Los 5 roles, `111` y `409` con `Resource GET /api/patients already exists`.
+>
+> ![](images/clipboard-3373548654.png)
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(path,'/',3),'/',-1) AS grupo, COUNT(*) AS recursos FROM resources GROUP BY grupo ORDER BY MIN(id);" 
+```
+
+> 16 grupos: 7 por feature, `clinical-records` con 8, `users` con 9, y `role-users` y `resource-roles` con 5.
+
+![](images/clipboard-1205926982.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-3549162360.png)
