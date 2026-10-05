@@ -10,6 +10,7 @@ import { AuthorizationRoutes } from "../features/business/authorization/authoriz
 import { EncounterRoutes } from "../features/business/encounter/encounter.routes";
 import { InvoiceRoutes } from "../features/business/invoice/invoice.routes";
 import { UsersRoutes } from "../features/auth/users/users.routes";
+import { SessionRoutes } from "../features/auth/session/session.routes";  
 import { RefreshTokensRoutes } from "../features/auth/refresh-tokens/refresh-tokens.routes";
 import { RolesRoutes } from "../features/auth/roles/roles.routes";
 import { ResourcesRoutes } from "../features/auth/resources/resources.routes";
@@ -31,6 +32,7 @@ export class Routes {
   public encounterRoutes: EncounterRoutes = new EncounterRoutes();
   public invoiceRoutes: InvoiceRoutes = new InvoiceRoutes();
   // Fase II — Auth con RBAC
+  public sessionRoutes: SessionRoutes = new SessionRoutes();  
   public refreshTokensRoutes: RefreshTokensRoutes = new RefreshTokensRoutes();
   public usersRoutes: UsersRoutes = new UsersRoutes();
   public rolesRoutes: RolesRoutes = new RolesRoutes();

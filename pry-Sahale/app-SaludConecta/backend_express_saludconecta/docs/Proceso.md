@@ -6068,3 +6068,230 @@ npm run dev
 ```
 
 ![](images/clipboard-2004061663.png)
+
+## **41. ISS-23 — Feature Session (login, refresh, logout, perfil y permisos)**
+
+**Equivale a:** ISS-15 de la guía (§20.1–20.7). **Objetivo:** el punto de entrada (login), la renovación (refresh con rotación), la salida (logout), el perfil y los permisos efectivos del usuario autenticado. **Bloqueado por:** ISS-22.
+
+``` bash
+mkdir -p src/features/auth/session/dto src/features/auth/session/http 
+```
+
+#### **41.1 `login.dto.ts`**
+
+#### ![](images/clipboard-3635100784.png)
+
+#### **41.2 `refresh-session.dto.ts`**
+
+#### ![](images/clipboard-1242373113.png)
+
+#### **41.3 `logout-session.dto.ts`**
+
+#### ![](images/clipboard-423384838.png)
+
+#### **41.4 `session-response.dto.ts`**
+
+#### ![](images/clipboard-3927310037.png)
+
+#### **41.5 `index.ts`**
+
+#### ![](images/clipboard-4077081235.png)
+
+#### **41.6 `session.service.ts`**
+
+#### ![](images/clipboard-2391385449.png)
+
+![](images/clipboard-3196238808.png)
+
+#### **41.7 `session.controller.ts`**
+
+#### ![](images/clipboard-1892719091.png)
+
+#### **41.8 `session.routes.ts`**
+
+#### ![](images/clipboard-2376589173.png)
+
+#### **41.9 `session.swagger.ts`**
+
+#### ![](images/clipboard-151133262.png)
+
+![](images/clipboard-94893275.png)
+
+#### **41.10 `session.login.http`**
+
+#### ![](images/clipboard-3955165004.png)
+
+#### **41.11 `session.refresh.http`**
+
+#### ![](images/clipboard-1242645536.png)
+
+#### **41.12 `session.profile.http`**
+
+![](images/clipboard-2395776152.png)
+
+## **Cableado**
+
+#### **41.13 PARCHE — `src/routes/index.ts`**
+
+**1.** **Encima de** `import { RefreshTokensRoutes } from "../features/auth/refresh-tokens/refresh-tokens.routes";`, **añadir:**
+
+``` typescript
+import { SessionRoutes } from "../features/auth/session/session.routes"; 
+```
+
+![](images/clipboard-930637818.png)
+
+**2.** **Encima de** `public refreshTokensRoutes: RefreshTokensRoutes = new RefreshTokensRoutes();`, **añadir:**
+
+``` typescript
+  public sessionRoutes: SessionRoutes = new SessionRoutes(); 
+```
+
+![](images/clipboard-2791315613.png)
+
+#### **41.14 PARCHE — `src/config/index.ts`**
+
+**Dentro de** `routes()`, **reemplazar** las dos líneas `// Fase II — Auth con RBAC` y `this.routePrv.refreshTokensRoutes.routes(this.app);` por:
+
+``` typescript
+    // Fase II — Auth con RBAC
+    // `sessionRoutes` registra los endpoints OPEN/JWT (login, refresh, logout,
+    // perfil, permisos); el resto son modalidad JWT + RBAC.
+    this.routePrv.sessionRoutes.routes(this.app);
+    this.routePrv.refreshTokensRoutes.routes(this.app);
+```
+
+![](images/clipboard-3219236243.png)
+
+#### **41.15 PARCHE — `src/swagger/index.ts` (registry + descripción)**
+
+**1.** **Encima de** `import { refreshTokensSwagger } from "../features/auth/refresh-tokens/refresh-tokens.swagger";`, **añadir:**
+
+``` typescript
+import { sessionSwagger } from "../features/auth/session/session.swagger"; 
+```
+
+![](images/clipboard-4035486883.png)
+
+**2.** **Dentro de** `featureSwaggerModules`, **encima de** `refreshTokensSwagger,`, **añadir:**
+
+``` typescript
+  sessionSwagger, 
+```
+
+![](images/clipboard-3897278471.png)
+
+**3.** **Dentro de** `info`, **reemplazar** las líneas `version: "1.0.0",` y `description: "API SaludConecta — … SIN AUTH en este lab.",` (la descripción completa) por:
+
+``` typescript
+      version: "2.0.0",
+      description: [
+        "API SaludConecta — centro médico ambulatorio (Express + Sequelize) con **Auth con RBAC**.",
+        "",
+        "**Las tres modalidades de acceso** (se declaran por operación, no globalmente):",
+        "",
+        "- **OPEN** — sin identidad previa: `POST /api/session/login`, `/refresh`, `/logout`.",
+        "- **JWT** — token de acceso válido: `/api/session/profile`, `/api/permissions`, `/api/sessions/*`.",
+        "- **JWT + RBAC** — token válido **y** concesión activa de `(method, path)`: todo el CRUD de negocio y de administración de seguridad.",
+        "",
+        "Autenticación: obtener el `access_token` en `POST /api/session/login` y pulsar **Authorize** con " +
+          "`Bearer <access_token>`. La autorización aplica **deny by default**: sin concesión explícita, 403.",
+        "",
+        "Credenciales de laboratorio: `admin / Admin123!`, `admisiones / Admisiones123!`, " +
+          "`medico / Medico123!`, `facturacion / Facturacion123!` y `auditor / Auditor123!`.",
+      ].join("\n"),
+```
+
+![](images/clipboard-1907786771.png)
+
+### **Verificación ISS-23 — las tres modalidades de punta a punta**
+
+``` bash
+npx tsc --noEmit 
+npm run db:seed && npm run dev 
+```
+
+![](images/clipboard-3481243281.png)
+
+En la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api
+login() { curl -s -X POST $B/session/login -H 'Content-Type: application/json' -d "{\"identifier\":\"$1\",\"password\":\"$2\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).access_token"; }
+```
+
+![](images/clipboard-970490131.png)
+
+**1) OPEN — login** (no requiere identidad):
+
+``` bash
+curl -s -X POST $B/session/login -H 'Content-Type: application/json' -d '{"identifier":"admin","password":"Admin123!"}'
+curl -s -w "\n%{http_code}\n" -X POST $B/session/login -H 'Content-Type: application/json' -d '{"identifier":"admin","password":"mala"}'
+```
+
+> El primero devuelve `access_token`, `token_type: "Bearer"`, `expires_in: 900`, `refresh_token` y `refresh_expires_in`. El segundo, `401` con `Invalid credentials`.
+>
+> ![](images/clipboard-2306487635.png)
+
+**2) JWT — perfil y permisos** (sin RBAC de por medio):
+
+``` bash
+ ADMIN=$(login admin 'Admin123!'); ADMISIONES=$(login admisiones 'Admisiones123!'); MEDICO=$(login medico 'Medico123!')
+FACTURACION=$(login facturacion 'Facturacion123!'); AUDITOR=$(login auditor 'Auditor123!')
+curl -s -H "Authorization: Bearer $MEDICO" $B/session/profile
+for t in "$ADMIN" "$ADMISIONES" "$MEDICO" "$FACTURACION" "$AUDITOR"; do
+  curl -s -H "Authorization: Bearer $t" $B/permissions | grep -o '"method"' | wc -l
+done
+```
+
+> El perfil del médico (sin `password`) y los permisos de cada rol: `111`, `25`, `21`, `15` y `15`.
+
+![](images/clipboard-847916776.png)
+
+**3) JWT + RBAC — la matriz en acción:**
+
+``` bash
+code() { curl -s -o /dev/null -w "%{http_code}" "$@"; }
+echo "admisiones GET  /clinical-records -> $(code -H "Authorization: Bearer $ADMISIONES" $B/clinical-records)"
+echo "medico     GET  /clinical-records -> $(code -H "Authorization: Bearer $MEDICO" $B/clinical-records)"
+echo "medico     POST /invoices         -> $(code -X POST -H "Authorization: Bearer $MEDICO" -H 'Content-Type: application/json' -d '{}' $B/invoices)"
+echo "facturacion POST /invoices        -> $(code -X POST -H "Authorization: Bearer $FACTURACION" -H 'Content-Type: application/json' -d '{}' $B/invoices)"
+echo "facturacion GET /clinical-records -> $(code -H "Authorization: Bearer $FACTURACION" $B/clinical-records)"
+echo "auditor    GET  /clinical-records -> $(code -H "Authorization: Bearer $AUDITOR" $B/clinical-records)"
+echo "auditor    POST /clinical-records -> $(code -X POST -H "Authorization: Bearer $AUDITOR" -H 'Content-Type: application/json' -d '{}' $B/clinical-records)"
+echo "auditor    GET  /users            -> $(code -H "Authorization: Bearer $AUDITOR" $B/users)"
+echo "admin      GET  /users            -> $(code -H "Authorization: Bearer $ADMIN" $B/users)"
+```
+
+> `403`, `200`, `403`, `400`, `403`, `200`, `403`, `403`, `200`. El `400` de facturación es correcto: **pasó** la autorización y lo rechazó la validación del negocio (`number is required`).
+
+![](images/clipboard-992410990.png)
+
+**4) Refresh con rotación y detección de reutilización:**
+
+``` bash
+R0=$(curl -s -X POST $B/session/login -H 'Content-Type: application/json' -d '{"identifier":"admin","password":"Admin123!"}' | node -pe "JSON.parse(require('fs').readFileSync(0)).refresh_token")
+R1=$(curl -s -X POST $B/session/refresh -H 'Content-Type: application/json' -d "{\"refresh_token\":\"$R0\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).refresh_token")
+curl -s -w "\n%{http_code}\n" -X POST $B/session/refresh -H 'Content-Type: application/json' -d "{\"refresh_token\":\"$R0\"}"
+curl -s -w "\n%{http_code}\n" -X POST $B/session/refresh -H 'Content-Type: application/json' -d "{\"refresh_token\":\"$R1\"}"
+```
+
+> Reusar `R0` (ya rotado) da `401` con `Refresh token reuse detected: session family revoked`. Después, `R1` también da `401`: se revocó toda la familia.
+>
+> ![](images/clipboard-2304951223.png)
+
+``` bash
+mysql -h 127.0.0.1 -P 3307 -u express_admin -p backend_express -e "SELECT id, user_id, LEFT(family_id, 8) AS familia, status, expires_at FROM refresh_tokens ORDER BY id DESC LIMIT 5;" 
+```
+
+> Las dos últimas filas comparten familia y están `inactive`. La columna `token_hash` guarda el SHA-256, nunca el token.
+>
+> ![](images/clipboard-3892511370.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-3725840749.png)

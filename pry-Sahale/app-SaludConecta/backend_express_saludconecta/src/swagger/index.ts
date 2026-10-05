@@ -11,6 +11,7 @@ import { clinicalRecordSwagger } from "../features/business/clinical-record/clin
 import { authorizationSwagger } from "../features/business/authorization/authorization.swagger";
 import { encounterSwagger } from "../features/business/encounter/encounter.swagger";
 import { invoiceSwagger } from "../features/business/invoice/invoice.swagger";
+import { sessionSwagger } from "../features/auth/session/session.swagger";
 import { refreshTokensSwagger } from "../features/auth/refresh-tokens/refresh-tokens.swagger";
 import { usersSwagger } from "../features/auth/users/users.swagger";
 import { rolesSwagger } from "../features/auth/roles/roles.swagger";
@@ -37,6 +38,7 @@ export type FeatureSwaggerModule = {
  * (mismo patrón que SeedersRunner).
  */
 const featureSwaggerModules: FeatureSwaggerModule[] = [
+  sessionSwagger,
   refreshTokensSwagger, 
   usersSwagger, 
   rolesSwagger,
@@ -74,9 +76,22 @@ export function buildOpenApiDocument() {
     openapi: "3.0.3",
     info: {
       title: "SaludConecta API",
-      version: "1.0.0",
-      description:
-        "API SaludConecta — centro médico ambulatorio (Express + Sequelize). Los endpoints de Patient están documentados como **SIN AUTH**. Todas las rutas business son **SIN AUTH** en este lab.",
+            version: "2.0.0",
+      description: [
+        "API SaludConecta — centro médico ambulatorio (Express + Sequelize) con **Auth con RBAC**.",
+        "",
+        "**Las tres modalidades de acceso** (se declaran por operación, no globalmente):",
+        "",
+        "- **OPEN** — sin identidad previa: `POST /api/session/login`, `/refresh`, `/logout`.",
+        "- **JWT** — token de acceso válido: `/api/session/profile`, `/api/permissions`, `/api/sessions/*`.",
+        "- **JWT + RBAC** — token válido **y** concesión activa de `(method, path)`: todo el CRUD de negocio y de administración de seguridad.",
+        "",
+        "Autenticación: obtener el `access_token` en `POST /api/session/login` y pulsar **Authorize** con " +
+          "`Bearer <access_token>`. La autorización aplica **deny by default**: sin concesión explícita, 403.",
+        "",
+        "Credenciales de laboratorio: `admin / Admin123!`, `admisiones / Admisiones123!`, " +
+          "`medico / Medico123!`, `facturacion / Facturacion123!` y `auditor / Auditor123!`.",
+      ].join("\n"),
     },
     servers: [
       {

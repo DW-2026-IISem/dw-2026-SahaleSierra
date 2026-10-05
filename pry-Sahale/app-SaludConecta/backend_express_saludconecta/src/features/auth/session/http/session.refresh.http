@@ -1,0 +1,51 @@
+### Feature Session — REFRESH (modalidad OPEN con credencial de sesión)
+### Renovación automática: el cliente llama aquí cuando el access token está por expirar.
+### ROTACIÓN: el refresh token enviado queda inválido y se emite uno nuevo (misma familia).
+### REUSE DETECTION: si se reenvía un token ya rotado -> 401 y se revoca toda la familia.
+@baseUrl = http://localhost:4000
+
+### 1) Login para obtener el par inicial
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+### 2) Refresh: devuelve access_token nuevo + refresh_token ROTADO
+# @name refresh
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{loginAdmin.response.body.$.refresh_token}}"
+}
+
+### 3) El access token nuevo sirve en una ruta JWT
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{refresh.response.body.$.access_token}}
+
+### 4) REUSE DETECTION: reenviar el refresh token ORIGINAL (ya rotado) -> 401
+###    y se revoca toda la familia (el token del paso 2 también deja de servir).
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{loginAdmin.response.body.$.refresh_token}}"
+}
+
+### 5) Comprobación: el refresh token del paso 2 ya no sirve -> 401
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refresh.response.body.$.refresh_token}}"
+}
+
+### 400 — falta el refresh_token
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{}

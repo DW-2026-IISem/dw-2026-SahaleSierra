@@ -73,6 +73,9 @@ export class App {
     this.routePrv.encounterRoutes.routes(this.app);
     this.routePrv.invoiceRoutes.routes(this.app);
     // Fase II — Auth con RBAC
+    // `sessionRoutes` registra los endpoints OPEN/JWT (login, refresh, logout,
+    // perfil, permisos); el resto son modalidad JWT + RBAC.
+    this.routePrv.sessionRoutes.routes(this.app);
     this.routePrv.refreshTokensRoutes.routes(this.app);
     this.routePrv.usersRoutes.routes(this.app);
     this.routePrv.rolesRoutes.routes(this.app);

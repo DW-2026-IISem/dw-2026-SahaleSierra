@@ -1,0 +1,44 @@
+### Feature Session — LOGOUT y PERFIL (OPEN con credencial de sesión + JWT)
+@baseUrl = http://localhost:4000
+
+# @name loginMedico
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "medico",
+  "password": "Medico123!"
+}
+
+### PERFIL — modalidad JWT: `authenticate` valida el token y REVALIDA en la BD
+### que el usuario sigue activo (desactivarlo invalida sus tokens al instante).
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{loginMedico.response.body.$.access_token}}
+
+### MIS PERMISOS — modalidad JWT: misma consulta RBAC que usa `authorize`
+### (medico -> 21 permisos; admin -> 111). Es la herramienta para depurar el RBAC.
+GET {{baseUrl}}/api/permissions
+Authorization: Bearer {{loginMedico.response.body.$.access_token}}
+
+### Sin token -> 401 (no autenticado)
+GET {{baseUrl}}/api/session/profile
+
+### LOGOUT — modalidad OPEN con credencial de sesión: revoca ese refresh token
+POST {{baseUrl}}/api/session/logout
+Content-Type: application/json
+
+{
+  "refresh_token": "{{loginMedico.response.body.$.refresh_token}}"
+}
+
+### Tras el logout, ese refresh token ya no renueva -> 401
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{loginMedico.response.body.$.refresh_token}}"
+}
+
+### El access token sigue valiendo hasta que expira (es autocontenido, 15 min)
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{loginMedico.response.body.$.access_token}}
