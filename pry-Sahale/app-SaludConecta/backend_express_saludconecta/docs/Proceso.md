@@ -3366,3 +3366,181 @@ curl -s -w "\n%{http_code}\n" -X POST http://localhost:4000/api/invoices \
 ![![](images/clipboard-336575025.png)](images/clipboard-2623634151.png)
 
 ![](images/clipboard-3796395947.png)
+
+## **ISS-16 completo: retrofit a 4 capas (A a L)**
+
+``` texinfo
+Antes:   Routes -> Controller (try/catch propio) -> Model
+Después: Routes -> Controller (BaseController) -> Service -> Repository -> Model
+```
+
+| Letra    | Sección | Qué hace                                   |
+|----------|---------|--------------------------------------------|
+| **16-A** | 22      | Base compartida `src/shared/` (4 archivos) |
+| **16-B** | 23      | Patient (plantilla)                        |
+| **16-C** | 24      | Specialty                                  |
+| **16-D** | 25      | Doctor                                     |
+| **16-E** | 26      | DoctorSpecialty                            |
+| **16-F** | 27      | Service                                    |
+| **16-G** | 28      | Agenda                                     |
+| **16-H** | 29      | Appointment (transaccional)                |
+| **16-I** | 30      | ClinicalRecord                             |
+| **16-J** | 31      | Authorization                              |
+| **16-K** | 32      | Encounter (transaccional, regla del PDF)   |
+| **16-L** | 33      | Invoice (transaccional)                    |
+| —        | 34      | Cierre de ISS-16 y verificación global     |
+
+## 22. ISS-16-A — Base compartida (`src/shared/`)
+
+**Objetivo:** crear las 4 piezas que la guía de Auth da por hechas y que tu Fase I no tiene. **Bloqueado por:** ISS-15.
+
+| Archivo | Para qué | Quién lo usa después |
+|----|----|----|
+| `shared/errors/app-error.ts` | Error con `statusCode` | Todos los services y middlewares |
+| `shared/database/with-transaction.ts` | Envolver una transacción | Services transaccionales |
+| `shared/http/error-response.ts` | Único mapeo error → HTTP | `BaseController`, `authenticate`, `authorize` |
+| `shared/http/base-controller.ts` | `run`, `paramId`, `handleError` | Todos los controllers |
+
+#### 22.1 `app-error.ts`
+
+![](images/clipboard-1804130046.png)
+
+#### 22.2 `with-transaction.ts`
+
+![](images/clipboard-686881324.png)
+
+#### 22.3 `error-response.ts`
+
+![](images/clipboard-1269386351.png)
+
+#### 22.4 `base-controller.ts`
+
+![](images/clipboard-4276205947.png)
+
+#### Verificación ISS-16-A
+
+``` bash
+npx tsc --noEmit
+find src/shared -type f | sort
+```
+
+![](images/clipboard-1211906846.png)
+
+### Cierre del ISS
+
+![](images/clipboard-640106910.png)
+
+## 23. ISS-16-B — Patient a 4 capas (plantilla)
+
+**Objetivo:** pasar Patient a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-A. **Referencia de patrón:** feature Users de la guía de Auth (su ISS-10 §15.1–15.4): mismos nombres de método en cada capa.
+
+### **23.1 DTOs**
+
+``` bash
+mkdir -p src/features/business/patient/dto
+```
+
+#### **23.1.a `create-patient.dto.ts`**
+
+![](images/clipboard-2653661274.png)
+
+#### **23.1.b `update-patient.dto.ts`**
+
+![](images/clipboard-949681004.png)
+
+#### **23.1.c `patch-patient.dto.ts`**
+
+![](images/clipboard-448172499.png)
+
+#### **23.1.d `patient-response.dto.ts`**
+
+![](images/clipboard-1556694710.png)
+
+#### **23.1.e `index.ts`**
+
+![](images/clipboard-925656928.png)
+
+### **23.2 Repository**
+
+![](images/clipboard-2046773061.png)
+
+### **23.3 Service**
+
+![](images/clipboard-3998089881.png)
+
+### **23.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`patient.controller.ts` ya existe desde ISS-03. No es un PARCHE por tramos: se reemplaza entero, porque cambian los imports, la clase base y los 7 métodos. El `: >` vacía el archivo antes de escribirlo.
+
+![](images/clipboard-4058132727.png)
+
+### **Verificación ISS-16-B**
+
+``` bash
+npx tsc --noEmit 
+```
+
+![](images/clipboard-736854276.png)
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n "patient.model\|sequelize" src/features/business/patient/patient.controller.ts 
+```
+
+![](images/clipboard-2247733961.png)
+
+Con `npm run dev` corriendo, en la segunda terminal. Usa un `document_number` que no exista:
+
+``` bash
+B=http://localhost:4000/api/patients
+curl -s -w "\n%{http_code}\n" $B | tail -c 200
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' \
+  -d '{"document_type":"CC","document_number":"16B0001","name":"Prueba Capas","birth_date":"1992-03-15","contact":"300"}'
+```
+
+> ![](images/clipboard-1571882851.png)
+>
+> `200` con `{"patients":[...]}` y `201` con `{"patient":{...,"status":"active",...}}`. Anota el `id` devuelto y úsalo en lugar de `ID`:
+
+``` bash
+ curl -s -w "\n%{http_code}\n" $B/14
+curl -s -w "\n%{http_code}\n" -X PUT $B/14 -H 'Content-Type: application/json' \
+  -d '{"document_type":"TI","document_number":"16B0001","name":"Prueba Editada","birth_date":"1990-05-10","contact":"301"}'
+curl -s -w "\n%{http_code}\n" -X PATCH $B/14 -H 'Content-Type: application/json' -d '{"contact":"302"}'
+curl -s -w "\n%{http_code}\n" -X PATCH $B/14/deactivate
+curl -s -w "\n%{http_code}\n" -X DELETE $B/14
+curl -s -w "\n%{http_code}\n" $B/14
+```
+
+> Cinco `200` con el mismo JSON de siempre y, al final, `404` con `{"error":"Patient not found"}`.
+>
+> ![](images/clipboard-2193035566.png)
+
+Las respuestas nuevas:
+
+``` bash
+curl -s -w "\n%{http_code}\n" $B/abc
+curl -s -w "\n%{http_code}\n" $B/99999999
+```
+
+> `400` con `{"error":"Invalid id: must be a positive integer"}` y `404` con `{"error":"Patient not found"}`.
+>
+> ![](images/clipboard-654263570.png)
+
+El seeder y Swagger siguen funcionando, porque no dependen del controller:
+
+``` bash
+npm run db:seed
+curl -s http://localhost:4000/api/docs.json | grep -o '"name":"Patients"'
+```
+
+![](images/clipboard-3684200389.png)
+
+### **Cierre del ISS**
+
+```         
+npm run dev
+```
+
+![](images/clipboard-1564554328.png)

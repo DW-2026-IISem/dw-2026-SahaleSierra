@@ -1,130 +1,79 @@
 import { Request, Response } from "express";
-import { Patient, PatientI } from "./patient.model";
+import { BaseController } from "../../../shared/http/base-controller";
+import { CreatePatientDto, PatchPatientDto, UpdatePatientDto } from "./dto";
+import { PatientService } from "./patient.service";
 
-function paramId(req: Request): number {
-  const raw = req.params.id;
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  return Number(value);
-}
-
-export class PatientController {
-  // ================== READ ==================
-    public async getAll(req: Request, res: Response) {
-    try {
-      const patients = await Patient.findAll({
-        where: { status: "active" },
-      });
-      res.status(200).json({ patients });
-    } catch (error) {
-      res.status(500).json({ error: "Error fetching patients", detail: String(error) });
-    }
+/**
+ * Capa Controller del feature Patient.
+ * Solo HTTP: lee `req`, llama al service y arma la respuesta.
+ * El manejo de errores se delega en `run()` (ver `BaseController`).
+ */
+export class PatientController extends BaseController {
+  public constructor(
+    private readonly service: PatientService = new PatientService()
+  ) {
+    super();
   }
 
-  public async getOne(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const patient = await Patient.findByPk(id);
-      if (!patient) {
-        res.status(404).json({ error: "Patient not found" });
-        return;
-      }
+  // ================== READ ==================
+  public async getAll(_req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const patients = await this.service.getAll();
+      res.status(200).json({ patients });
+    });
+  }
+
+  public async getOne(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const patient = await this.service.getOne(this.paramId(req));
       res.status(200).json({ patient });
-    } catch (error) {
-      res.status(500).json({ error: "Error fetching patient", detail: String(error) });
-    }
+    });
   }
 
   // ================== CREATE ==================
-   public async create(req: Request, res: Response) {
-    try {
-      const body = req.body as PatientI;
-      const patient = await Patient.create({
-        document_type: body.document_type,
-        document_number: body.document_number,
-        name: body.name,
-        birth_date: body.birth_date,
-        contact: body.contact,
-        status: body.status ?? "active",
-      });
+  public async create(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const patient = await this.service.create(req.body as CreatePatientDto);
       res.status(201).json({ patient });
-    } catch (error) {
-      res.status(500).json({ error: "Error creating patient", detail: String(error) });
-    }
+    });
   }
 
   // ================== UPDATE ==================
-    public async updatePut(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const body = req.body as PatientI;
-      const patient = await Patient.findByPk(id);
-      if (!patient) {
-        res.status(404).json({ error: "Patient not found" });
-        return;
-      }
-
-      await patient.update({
-        document_type: body.document_type,
-        document_number: body.document_number,
-        name: body.name,
-        birth_date: body.birth_date,
-        contact: body.contact,
-        status: body.status ?? patient.status,
-      });
-
+  public async updatePut(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const patient = await this.service.updatePut(
+        this.paramId(req),
+        req.body as UpdatePatientDto
+      );
       res.status(200).json({ patient });
-    } catch (error) {
-      res.status(500).json({ error: "Error updating patient (PUT)", detail: String(error) });
-    }
+    });
   }
 
-  public async updatePatch(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const body = req.body as Partial<PatientI>;
-      const patient = await Patient.findByPk(id);
-      if (!patient) {
-        res.status(404).json({ error: "Patient not found" });
-        return;
-      }
-
-      await patient.update(body);
+  public async updatePatch(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const patient = await this.service.updatePatch(
+        this.paramId(req),
+        req.body as PatchPatientDto
+      );
       res.status(200).json({ patient });
-    } catch (error) {
-      res.status(500).json({ error: "Error updating patient (PATCH)", detail: String(error) });
-    }
+    });
   }
 
   // ================== DELETE ==================
-    /** Eliminación física */
-  public async deletePhysical(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const patient = await Patient.findByPk(id);
-      if (!patient) {
-        res.status(404).json({ error: "Patient not found" });
-        return;
-      }
-      await patient.destroy();
+  /** Eliminación física */
+  public async deletePhysical(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const id = this.paramId(req);
+      await this.service.deletePhysical(id);
       res.status(200).json({ message: "Patient permanently deleted", id });
-    } catch (error) {
-      res.status(500).json({ error: "Error deleting patient", detail: String(error) });
-    }
+    });
   }
 
   /** Eliminación lógica → status = inactive */
-  public async deleteLogical(req: Request, res: Response) {
-    try {
-      const id = paramId(req);
-      const patient = await Patient.findByPk(id);
-      if (!patient) {
-        res.status(404).json({ error: "Patient not found" });
-        return;
-      }
-      await patient.update({ status: "inactive" });
+  public async deleteLogical(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const patient = await this.service.deleteLogical(this.paramId(req));
       res.status(200).json({ message: "Patient deactivated (logical delete)", patient });
-    } catch (error) {
-      res.status(500).json({ error: "Error deactivating patient", detail: String(error) });
-    }
+    });
   }
 }
