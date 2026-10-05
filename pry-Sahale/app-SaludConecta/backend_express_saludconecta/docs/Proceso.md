@@ -4355,3 +4355,105 @@ npm run dev
 ```
 
 ![](images/clipboard-3769671468.png)
+
+## **33. ISS-16-L — Invoice a 4 capas**
+
+**Objetivo:** pasar Invoice a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-K.
+
+Agregador transaccional. Última entidad del retrofit.
+
+### **33.1 DTOs**
+
+``` bash
+mkdir -p src/features/business/invoice/dto
+```
+
+#### **33.1.a `create-invoice.dto.ts`**
+
+#### ![](images/clipboard-1056178492.png)
+
+#### **33.1.b `update-invoice.dto.ts`**
+
+#### ![](images/clipboard-1365619865.png)
+
+#### **33.1.c `patch-invoice.dto.ts`**
+
+#### ![](images/clipboard-542773458.png)
+
+#### **33.1.d `invoice-response.dto.ts`**
+
+#### ![](images/clipboard-144177329.png)
+
+#### **33.1.e `index.ts`**
+
+![](images/clipboard-1752078769.png)
+
+### **33.2 Repository**
+
+#### **`invoice.repository.ts`**
+
+![](images/clipboard-3729570494.png)
+
+### **33.3 Service**
+
+#### **`invoice.service.ts`**
+
+![](images/clipboard-4158673356.png)
+
+![](images/clipboard-1610408835.png)
+
+### **33.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`invoice.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`invoice.controller.ts`**
+
+![](images/clipboard-2790005985.png)
+
+### **Verificación ISS-16-L**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/invoice/invoice.controller.ts 
+```
+
+![](images/clipboard-2067697579.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api/invoices
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"number":"FV-16L"}'
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"number":"FV-16L","encounter_ids":[99999999]}'
+```
+
+> `400` (`Invoice requires at least one encounter (encounter_ids)`) y `404` (`Encounter not found: 99999999`).
+>
+> ![](images/clipboard-581305157.png)
+
+Para una factura real, busca atenciones facturables y úsalas en `encounter_ids`:
+
+``` bash
+curl -s http://localhost:4000/api/encounters | grep -o '"id":[0-9]*,"appointment_id"[^}]*"state":"completed"[^}]*"invoice_id":null' | grep -o '^"id":[0-9]*'
+```
+
+``` bash
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"number":"FV-16L-1","tax":0,"encounter_ids":[ID_ATENCION]}'
+```
+
+> `201`, con `subtotal` y `total` iguales al `total` de la atención y la atención dentro de `encounters`.
+>
+> ![](images/clipboard-4259536472.png)
+
+### **Cierre del ISS**
+
+```         
+npm run dev
+```
+
+![](images/clipboard-2277490722.png)
