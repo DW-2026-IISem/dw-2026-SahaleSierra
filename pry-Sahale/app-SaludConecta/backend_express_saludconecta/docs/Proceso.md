@@ -4072,3 +4072,92 @@ npm run dev
 ```
 
 ![](images/clipboard-705172957.png)
+
+## **30. ISS-16-I — ClinicalRecord a 4 capas**
+
+**Objetivo:** pasar ClinicalRecord a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-H.
+
+1:1 con Patient. El controller conserva su método extra `getByPatient`.
+
+### **30.1 DTOs**
+
+```         
+mkdir -p src/features/business/clinical-record/dto
+```
+
+#### **30.1.a `create-clinical-record.dto.ts`**
+
+#### ![](images/clipboard-1334368012.png)
+
+#### **30.1.b `update-clinical-record.dto.ts`**
+
+#### ![](images/clipboard-3943124440.png)
+
+#### **30.1.c `patch-clinical-record.dto.ts`**
+
+#### ![](images/clipboard-4049815025.png)
+
+#### **30.1.d `clinical-record-response.dto.ts`**
+
+#### ![](images/clipboard-862375703.png)
+
+#### **30.1.e `index.ts`**
+
+![](images/clipboard-1170967285.png)
+
+### **30.2 Repository**
+
+#### **`clinical-record.repository.ts`**
+
+![](images/clipboard-654217334.png)
+
+### **30.3 Service**
+
+#### **`clinical-record.service.ts`**
+
+![](images/clipboard-2447330506.png)
+
+![](images/clipboard-1389526530.png)
+
+### **30.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`clinical-record.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`clinical-record.controller.ts`**
+
+![](images/clipboard-2851671118.png)
+
+### **Verificación ISS-16-I**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/clinical-record/clinical-record.controller.ts 
+```
+
+![](images/clipboard-145188968.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+``` bash
+B=http://localhost:4000/api/clinical-records
+curl -s -w "\n%{http_code}\n" $B/patient/1
+curl -s -w "\n%{http_code}\n" $B/patient/abc
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' -d '{"name":"Dup","patient_id":1}'
+```
+
+> Si el paciente 1 tiene historia: `200`, luego `400` (`Invalid patientId…`) y `400` (`Patient already has a clinical record (id N, status active)`).
+>
+> ![](images/clipboard-2724262321.png)
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-2106648971.png)
