@@ -4250,3 +4250,108 @@ npm run dev
 ```
 
 ![](images/clipboard-2851841037.png)
+
+## **32. ISS-16-K — Encounter a 4 capas**
+
+**Objetivo:** pasar Encounter a `Controller -> Service -> Repository -> Model` con carpeta `dto/`, sin cambiar la API. **Bloqueado por:** ISS-16-J.
+
+Aquí vive la regla central del PDF. Es el service que más repositories usa (7).
+
+### **32.1 DTOs**
+
+```         
+mkdir -p src/features/business/encounter/dto
+```
+
+#### **32.1.a `create-encounter.dto.ts`**
+
+#### ![](images/clipboard-2062526456.png)
+
+#### **32.1.b `update-encounter.dto.ts`**
+
+#### ![](images/clipboard-209589486.png)
+
+#### **32.1.c `patch-encounter.dto.ts`**
+
+#### ![](images/clipboard-3450149146.png)
+
+#### **32.1.d `encounter-response.dto.ts`**
+
+#### ![](images/clipboard-248997457.png)
+
+#### **32.1.e `index.ts`**
+
+![](images/clipboard-129352556.png)
+
+### **32.2 Repository**
+
+#### **`encounter.repository.ts`**
+
+![](images/clipboard-4111817400.png)
+
+### **32.3 Service**
+
+#### **`encounter.service.ts`**
+
+![](images/clipboard-670240542.png)
+
+![](images/clipboard-3392716936.png)
+
+![](images/clipboard-2710244296.png)
+
+### **32.4 Controller — REEMPLAZO COMPLETO de un archivo existente**
+
+`encounter.controller.ts` ya existe. Se reemplaza entero (el `: >` lo vacía antes de escribirlo).
+
+#### **`encounter.controller.ts`**
+
+![](images/clipboard-3306028271.png)
+
+### **Verificación ISS-16-K**
+
+``` bash
+npx tsc --noEmit 
+```
+
+El controller ya no debe tocar Sequelize. Este comando no debe imprimir nada:
+
+``` bash
+grep -n '\.model"\|sequelize' src/features/business/encounter/encounter.controller.ts 
+```
+
+![](images/clipboard-1409938.png)
+
+Con `npm run dev` corriendo, en la segunda terminal:
+
+Busca una cita `scheduled` y reemplaza `ID_CITA`:
+
+``` bash
+curl -s http://localhost:4000/api/appointments | grep -o '"id":[0-9]*,"start_date"[^}]*"state":"scheduled"' | head -3
+```
+
+``` bash
+B=http://localhost:4000/api/encounters
+curl -s -w "\n%{http_code}\n" -X POST $B -H 'Content-Type: application/json' \
+  -d '{"appointment_id":ID_CITA,"service_id":1,"total":85000,"state":"completed","observations":"16K"}'
+curl -s http://localhost:4000/api/appointments/ID_CITA | grep -o '"state":"[a-z]*"' | head -1
+```
+
+> - Si el paciente tiene historia clínica activa: `201` con `encounter` y `appointment`, y la cita queda `"state":"attended"`.
+>
+> - Si no la tiene: `400` (`Patient must have an active clinical record`) y la cita sigue en `"scheduled"`. Eso prueba que el rollback automático de `withTransaction` funciona.
+>
+>   ![](images/clipboard-497229429.png)
+>
+>   ![](images/clipboard-2707644705.png)
+
+Repite el mismo POST:
+
+> `400` con `Appointment must be 'scheduled' (current: 'attended')`.
+
+### **Cierre del ISS**
+
+``` bash
+npm run dev
+```
+
+![](images/clipboard-3769671468.png)
