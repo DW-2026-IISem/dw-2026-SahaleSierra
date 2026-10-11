@@ -1,0 +1,160 @@
+### ISS-25 — Tipo de acceso 3: AUTENTICACIÓN + JWT + REFRESH
+### Ciclo de vida de la sesión: access token (15 min) + refresh token opaco con rotación.
+### Ejecutar en orden: cada petición usa tokens de las anteriores.
+@baseUrl = http://localhost:4000
+
+### 3.1 EXITOSA — Login de admisiones: devuelve el par de tokens (R0)
+# Esperado: 200 con access_token, expires_in 900, refresh_token y refresh_expires_in
+# @name loginAdmisiones
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admisiones",
+  "password": "Admisiones123!"
+}
+
+###
+
+@accessT0 = {{loginAdmisiones.response.body.$.access_token}}
+@refreshR0 = {{loginAdmisiones.response.body.$.refresh_token}}
+
+### 3.2 EXITOSA — Con el access token se listan los pacientes
+# Esperado: 200 {"patients":[...]}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{accessT0}}
+
+### 3.3 EXITOSA — Refresh con R0: el servidor rota y entrega un par nuevo (R1)
+# Esperado: 200 con access_token y refresh_token NUEVOS
+# @name refreshUno
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshR0}}"
+}
+
+###
+
+@accessT1 = {{refreshUno.response.body.$.access_token}}
+@refreshR1 = {{refreshUno.response.body.$.refresh_token}}
+
+### 3.4 EXITOSA — Con el access token renovado se listan las citas
+# Esperado: 200 {"appointments":[...]}
+GET {{baseUrl}}/api/appointments
+Authorization: Bearer {{accessT1}}
+
+### 3.5 EXITOSA — Sesiones activas del usuario (ruta JWT)
+# Esperado: 200 {"sessions":[...]} con la sesión rotada (R1) activa
+GET {{baseUrl}}/api/sessions
+Authorization: Bearer {{accessT1}}
+
+### 3.6 FALSA — Reutilizar R0 (ya rotado): se detecta posible robo y se revoca la familia
+# Esperado: 401 {"error":"Refresh token reuse detected: session family revoked"}
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshR0}}"
+}
+
+### 3.7 FALSA — R1 también quedó revocado (toda la familia cae)
+# Esperado: 401 {"error":"Refresh token reuse detected: session family revoked"}
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshR1}}"
+}
+
+### 3.8 FALSA — Refresh token inventado
+# Esperado: 401 {"error":"Invalid refresh token"}
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "esto-no-es-un-refresh-token"
+}
+
+### 3.9 FALSA — Access token alterado (se cambian los últimos caracteres de la firma)
+# Esperado: 401 {"error":"Invalid or expired access token"}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{accessT1}}xyz
+
+### 3.10 EXITOSA — Nuevo login y logout: cierra esa sesión
+# @name loginLogout
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admisiones",
+  "password": "Admisiones123!"
+}
+
+###
+
+@refreshLogout = {{loginLogout.response.body.$.refresh_token}}
+
+### 3.11 EXITOSA — Logout con el refresh token de esa sesión
+# Esperado: 200 {"message":"Session closed"}
+POST {{baseUrl}}/api/session/logout
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshLogout}}"
+}
+
+### 3.12 FALSA — Refresh con el token de la sesión cerrada
+# Esperado: 401 (la sesión ya está inactive)
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshLogout}}"
+}
+
+### 3.13 Preparación — Login del practicante y del admin para la última prueba
+# @name loginPracticante
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "practicante",
+  "password": "Practicante123!"
+}
+
+###
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+###
+
+@practicanteToken = {{loginPracticante.response.body.$.access_token}}
+@adminToken = {{loginAdmin.response.body.$.access_token}}
+
+### 3.14 EXITOSA — Perfil del practicante: su JWT es válido
+# Esperado: 200
+# @name perfilPracticante
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{practicanteToken}}
+
+###
+
+@practicanteId = {{perfilPracticante.response.body.$.user.id}}
+
+### 3.15 EXITOSA — El admin desactiva al practicante (baja lógica, revoca sus sesiones)
+# Esperado: 200 {"message":"User deactivated (logical delete)",...}
+PATCH {{baseUrl}}/api/users/{{practicanteId}}/deactivate
+Authorization: Bearer {{adminToken}}
+
+### 3.16 FALSA — El mismo JWT (aún no vencido) ya no sirve: authenticate revalida en la BD
+# Esperado: 401 {"error":"User is not active"}
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{practicanteToken}}

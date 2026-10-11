@@ -1,0 +1,227 @@
+### ISS-25 — Tipo de acceso 4: AUTENTICACIÓN + JWT + REFRESH + RBAC
+### Mismas tablas (patients y appointments), distintos roles: cada rol solo hace lo que su matriz permite.
+### Antes de ejecutar: poner en @agendaId una agenda activa (SELECT id FROM agendas WHERE status = 'active').
+@baseUrl = http://localhost:4000
+@agendaId = 1
+
+### 4.0 Logins de los cinco roles (EXITOSAS, 200)
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "admin", "password": "Admin123!" }
+
+###
+
+# @name loginAdmisiones
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "admisiones", "password": "Admisiones123!" }
+
+###
+
+# @name loginMedico
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "medico", "password": "Medico123!" }
+
+###
+
+# @name loginFacturacion
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "facturacion", "password": "Facturacion123!" }
+
+###
+
+# @name loginAuditor
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "auditor", "password": "Auditor123!" }
+
+###
+
+@admin = {{loginAdmin.response.body.$.access_token}}
+@admisiones = {{loginAdmisiones.response.body.$.access_token}}
+@medico = {{loginMedico.response.body.$.access_token}}
+@facturacion = {{loginFacturacion.response.body.$.access_token}}
+@auditor = {{loginAuditor.response.body.$.access_token}}
+
+### ===================== PATIENTS =====================
+
+### 4.1 EXITOSA — ADMISIONES registra un paciente
+# Esperado: 201 {"patient":{...}}  (si se repite, cambiar document_number)
+# @name createPatient
+POST {{baseUrl}}/api/patients
+Authorization: Bearer {{admisiones}}
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "1032456789",
+  "name": "Laura Gómez",
+  "birth_date": "1990-05-12",
+  "contact": "3104567890",
+  "status": "active"
+}
+
+###
+
+@patientId = {{createPatient.response.body.$.patient.id}}
+
+### 4.2 FALSA — MEDICO intenta registrar un paciente
+# Esperado: 403 {"error":"Forbidden: no grant for POST /api/patients"}
+POST {{baseUrl}}/api/patients
+Authorization: Bearer {{medico}}
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "1032456790",
+  "name": "Paciente No Autorizado",
+  "birth_date": "1985-09-01",
+  "contact": "3001112233",
+  "status": "active"
+}
+
+### 4.3 EXITOSA — MEDICO consulta al paciente (lectura permitida)
+# Esperado: 200 {"patient":{...}}
+GET {{baseUrl}}/api/patients/{{patientId}}
+Authorization: Bearer {{medico}}
+
+### 4.4 FALSA — FACTURACION intenta modificar los datos del paciente
+# Esperado: 403 {"error":"Forbidden: no grant for PATCH /api/patients/<id>"}
+PATCH {{baseUrl}}/api/patients/{{patientId}}
+Authorization: Bearer {{facturacion}}
+Content-Type: application/json
+
+{ "contact": "3209998877" }
+
+### 4.5 EXITOSA — ADMISIONES actualiza el contacto del paciente
+# Esperado: 200 con "contact":"3209998877"
+PATCH {{baseUrl}}/api/patients/{{patientId}}
+Authorization: Bearer {{admisiones}}
+Content-Type: application/json
+
+{ "contact": "3209998877" }
+
+### 4.6 FALSA — ADMISIONES intenta borrar físicamente al paciente (solo ADMIN)
+# Esperado: 403 {"error":"Forbidden: no grant for DELETE /api/patients/<id>"}
+DELETE {{baseUrl}}/api/patients/{{patientId}}
+Authorization: Bearer {{admisiones}}
+
+### =================== APPOINTMENTS ===================
+
+### 4.7 FALSA — MEDICO intenta agendar una cita
+# Esperado: 403 {"error":"Forbidden: no grant for POST /api/appointments"}
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{medico}}
+Content-Type: application/json
+
+{
+  "agenda_id": {{agendaId}},
+  "patient_id": {{patientId}},
+  "start_date": "2026-12-15T09:00:00",
+  "end_date": "2026-12-15T09:30:00",
+  "reason": "Consulta de control",
+  "status": "active"
+}
+
+### 4.8 EXITOSA — ADMISIONES agenda la cita
+# Esperado: 201 {"appointment":{...,"state":"scheduled"}}
+# @name createAppointment
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{admisiones}}
+Content-Type: application/json
+
+{
+  "agenda_id": {{agendaId}},
+  "patient_id": {{patientId}},
+  "start_date": "2026-12-15T09:00:00",
+  "end_date": "2026-12-15T09:30:00",
+  "reason": "Consulta de control",
+  "status": "active"
+}
+
+###
+
+@appointmentId = {{createAppointment.response.body.$.appointment.id}}
+
+### 4.9 FALSA — ADMISIONES repite la misma franja: pasa el RBAC, pero la regla de negocio la rechaza
+# Esperado: 400 {"error":"Agenda already has an appointment in that time range (id <id>)"}
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{admisiones}}
+Content-Type: application/json
+
+{
+  "agenda_id": {{agendaId}},
+  "patient_id": {{patientId}},
+  "start_date": "2026-12-15T09:00:00",
+  "end_date": "2026-12-15T09:30:00",
+  "reason": "Consulta de control",
+  "status": "active"
+}
+
+### 4.10 EXITOSA — AUDITOR_CLINICO consulta la cita
+# Esperado: 200 {"appointment":{...}}
+GET {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{auditor}}
+
+### 4.11 FALSA — AUDITOR_CLINICO intenta modificar la cita (solo lectura)
+# Esperado: 403 {"error":"Forbidden: no grant for PATCH /api/appointments/<id>"}
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{auditor}}
+Content-Type: application/json
+
+{ "reason": "Cambio no autorizado" }
+
+### 4.12 FALSA — FACTURACION intenta eliminar la cita
+# Esperado: 403 {"error":"Forbidden: no grant for DELETE /api/appointments/<id>"}
+DELETE {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{facturacion}}
+
+### 4.13 FALSA — ADMISIONES intenta dar de baja la cita (solo ADMIN)
+# Esperado: 403 {"error":"Forbidden: no grant for PATCH /api/appointments/<id>/deactivate"}
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}/deactivate
+Authorization: Bearer {{admisiones}}
+
+### 4.14 EXITOSA — ADMIN da de baja la cita (baja lógica)
+# Esperado: 200 {"message":"Appointment deactivated (logical delete)",...}
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}/deactivate
+Authorization: Bearer {{admin}}
+
+### ========= REVOCACIÓN EN CALIENTE (sin reiniciar el servidor) =========
+
+### 4.15 EXITOSA — ADMIN busca la concesión MEDICO (role_id 3) -> GET /api/patients (resource_id 1)
+# Esperado: 200 {"grants":[{ "id": ..., "status":"active", ... }]}
+# @name grantMedico
+GET {{baseUrl}}/api/resource-roles?role_id=3&resource_id=1
+Authorization: Bearer {{admin}}
+
+###
+
+@grantId = {{grantMedico.response.body.$.grants[0].id}}
+
+### 4.16 EXITOSA — ADMIN revoca ese permiso
+# Esperado: 200 {"message":"Grant deactivated (permission revoked)",...}
+PATCH {{baseUrl}}/api/resource-roles/{{grantId}}/deactivate
+Authorization: Bearer {{admin}}
+
+### 4.17 FALSA — MEDICO, con el MISMO token de antes, ya no puede listar pacientes
+# Esperado: 403 {"error":"Forbidden: no grant for GET /api/patients"}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{medico}}
+
+### 4.18 EXITOSA — ADMIN restaura el permiso
+# Esperado: 200 {"message":"Grant reactivated",...}
+PATCH {{baseUrl}}/api/resource-roles/{{grantId}}/reactivate
+Authorization: Bearer {{admin}}
+
+### 4.19 EXITOSA — MEDICO vuelve a listar pacientes de inmediato
+# Esperado: 200 {"patients":[...]}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{medico}}

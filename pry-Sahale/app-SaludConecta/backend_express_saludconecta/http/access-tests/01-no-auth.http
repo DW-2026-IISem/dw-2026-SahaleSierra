@@ -1,0 +1,54 @@
+### ISS-25 — Tipo de acceso 1: SIN AUTENTICACIÓN
+### Tablas probadas: patients y appointments
+### Ninguna petición lleva cabecera Authorization (o lleva una que no es un Bearer válido).
+@baseUrl = http://localhost:4000
+
+### 1.1 EXITOSA — La documentación OpenAPI es pública (OPEN)
+# Esperado: 200
+GET {{baseUrl}}/api/docs.json
+
+### 1.2 FALSA — Listar pacientes sin token
+# Esperado: 401 {"error":"Missing Bearer token"}
+GET {{baseUrl}}/api/patients
+
+### 1.3 FALSA — Listar citas sin token
+# Esperado: 401 {"error":"Missing Bearer token"}
+GET {{baseUrl}}/api/appointments
+
+### 1.4 FALSA — Crear paciente sin token (no llega ni a validar el body)
+# Esperado: 401 {"error":"Missing Bearer token"}
+POST {{baseUrl}}/api/patients
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "1098765432",
+  "name": "Paciente Sin Token",
+  "birth_date": "1988-02-20",
+  "contact": "3157778899",
+  "status": "active"
+}
+
+### 1.5 FALSA — Crear cita sin token
+# Esperado: 401 {"error":"Missing Bearer token"}
+POST {{baseUrl}}/api/appointments
+Content-Type: application/json
+
+{
+  "agenda_id": 1,
+  "patient_id": 1,
+  "start_date": "2026-12-15T09:00:00",
+  "end_date": "2026-12-15T09:30:00",
+  "reason": "Cita sin token",
+  "status": "active"
+}
+
+### 1.6 FALSA — Credenciales enviadas como Basic (usuario:contraseña en base64), no como Bearer
+# Esperado: 401 {"error":"Missing Bearer token"}
+GET {{baseUrl}}/api/patients
+Authorization: Basic YWRtaXNpb25lczpBZG1pc2lvbmVzMTIzIQ==
+
+### 1.7 FALSA — Bearer inventado (no es un JWT firmado por el servidor)
+# Esperado: 401 {"error":"Invalid or expired access token"}
+GET {{baseUrl}}/api/appointments
+Authorization: Bearer token.inventado.123

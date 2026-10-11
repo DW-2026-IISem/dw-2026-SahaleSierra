@@ -1,0 +1,94 @@
+### ISS-25 — Tipo de acceso 2: SOLO AUTENTICACIÓN
+### Se prueba la identidad (login y rutas JWT) sin que el usuario tenga permisos de negocio.
+### El usuario "practicante" se crea sin rol: está autenticado, pero no autorizado.
+@baseUrl = http://localhost:4000
+
+### 2.1 FALSA — Login con contraseña incorrecta
+# Esperado: 401 {"error":"Invalid credentials"}
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admisiones",
+  "password": "ClaveIncorrecta1!"
+}
+
+### 2.2 FALSA — Login con un usuario que no existe
+# Esperado: 401 {"error":"Invalid credentials"} (mismo mensaje: no revela qué usuarios existen)
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "doctor.fantasma",
+  "password": "Fantasma123!"
+}
+
+### 2.3 FALSA — Login sin credenciales
+# Esperado: 400 {"error":"identifier and password are required"}
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{}
+
+### 2.4 EXITOSA — Login del administrador (se usa solo para crear al practicante)
+# Esperado: 200 con access_token y refresh_token
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+###
+
+@adminToken = {{loginAdmin.response.body.$.access_token}}
+
+### 2.5 EXITOSA — El admin crea el usuario "practicante" SIN asignarle rol
+# Esperado: 201 (si ya existe: 409 "Username already in use", se puede seguir)
+POST {{baseUrl}}/api/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "username": "practicante",
+  "email": "practicante@saludconecta.local",
+  "password": "Practicante123!",
+  "status": "active"
+}
+
+### 2.6 EXITOSA — Login del practicante
+# Esperado: 200 con access_token
+# @name loginPracticante
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "practicante",
+  "password": "Practicante123!"
+}
+
+###
+
+@practicanteToken = {{loginPracticante.response.body.$.access_token}}
+
+### 2.7 EXITOSA — Perfil del usuario autenticado (ruta JWT, sin RBAC)
+# Esperado: 200 {"user":{...,"username":"practicante"}} sin password
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{practicanteToken}}
+
+### 2.8 EXITOSA — Permisos efectivos del practicante (ruta JWT)
+# Esperado: 200 {"permissions":[]} — no tiene ningún rol
+GET {{baseUrl}}/api/permissions
+Authorization: Bearer {{practicanteToken}}
+
+### 2.9 FALSA — Autenticado, pero sin permiso para listar pacientes
+# Esperado: 403 {"error":"Forbidden: no grant for GET /api/patients"}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{practicanteToken}}
+
+### 2.10 FALSA — Autenticado, pero sin permiso para listar citas
+# Esperado: 403 {"error":"Forbidden: no grant for GET /api/appointments"}
+GET {{baseUrl}}/api/appointments
+Authorization: Bearer {{practicanteToken}}

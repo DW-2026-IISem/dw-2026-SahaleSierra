@@ -1,6 +1,6 @@
 # SaludConecta — Backend con Express, TypeScript y Sequelize
 
-**Bitácora del proceso de construcción (ISS-00 a ISS-24)**
+**Bitácora del proceso de construcción (ISS-00 a ISS-25)**
 
 Este documento recoge, paso a paso, cómo construí el backend de **SaludConecta**, un sistema para un centro médico ambulatorio. Lo hice adaptando a mi proyecto el manual del curso (`app-storelab-express`) y, en la segunda parte, la guía de autenticación con RBAC del profesor. El trabajo está dividido en *issues* (ISS): cada uno tiene su objetivo, los archivos que creé o modifiqué, la verificación y el commit de cierre, con capturas de pantalla como evidencia.
 
@@ -23,7 +23,7 @@ Este documento recoge, paso a paso, cómo construí el backend de **SaludConecta
 
 ## Índice
 
-- **[Fase I: API de negocio sin autenticación (ISS-00 a ISS-15)](#fase-1)**
+- [**Fase I: API de negocio sin autenticación (ISS-00 a ISS-15)**](#fase-1)
   - [1. ISS-00 — Requisitos previos](#iss-00)
   - [2. ISS-01 — Esqueleto del proyecto](#iss-01)
   - [3. ISS-02 — Infraestructura de base de datos](#iss-02)
@@ -44,7 +44,7 @@ Este documento recoge, paso a paso, cómo construí el backend de **SaludConecta
   - [18. ISS-13 — Feature Authorization (autorizaciones)](#iss-13)
   - [19. ISS-14 — Feature Encounter (atenciones)](#iss-14)
   - [20. ISS-15 — Feature Invoice (facturas) + extensión de Encounter](#iss-15)
-- **[Retrofit a 4 capas (ISS-16)](#retrofit)**
+- [**Retrofit a 4 capas (ISS-16)**](#retrofit)
   - [21. ISS-16 — Retrofit a 4 capas: visión general (A a L)](#iss-16)
   - [22. ISS-16-A — Base compartida (`src/shared/`)](#iss-16-a)
   - [23. ISS-16-B — Patient a 4 capas (plantilla)](#iss-16-b)
@@ -59,7 +59,7 @@ Este documento recoge, paso a paso, cómo construí el backend de **SaludConecta
   - [32. ISS-16-K — Encounter a 4 capas](#iss-16-k)
   - [33. ISS-16-L — Invoice a 4 capas](#iss-16-l)
   - [34. Cierre de ISS-16](#iss-16-cierre)
-- **[Fase II: Auth con RBAC (ISS-17 a ISS-24)](#fase-2)**
+- [**Fase II: Auth con RBAC (ISS-17 a ISS-24)**](#fase-2)
   - [35. ISS-17 — Base de seguridad compartida y modelos Auth](#iss-17)
   - [36. ISS-18 — Feature Users (identidad y contraseña)](#iss-18)
   - [37. ISS-19 — Features Roles y Resources (catálogo de autorización)](#iss-19)
@@ -68,8 +68,10 @@ Este documento recoge, paso a paso, cómo construí el backend de **SaludConecta
   - [40. ISS-22 — Feature RefreshTokens (sesiones renovables y revocables)](#iss-22)
   - [41. ISS-23 — Feature Session (login, refresh, logout, perfil y permisos)](#iss-23)
   - [42. ISS-24 — Cierre Fase II: Auth con RBAC](#iss-24)
+- [**Pruebas finales de los tipos de acceso (ISS-25)**](#pruebas)
+  - [43. ISS-25 — Pruebas de los tipos de acceso con HTTP y Swagger (Patients y Appointments)](#iss-25)
 
----
+------------------------------------------------------------------------
 
 <a id="fase-1"></a>
 
@@ -7158,7 +7160,7 @@ EOF
 ### 42.2 Las tres modalidades — mapa definitivo de rutas
 
 | Modalidad | Middlewares | Rutas |
-|:---|:---|:---|
+|:-----------------------|:-----------------------|:-----------------------|
 | **OPEN** | — | `POST /api/session/login` · `/refresh` · `/logout` · `GET /api/docs` · `/api/docs.json` |
 | **JWT** | `authenticate` | `GET /api/session/profile` · `GET /api/permissions` · `GET /api/sessions` · `GET /api/sessions/:id` · `PATCH /api/sessions/:id/deactivate` · `PATCH /api/sessions/deactivate-all` · `DELETE /api/sessions` |
 | **JWT + RBAC** | `authenticate, authorize` | `/api/users…` · `/api/roles…` · `/api/resources…` · `/api/role-users…` · `/api/resource-roles…` · `/api/patients…` · `/api/specialties…` · `/api/doctors…` · `/api/doctor-specialties…` · `/api/services…` · `/api/agendas…` · `/api/appointments…` · `/api/clinical-records…` · `/api/authorizations…` · `/api/encounters…` · `/api/invoices…` |
@@ -7166,7 +7168,7 @@ EOF
 ### 42.3 Roles, usuarios y matriz
 
 | Usuario | Contraseña | Rol | Recursos | Alcance |
-|:---|:---|:---|---:|:---|
+|:--------------|:--------------|:--------------|--------------:|:--------------|
 | `admin` | `Admin123!` | `ADMIN` | 111 | Todo. Único que borra, desactiva y administra la seguridad |
 | `admisiones` | `Admisiones123!` | `ADMISIONES` | 25 | Pacientes, citas y autorizaciones (leer y escribir); catálogos (leer) |
 | `medico` | `Medico123!` | `MEDICO` | 21 | Historias clínicas y atenciones (leer y escribir); agenda, citas, pacientes (leer) |
@@ -7251,3 +7253,1146 @@ git ls-files | grep -c "^\.env$"
 ![](images/clipboard-2420583640.png)
 
 **Borrado físico de usuarios, roles y recursos.** Igual que en negocio, las FKs impiden borrar un padre con hijos: `DELETE /api/users/:id` de un usuario que ya inició sesión o tiene un rol asignado responde `500` (`SequelizeForeignKeyConstraintError`) y no borra nada. Para esos casos se usa `PATCH …/:id/deactivate`, que además invalida sus tokens al instante.
+
+<a id="pruebas"></a>
+
+# Pruebas finales de los tipos de acceso (ISS-25)
+
+Con el backend terminado, el profesor pidió una última parte: escoger dos tablas de negocio y probar sobre ellas todos los tipos de acceso, con pruebas que pasan y pruebas que el sistema debe rechazar. Las hice con archivos `.http` (extensión REST Client de VS Code) y con Swagger UI, y revisé en DBeaver lo que iba quedando en la base de datos.
+
+<a id="iss-25"></a>
+
+## 43. ISS-25 — Pruebas de los tipos de acceso con HTTP y Swagger (Patients y Appointments)
+
+- **Objetivo:** probar sobre `patients` y `appointments` los cuatro tipos de acceso: sin autenticación, solo autenticación, autenticación con JWT + Refresh y autenticación con JWT + Refresh + RBAC.
+- **Bloqueado por:** ISS-24.
+- **API:** no se agregan rutas ni se cambia código; solo se crean 4 archivos `.http` de prueba.
+- **Herramientas:** REST Client en VS Code, Swagger UI (`http://localhost:4000/api/docs`) y DBeaver.
+
+**Por qué escogí estas dos tablas.** `patients` y `appointments` son la base del proceso de admisiones: sin paciente no hay cita y sin cita no hay atención ni factura. También son las que más sentido tiene proteger, porque `patients` guarda datos personales y `appointments` tiene la regla de no cruzar dos citas en la misma agenda. Además cada rol tiene permisos distintos sobre ellas, así que sirven para ver el RBAC funcionando.
+
+**Cómo quedó cada tipo de acceso en mi proyecto.** El backend maneja tres modalidades en las rutas (OPEN, JWT y JWT + RBAC), y con ellas armé los cuatro tipos de acceso que pidió el profesor:
+
+| Tipo de acceso | Cómo funciona en SaludConecta | Middlewares | Qué muestran las pruebas |
+|:---|:---|:---|:---|
+| 1. Sin autenticación | Rutas OPEN (documentación y login) | — | Lo público responde sin token; las dos tablas responden `401` |
+| 2. Solo autenticación | Login con usuario y contraseña, y rutas JWT (perfil, permisos) | `authenticate` | Se valida la identidad, pero un usuario sin rol recibe `403` en las tablas |
+| 3. Autenticación + JWT + Refresh | Access token de 15 min y refresh token que rota | `authenticate` | El token da acceso; el refresh renueva la sesión, detecta reutilización y el logout la cierra |
+| 4. Autenticación + JWT + Refresh + RBAC | Matriz rol → recurso revisada en cada petición | `authenticate, authorize` | Cada rol solo hace lo que su matriz permite y un permiso revocado deja de valer de inmediato |
+
+En las tablas de resultados llamo **exitosa** a la prueba que el sistema acepta (`200` / `201`) y **rechazada** a la que debe negar (`400` / `401` / `403`). Que las rechazadas devuelvan ese código es lo que demuestra que la seguridad está funcionando.
+
+### 43.1 Preparación
+
+Primero corrí el seeder para dejar roles, recursos y permisos como están en el código, y levanté el servidor:
+
+```bash
+npm run db:seed
+npm run dev
+```
+![](images/clipboard-2131733021.png)
+
+En DBeaver creé una conexión MySQL con Host `localhost`, Port `3307`, Database `backend_express`, usuario `express_admin` y la contraseña del `.env`. (Si sale el error *Public Key Retrieval is not allowed*, se arregla poniendo `allowPublicKeyRetrieval = true` en *Driver properties*.)
+
+
+
+Con la conexión lista revisé los usuarios canónicos y el rol de cada uno:
+
+```sql
+SELECT u.id, u.username, u.status, r.name AS role
+FROM users u
+LEFT JOIN role_users ru ON ru.user_id = u.id AND ru.status = 'active'
+LEFT JOIN roles r ON r.id = ru.role_id
+ORDER BY u.id;
+```
+
+![](images/clipboard-3135127262.png)
+
+Y la matriz de permisos de las dos tablas:
+
+```sql
+SELECT res.method, res.path, r.name AS role, rr.id AS grant_id
+FROM resource_roles rr
+JOIN roles r ON r.id = rr.role_id
+JOIN resources res ON res.id = rr.resource_id
+WHERE rr.status = 'active'
+  AND (res.path LIKE '/api/patients%' OR res.path LIKE '/api/appointments%')
+ORDER BY res.path, res.method, r.name;
+```
+
+![](images/clipboard-376442681.png)
+
+Aquí se ve cómo están repartidos los permisos: las consultas (`GET`) las tienen los cinco roles, crear y modificar (`POST`, `PUT`, `PATCH`) es de ADMIN y ADMISIONES, y borrar o dar de baja (`DELETE`, `/deactivate`) solo lo puede hacer ADMIN.
+
+### 43.2 Carpeta de pruebas
+
+Como estas pruebas usan varias tablas y no son de un solo feature, las puse en una carpeta aparte en la raíz del proyecto:
+
+```bash
+mkdir -p http/access-tests
+```
+
+En cada archivo, encima de cada petición dejé un comentario `# Esperado:` con el código y el mensaje que debería responder, para poder comparar con lo que sale en el panel de respuesta. En VS Code cada petición se manda con el enlace **Send Request**. Los archivos 02, 03 y 04 reutilizan datos de respuestas anteriores (por ejemplo el token del login), por eso hay que ejecutarlos en orden de arriba hacia abajo.
+
+### 43.3 Tipo 1 — Sin autenticación
+
+#### 43.3.1 Archivo `01-no-auth.http`
+
+```bash
+: > http/access-tests/01-no-auth.http
+cat >> http/access-tests/01-no-auth.http << 'EOF'
+### ISS-25 — Tipo de acceso 1: SIN AUTENTICACIÓN
+### Tablas probadas: patients y appointments
+### Ninguna petición lleva cabecera Authorization (o lleva una que no es un Bearer válido).
+@baseUrl = http://localhost:4000
+
+### 1.1 EXITOSA — La documentación OpenAPI es pública (OPEN)
+# Esperado: 200
+GET {{baseUrl}}/api/docs.json
+
+### 1.2 FALSA — Listar pacientes sin token
+# Esperado: 401 {"error":"Missing Bearer token"}
+GET {{baseUrl}}/api/patients
+
+### 1.3 FALSA — Listar citas sin token
+# Esperado: 401 {"error":"Missing Bearer token"}
+GET {{baseUrl}}/api/appointments
+
+### 1.4 FALSA — Crear paciente sin token (no llega ni a validar el body)
+# Esperado: 401 {"error":"Missing Bearer token"}
+POST {{baseUrl}}/api/patients
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "1098765432",
+  "name": "Paciente Sin Token",
+  "birth_date": "1988-02-20",
+  "contact": "3157778899",
+  "status": "active"
+}
+
+### 1.5 FALSA — Crear cita sin token
+# Esperado: 401 {"error":"Missing Bearer token"}
+POST {{baseUrl}}/api/appointments
+Content-Type: application/json
+
+{
+  "agenda_id": 1,
+  "patient_id": 1,
+  "start_date": "2026-12-15T09:00:00",
+  "end_date": "2026-12-15T09:30:00",
+  "reason": "Cita sin token",
+  "status": "active"
+}
+
+### 1.6 FALSA — Credenciales enviadas como Basic (usuario:contraseña en base64), no como Bearer
+# Esperado: 401 {"error":"Missing Bearer token"}
+GET {{baseUrl}}/api/patients
+Authorization: Basic YWRtaXNpb25lczpBZG1pc2lvbmVzMTIzIQ==
+
+### 1.7 FALSA — Bearer inventado (no es un JWT firmado por el servidor)
+# Esperado: 401 {"error":"Invalid or expired access token"}
+GET {{baseUrl}}/api/appointments
+Authorization: Bearer token.inventado.123
+EOF
+```
+
+![](images/clipboard-1362167049.png)
+
+#### 43.3.2 Ejecución con REST Client
+
+En la 1.1 la documentación de la API respondió `200` sin pedir ningún token, porque es una ruta pública:
+
+![](images/clipboard-4184885351.png)
+
+En la 1.2 y la 1.3 intenté listar pacientes y citas sin token, y las dos respondieron `401` con `Missing Bearer token`:
+
+![](images/clipboard-3988757784.png)
+
+![](images/clipboard-3341465111.png)
+
+La 1.4 y la 1.5 intentan crear un paciente y una cita. También dieron `401`: `authenticate` corta la petición antes de que el body llegue a validarse.
+
+![](images/clipboard-1245642790.png)
+
+![](images/clipboard-385917085.png)
+
+En la 1.6 mandé usuario y contraseña con autenticación Basic. Igual dio `401`, porque la API solo acepta tokens Bearer:
+
+![](images/clipboard-2347175644.png)
+
+En la 1.7 mandé un Bearer inventado y respondió `401` con `Invalid or expired access token`, porque no es un JWT firmado por el servidor:
+
+![](images/clipboard-2185083599.png)
+
+#### 43.3.3 Pruebas en Swagger
+
+En `http://localhost:4000/api/docs`, sin pulsar *Authorize*, ejecuté **`GET /api/patients`** (*Try it out* → *Execute*) y respondió `401`:
+
+![](images/clipboard-1882196534.png)
+
+Luego **`POST /api/appointments`** con el body de ejemplo, también `401`:
+
+![](images/clipboard-1024742025.png)
+
+Por último, en *Authorize* escribí un token falso (`token.inventado.123`) y volví a ejecutar **`GET /api/patients`**: `401` con `Invalid or expired access token`. Después pulsé *Logout* para quitarlo.
+
+![](images/clipboard-3003739937.png)
+
+#### 43.3.4 Resultados del tipo 1
+
+| # | Prueba | Respuesta | Resultado |
+|:---|:---|:---|:---|
+| 1.1 | Documentación OpenAPI sin token | `200` | ✅ Exitosa |
+| 1.2 | `GET /api/patients` sin token | `401` `Missing Bearer token` | ❌ Rechazada |
+| 1.3 | `GET /api/appointments` sin token | `401` `Missing Bearer token` | ❌ Rechazada |
+| 1.4 | `POST /api/patients` sin token | `401` `Missing Bearer token` | ❌ Rechazada |
+| 1.5 | `POST /api/appointments` sin token | `401` `Missing Bearer token` | ❌ Rechazada |
+| 1.6 | Credenciales en Basic | `401` `Missing Bearer token` | ❌ Rechazada |
+| 1.7 | Bearer inventado | `401` `Invalid or expired access token` | ❌ Rechazada |
+
+Sin autenticarse solo responde lo que es público (la documentación y el login). A pacientes y citas no se puede entrar de ninguna forma, ni para leer ni para escribir.
+
+### 43.4 Tipo 2 — Solo autenticación
+
+Para probar la autenticación separada de los permisos creé el usuario **`practicante`** y no le asigné ningún rol. Sería como una cuenta nueva a la que todavía no le han dado funciones: puede iniciar sesión, pero no debería ver datos de pacientes.
+
+#### 43.4.1 Archivo `02-auth-only.http`
+
+```bash
+: > http/access-tests/02-auth-only.http
+cat >> http/access-tests/02-auth-only.http << 'EOF'
+### ISS-25 — Tipo de acceso 2: SOLO AUTENTICACIÓN
+### Se prueba la identidad (login y rutas JWT) sin que el usuario tenga permisos de negocio.
+### El usuario "practicante" se crea sin rol: está autenticado, pero no autorizado.
+@baseUrl = http://localhost:4000
+
+### 2.1 FALSA — Login con contraseña incorrecta
+# Esperado: 401 {"error":"Invalid credentials"}
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admisiones",
+  "password": "ClaveIncorrecta1!"
+}
+
+### 2.2 FALSA — Login con un usuario que no existe
+# Esperado: 401 {"error":"Invalid credentials"} (mismo mensaje: no revela qué usuarios existen)
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "doctor.fantasma",
+  "password": "Fantasma123!"
+}
+
+### 2.3 FALSA — Login sin credenciales
+# Esperado: 400 {"error":"identifier and password are required"}
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{}
+
+### 2.4 EXITOSA — Login del administrador (se usa solo para crear al practicante)
+# Esperado: 200 con access_token y refresh_token
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+###
+
+@adminToken = {{loginAdmin.response.body.$.access_token}}
+
+### 2.5 EXITOSA — El admin crea el usuario "practicante" SIN asignarle rol
+# Esperado: 201 (si ya existe: 409 "Username already in use", se puede seguir)
+POST {{baseUrl}}/api/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "username": "practicante",
+  "email": "practicante@saludconecta.local",
+  "password": "Practicante123!",
+  "status": "active"
+}
+
+### 2.6 EXITOSA — Login del practicante
+# Esperado: 200 con access_token
+# @name loginPracticante
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "practicante",
+  "password": "Practicante123!"
+}
+
+###
+
+@practicanteToken = {{loginPracticante.response.body.$.access_token}}
+
+### 2.7 EXITOSA — Perfil del usuario autenticado (ruta JWT, sin RBAC)
+# Esperado: 200 {"user":{...,"username":"practicante"}} sin password
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{practicanteToken}}
+
+### 2.8 EXITOSA — Permisos efectivos del practicante (ruta JWT)
+# Esperado: 200 {"permissions":[]} — no tiene ningún rol
+GET {{baseUrl}}/api/permissions
+Authorization: Bearer {{practicanteToken}}
+
+### 2.9 FALSA — Autenticado, pero sin permiso para listar pacientes
+# Esperado: 403 {"error":"Forbidden: no grant for GET /api/patients"}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{practicanteToken}}
+
+### 2.10 FALSA — Autenticado, pero sin permiso para listar citas
+# Esperado: 403 {"error":"Forbidden: no grant for GET /api/appointments"}
+GET {{baseUrl}}/api/appointments
+Authorization: Bearer {{practicanteToken}}
+EOF
+```
+
+![](images/clipboard-2773173853.png)
+
+#### 43.4.2 Ejecución con REST Client
+
+La 2.1 (contraseña mala) y la 2.2 (usuario que no existe) respondieron igual, `401` con `Invalid credentials`. Que el mensaje sea el mismo es a propósito: así no se puede averiguar qué usuarios existen.
+
+![](images/clipboard-747620339.png)
+
+![](images/clipboard-811773209.png)
+
+En la 2.3 mandé el login sin datos y respondió `400` con `identifier and password are required`:
+
+![](images/clipboard-1199065277.png)
+
+En la 2.5 el admin creó al practicante (`201`); la respuesta no devuelve la contraseña:
+
+![](images/clipboard-504911464.png)
+
+En la 2.6 el practicante inició sesión y recibió su `access_token` (vence en 900 segundos) y su `refresh_token`:
+
+![](images/clipboard-736808266.png)
+
+Con ese token, la 2.7 (perfil) y la 2.8 (permisos) respondieron `200`. Sus permisos salen vacíos (`[]`) porque no tiene rol:
+
+![](images/clipboard-866497950.png)
+
+![](images/clipboard-2237077372.png)
+
+En cambio, en la 2.9 y la 2.10, al intentar listar pacientes y citas recibió `403` `Forbidden: no grant for ...`:
+
+![](images/clipboard-2046119695.png)
+
+![](images/clipboard-2288376735.png)
+
+#### 43.4.3 Pruebas en Swagger
+
+Repetí el caso desde Swagger. Primero, en **Session → `POST /api/session/login`**, probé con `{ "identifier": "admisiones", "password": "ClaveIncorrecta1!" }` y respondió `401`:
+
+![](images/clipboard-664884919.png)
+
+Después inicié sesión con `{ "identifier": "practicante", "password": "Practicante123!" }` y copié el `access_token`:
+
+![](images/clipboard-2655031411.png)
+
+Lo pegué en **Authorize** (solo el token; Swagger le agrega `Bearer`):
+
+![](images/clipboard-1690065633.png)
+
+Con el token puesto, **`GET /api/session/profile`** y **`GET /api/permissions`** respondieron `200`, y los permisos vacíos:
+
+![](images/clipboard-632932982.png)
+
+![](images/clipboard-110104855.png)
+
+Y **Patients → `GET /api/patients`** respondió `403`:
+
+![](images/clipboard-4217267219.png)
+
+#### 43.4.4 Evidencia en DBeaver
+
+Revisé las sesiones que quedaron abiertas para el practicante:
+
+```sql
+SELECT rt.id, u.username, rt.family_id, rt.status, LEFT(rt.token_hash, 16) AS hash_inicio, rt.expires_at
+FROM refresh_tokens rt
+JOIN users u ON u.id = rt.user_id
+WHERE u.username = 'practicante'
+ORDER BY rt.id;
+```
+
+![](images/clipboard-3155659490.png)
+
+Cada login crea una fila en `refresh_tokens` aunque el usuario no tenga rol. En `token_hash` no queda el token sino su hash SHA-256.
+
+#### 43.4.5 Resultados del tipo 2
+
+| # | Prueba | Respuesta | Resultado |
+|:---|:---|:---|:---|
+| 2.1 | Login con contraseña incorrecta | `401` `Invalid credentials` | ❌ Rechazada |
+| 2.2 | Login con usuario inexistente | `401` `Invalid credentials` | ❌ Rechazada |
+| 2.3 | Login sin credenciales | `400` | ❌ Rechazada |
+| 2.4 | Login de admin | `200` | ✅ Exitosa |
+| 2.5 | Admin crea `practicante` sin rol | `201` | ✅ Exitosa |
+| 2.6 | Login de practicante | `200` | ✅ Exitosa |
+| 2.7 | Perfil (ruta JWT) | `200` | ✅ Exitosa |
+| 2.8 | Permisos efectivos (ruta JWT) | `200` `[]` | ✅ Exitosa |
+| 2.9 | Practicante lista pacientes | `403` | ❌ Rechazada |
+| 2.10 | Practicante lista citas | `403` | ❌ Rechazada |
+
+Autenticarse sirve para que el sistema sepa quién es el usuario, y con eso se abren las rutas JWT (perfil, permisos, sesiones), pero no las tablas de negocio. Aquí se nota la diferencia entre `401` (el sistema no sabe quién eres) y `403` (sabe quién eres, pero no tienes permiso).
+
+### 43.5 Tipo 3 — Autenticación + JWT + Refresh
+
+En este tipo probé cómo vive una sesión, con el usuario `admisiones`. El access token dura 15 minutos y el refresh token permite pedir uno nuevo sin volver a poner la contraseña. Cada vez que se usa el refresh token, el servidor lo cambia por otro: el viejo queda inactivo y, si alguien intenta usarlo otra vez, el sistema asume que pudo ser robado y cierra toda la familia de esa sesión.
+
+#### 43.5.1 Archivo `03-jwt-refresh.http`
+
+```bash
+: > http/access-tests/03-jwt-refresh.http
+cat >> http/access-tests/03-jwt-refresh.http << 'EOF'
+### ISS-25 — Tipo de acceso 3: AUTENTICACIÓN + JWT + REFRESH
+### Ciclo de vida de la sesión: access token (15 min) + refresh token opaco con rotación.
+### Ejecutar en orden: cada petición usa tokens de las anteriores.
+@baseUrl = http://localhost:4000
+
+### 3.1 EXITOSA — Login de admisiones: devuelve el par de tokens (R0)
+# Esperado: 200 con access_token, expires_in 900, refresh_token y refresh_expires_in
+# @name loginAdmisiones
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admisiones",
+  "password": "Admisiones123!"
+}
+
+###
+
+@accessT0 = {{loginAdmisiones.response.body.$.access_token}}
+@refreshR0 = {{loginAdmisiones.response.body.$.refresh_token}}
+
+### 3.2 EXITOSA — Con el access token se listan los pacientes
+# Esperado: 200 {"patients":[...]}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{accessT0}}
+
+### 3.3 EXITOSA — Refresh con R0: el servidor rota y entrega un par nuevo (R1)
+# Esperado: 200 con access_token y refresh_token NUEVOS
+# @name refreshUno
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshR0}}"
+}
+
+###
+
+@accessT1 = {{refreshUno.response.body.$.access_token}}
+@refreshR1 = {{refreshUno.response.body.$.refresh_token}}
+
+### 3.4 EXITOSA — Con el access token renovado se listan las citas
+# Esperado: 200 {"appointments":[...]}
+GET {{baseUrl}}/api/appointments
+Authorization: Bearer {{accessT1}}
+
+### 3.5 EXITOSA — Sesiones activas del usuario (ruta JWT)
+# Esperado: 200 {"sessions":[...]} con la sesión rotada (R1) activa
+GET {{baseUrl}}/api/sessions
+Authorization: Bearer {{accessT1}}
+
+### 3.6 FALSA — Reutilizar R0 (ya rotado): se detecta posible robo y se revoca la familia
+# Esperado: 401 {"error":"Refresh token reuse detected: session family revoked"}
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshR0}}"
+}
+
+### 3.7 FALSA — R1 también quedó revocado (toda la familia cae)
+# Esperado: 401 {"error":"Refresh token reuse detected: session family revoked"}
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshR1}}"
+}
+
+### 3.8 FALSA — Refresh token inventado
+# Esperado: 401 {"error":"Invalid refresh token"}
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "esto-no-es-un-refresh-token"
+}
+
+### 3.9 FALSA — Access token alterado (se cambian los últimos caracteres de la firma)
+# Esperado: 401 {"error":"Invalid or expired access token"}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{accessT1}}xyz
+
+### 3.10 EXITOSA — Nuevo login y logout: cierra esa sesión
+# @name loginLogout
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admisiones",
+  "password": "Admisiones123!"
+}
+
+###
+
+@refreshLogout = {{loginLogout.response.body.$.refresh_token}}
+
+### 3.11 EXITOSA — Logout con el refresh token de esa sesión
+# Esperado: 200 {"message":"Session closed"}
+POST {{baseUrl}}/api/session/logout
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshLogout}}"
+}
+
+### 3.12 FALSA — Refresh con el token de la sesión cerrada
+# Esperado: 401 (la sesión ya está inactive)
+POST {{baseUrl}}/api/session/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshLogout}}"
+}
+
+### 3.13 Preparación — Login del practicante y del admin para la última prueba
+# @name loginPracticante
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "practicante",
+  "password": "Practicante123!"
+}
+
+###
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+###
+
+@practicanteToken = {{loginPracticante.response.body.$.access_token}}
+@adminToken = {{loginAdmin.response.body.$.access_token}}
+
+### 3.14 EXITOSA — Perfil del practicante: su JWT es válido
+# Esperado: 200
+# @name perfilPracticante
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{practicanteToken}}
+
+###
+
+@practicanteId = {{perfilPracticante.response.body.$.user.id}}
+
+### 3.15 EXITOSA — El admin desactiva al practicante (baja lógica, revoca sus sesiones)
+# Esperado: 200 {"message":"User deactivated (logical delete)",...}
+PATCH {{baseUrl}}/api/users/{{practicanteId}}/deactivate
+Authorization: Bearer {{adminToken}}
+
+### 3.16 FALSA — El mismo JWT (aún no vencido) ya no sirve: authenticate revalida en la BD
+# Esperado: 401 {"error":"User is not active"}
+GET {{baseUrl}}/api/session/profile
+Authorization: Bearer {{practicanteToken}}
+EOF
+```
+
+![](images/clipboard-3898356323.png)
+
+#### 43.5.2 Ejecución con REST Client
+
+En la 3.1 el login devolvió el primer par de tokens (R0):
+
+![](images/clipboard-980151323.png)
+
+En la 3.2 listé los pacientes con ese access token (`200`):
+
+![](images/clipboard-839944293.png)
+
+En la 3.3 usé R0 en `/api/session/refresh` y recibí un `access_token` y un `refresh_token` nuevos (R1):
+
+![](images/clipboard-1052587782.png)
+
+En la 3.4 listé las citas con el token renovado (`200`):
+
+![](images/clipboard-3817404745.png)
+
+En la 3.5 consulté mis sesiones activas; aparece la sesión con su `family_id`:
+
+![](images/clipboard-2917267208.png)
+
+En la 3.6 volví a usar R0, que ya había sido reemplazado. El servidor respondió `401` con `Refresh token reuse detected: session family revoked`. En la 3.7 probé R1 y tampoco sirvió, porque se revocó toda la familia:
+
+![](images/clipboard-1955739677.png)
+
+![](images/clipboard-1803253896.png)
+
+Un refresh token inventado (3.8) dio `401` `Invalid refresh token`, y un access token alterado (3.9) dio `401` `Invalid or expired access token`:
+
+![](images/clipboard-4038299546.png)
+
+![](images/clipboard-2175165942.png)
+
+En la 3.11 cerré otra sesión con logout (`200` `Session closed`) y en la 3.12 el refresh de esa sesión ya no funcionó (`401`):
+
+![](images/clipboard-1691207085.png)
+
+![](images/clipboard-3812769817.png)
+
+En la 3.15 el admin desactivó al practicante y en la 3.16 su token, que todavía no había vencido, dejó de servir: `401` con `User is not active`. Esto pasa porque `authenticate` revisa en cada petición que el usuario siga activo en la base de datos.
+
+![](images/clipboard-1904282099.png)
+
+![](images/clipboard-2936337456.png)
+
+Como la API no tiene ruta para volver a activar usuarios, si quiero repetir los archivos 02 y 03 lo reactivo desde DBeaver con `UPDATE users SET status = 'active' WHERE username = 'practicante';`.
+
+#### 43.5.3 Pruebas en Swagger
+
+En Swagger hice el mismo recorrido con una sesión nueva de `admisiones`. Login:
+
+![](images/clipboard-3838641332.png)
+
+Con su `access_token` en *Authorize*, **`GET /api/patients`** respondió `200`:
+
+![](images/clipboard-911207615.png)
+
+En **`POST /api/session/refresh`** mandé el refresh token del login (R0) y recibí un par nuevo (R1):
+
+![](images/clipboard-2656336128.png)
+
+Cambié el token de *Authorize* por el nuevo y **`GET /api/appointments`** respondió `200`:
+
+![](images/clipboard-1670074140.png)
+
+Volví a mandar R0 al refresh y respondió `401` por reutilización:
+
+![](images/clipboard-3022797775.png)
+
+Y R1 ya tampoco sirvió:
+
+![](images/clipboard-2465230253.png)
+
+#### 43.5.4 Evidencia en DBeaver
+
+```sql
+SELECT rt.id, u.username, rt.family_id, rt.status, LEFT(rt.token_hash, 16) AS hash_inicio, rt.createdAt
+FROM refresh_tokens rt
+JOIN users u ON u.id = rt.user_id
+WHERE u.username = 'admisiones'
+ORDER BY rt.id DESC
+LIMIT 8;
+```
+
+![](images/clipboard-1261193421.png)
+
+Los tokens que comparten `family_id` quedaron todos en `inactive` después de la reutilización, y el de la sesión cerrada con logout también.
+
+```sql
+SELECT id, username, status FROM users WHERE username = 'practicante';
+```
+
+![](images/clipboard-3560952851.png)
+
+El practicante quedó con `status = inactive` después de la prueba 3.15.
+
+#### 43.5.5 Resultados del tipo 3
+
+| # | Prueba | Respuesta | Resultado |
+|:---|:---|:---|:---|
+| 3.1 | Login de admisiones (R0) | `200` | ✅ Exitosa |
+| 3.2 | Listar pacientes con el access token | `200` | ✅ Exitosa |
+| 3.3 | Refresh con R0 → par nuevo (R1) | `200` | ✅ Exitosa |
+| 3.4 | Listar citas con el token renovado | `200` | ✅ Exitosa |
+| 3.5 | Ver sesiones activas | `200` | ✅ Exitosa |
+| 3.6 | Reutilizar R0 | `401` reuse detected | ❌ Rechazada |
+| 3.7 | Usar R1 después de la reutilización | `401` reuse detected | ❌ Rechazada |
+| 3.8 | Refresh token inventado | `401` `Invalid refresh token` | ❌ Rechazada |
+| 3.9 | Access token alterado | `401` | ❌ Rechazada |
+| 3.10–3.11 | Login y logout | `200` `Session closed` | ✅ Exitosa |
+| 3.12 | Refresh de la sesión cerrada | `401` | ❌ Rechazada |
+| 3.14 | Perfil con JWT válido | `200` | ✅ Exitosa |
+| 3.15 | Admin desactiva al practicante | `200` | ✅ Exitosa |
+| 3.16 | Mismo JWT con el usuario desactivado | `401` `User is not active` | ❌ Rechazada |
+
+### 43.6 Tipo 4 — Autenticación + JWT + Refresh + RBAC
+
+Para el último tipo usé los cinco roles sobre las mismas tablas, con un caso parecido a lo que pasaría en el centro médico: admisiones registra a una paciente y le agenda una cita, el médico la consulta, facturación y auditoría intentan hacer cosas que no les tocan, y el administrador le quita un permiso al médico y se lo devuelve sin reiniciar el servidor.
+
+Antes de ejecutar el archivo busqué una agenda activa para ponerla en `@agendaId`:
+
+```sql
+SELECT id, name, doctor_id FROM agendas WHERE status = 'active' ORDER BY id LIMIT 5;
+```
+
+![](images/clipboard-2491853587.png)
+
+La prueba de revocación usa `role_id=3` (MEDICO) y `resource_id=1` (`GET /api/patients`). Confirmé que en mi base esos son los ids:
+
+```sql
+SELECT (SELECT id FROM roles WHERE name = 'MEDICO') AS medico_role_id,
+       (SELECT id FROM resources WHERE method = 'GET' AND path = '/api/patients') AS get_patients_resource_id;
+```
+
+![](images/clipboard-3220953189.png)
+
+#### 43.6.1 Archivo `04-jwt-refresh-rbac.http`
+
+```bash
+: > http/access-tests/04-jwt-refresh-rbac.http
+cat >> http/access-tests/04-jwt-refresh-rbac.http << 'EOF'
+### ISS-25 — Tipo de acceso 4: AUTENTICACIÓN + JWT + REFRESH + RBAC
+### Mismas tablas (patients y appointments), distintos roles: cada rol solo hace lo que su matriz permite.
+### Antes de ejecutar: poner en @agendaId una agenda activa (SELECT id FROM agendas WHERE status = 'active').
+@baseUrl = http://localhost:4000
+@agendaId = 1
+
+### 4.0 Logins de los cinco roles (EXITOSAS, 200)
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "admin", "password": "Admin123!" }
+
+###
+
+# @name loginAdmisiones
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "admisiones", "password": "Admisiones123!" }
+
+###
+
+# @name loginMedico
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "medico", "password": "Medico123!" }
+
+###
+
+# @name loginFacturacion
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "facturacion", "password": "Facturacion123!" }
+
+###
+
+# @name loginAuditor
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{ "identifier": "auditor", "password": "Auditor123!" }
+
+###
+
+@admin = {{loginAdmin.response.body.$.access_token}}
+@admisiones = {{loginAdmisiones.response.body.$.access_token}}
+@medico = {{loginMedico.response.body.$.access_token}}
+@facturacion = {{loginFacturacion.response.body.$.access_token}}
+@auditor = {{loginAuditor.response.body.$.access_token}}
+
+### ===================== PATIENTS =====================
+
+### 4.1 EXITOSA — ADMISIONES registra un paciente
+# Esperado: 201 {"patient":{...}}  (si se repite, cambiar document_number)
+# @name createPatient
+POST {{baseUrl}}/api/patients
+Authorization: Bearer {{admisiones}}
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "1032456789",
+  "name": "Laura Gómez",
+  "birth_date": "1990-05-12",
+  "contact": "3104567890",
+  "status": "active"
+}
+
+###
+
+@patientId = {{createPatient.response.body.$.patient.id}}
+
+### 4.2 FALSA — MEDICO intenta registrar un paciente
+# Esperado: 403 {"error":"Forbidden: no grant for POST /api/patients"}
+POST {{baseUrl}}/api/patients
+Authorization: Bearer {{medico}}
+Content-Type: application/json
+
+{
+  "document_type": "CC",
+  "document_number": "1032456790",
+  "name": "Paciente No Autorizado",
+  "birth_date": "1985-09-01",
+  "contact": "3001112233",
+  "status": "active"
+}
+
+### 4.3 EXITOSA — MEDICO consulta al paciente (lectura permitida)
+# Esperado: 200 {"patient":{...}}
+GET {{baseUrl}}/api/patients/{{patientId}}
+Authorization: Bearer {{medico}}
+
+### 4.4 FALSA — FACTURACION intenta modificar los datos del paciente
+# Esperado: 403 {"error":"Forbidden: no grant for PATCH /api/patients/<id>"}
+PATCH {{baseUrl}}/api/patients/{{patientId}}
+Authorization: Bearer {{facturacion}}
+Content-Type: application/json
+
+{ "contact": "3209998877" }
+
+### 4.5 EXITOSA — ADMISIONES actualiza el contacto del paciente
+# Esperado: 200 con "contact":"3209998877"
+PATCH {{baseUrl}}/api/patients/{{patientId}}
+Authorization: Bearer {{admisiones}}
+Content-Type: application/json
+
+{ "contact": "3209998877" }
+
+### 4.6 FALSA — ADMISIONES intenta borrar físicamente al paciente (solo ADMIN)
+# Esperado: 403 {"error":"Forbidden: no grant for DELETE /api/patients/<id>"}
+DELETE {{baseUrl}}/api/patients/{{patientId}}
+Authorization: Bearer {{admisiones}}
+
+### =================== APPOINTMENTS ===================
+
+### 4.7 FALSA — MEDICO intenta agendar una cita
+# Esperado: 403 {"error":"Forbidden: no grant for POST /api/appointments"}
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{medico}}
+Content-Type: application/json
+
+{
+  "agenda_id": {{agendaId}},
+  "patient_id": {{patientId}},
+  "start_date": "2026-12-15T09:00:00",
+  "end_date": "2026-12-15T09:30:00",
+  "reason": "Consulta de control",
+  "status": "active"
+}
+
+### 4.8 EXITOSA — ADMISIONES agenda la cita
+# Esperado: 201 {"appointment":{...,"state":"scheduled"}}
+# @name createAppointment
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{admisiones}}
+Content-Type: application/json
+
+{
+  "agenda_id": {{agendaId}},
+  "patient_id": {{patientId}},
+  "start_date": "2026-12-15T09:00:00",
+  "end_date": "2026-12-15T09:30:00",
+  "reason": "Consulta de control",
+  "status": "active"
+}
+
+###
+
+@appointmentId = {{createAppointment.response.body.$.appointment.id}}
+
+### 4.9 FALSA — ADMISIONES repite la misma franja: pasa el RBAC, pero la regla de negocio la rechaza
+# Esperado: 400 {"error":"Agenda already has an appointment in that time range (id <id>)"}
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{admisiones}}
+Content-Type: application/json
+
+{
+  "agenda_id": {{agendaId}},
+  "patient_id": {{patientId}},
+  "start_date": "2026-12-15T09:00:00",
+  "end_date": "2026-12-15T09:30:00",
+  "reason": "Consulta de control",
+  "status": "active"
+}
+
+### 4.10 EXITOSA — AUDITOR_CLINICO consulta la cita
+# Esperado: 200 {"appointment":{...}}
+GET {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{auditor}}
+
+### 4.11 FALSA — AUDITOR_CLINICO intenta modificar la cita (solo lectura)
+# Esperado: 403 {"error":"Forbidden: no grant for PATCH /api/appointments/<id>"}
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{auditor}}
+Content-Type: application/json
+
+{ "reason": "Cambio no autorizado" }
+
+### 4.12 FALSA — FACTURACION intenta eliminar la cita
+# Esperado: 403 {"error":"Forbidden: no grant for DELETE /api/appointments/<id>"}
+DELETE {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{facturacion}}
+
+### 4.13 FALSA — ADMISIONES intenta dar de baja la cita (solo ADMIN)
+# Esperado: 403 {"error":"Forbidden: no grant for PATCH /api/appointments/<id>/deactivate"}
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}/deactivate
+Authorization: Bearer {{admisiones}}
+
+### 4.14 EXITOSA — ADMIN da de baja la cita (baja lógica)
+# Esperado: 200 {"message":"Appointment deactivated (logical delete)",...}
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}/deactivate
+Authorization: Bearer {{admin}}
+
+### ========= REVOCACIÓN EN CALIENTE (sin reiniciar el servidor) =========
+
+### 4.15 EXITOSA — ADMIN busca la concesión MEDICO (role_id 3) -> GET /api/patients (resource_id 1)
+# Esperado: 200 {"grants":[{ "id": ..., "status":"active", ... }]}
+# @name grantMedico
+GET {{baseUrl}}/api/resource-roles?role_id=3&resource_id=1
+Authorization: Bearer {{admin}}
+
+###
+
+@grantId = {{grantMedico.response.body.$.grants[0].id}}
+
+### 4.16 EXITOSA — ADMIN revoca ese permiso
+# Esperado: 200 {"message":"Grant deactivated (permission revoked)",...}
+PATCH {{baseUrl}}/api/resource-roles/{{grantId}}/deactivate
+Authorization: Bearer {{admin}}
+
+### 4.17 FALSA — MEDICO, con el MISMO token de antes, ya no puede listar pacientes
+# Esperado: 403 {"error":"Forbidden: no grant for GET /api/patients"}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{medico}}
+
+### 4.18 EXITOSA — ADMIN restaura el permiso
+# Esperado: 200 {"message":"Grant reactivated",...}
+PATCH {{baseUrl}}/api/resource-roles/{{grantId}}/reactivate
+Authorization: Bearer {{admin}}
+
+### 4.19 EXITOSA — MEDICO vuelve a listar pacientes de inmediato
+# Esperado: 200 {"patients":[...]}
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{medico}}
+EOF
+```
+
+![](images/clipboard-2042940881.png)
+
+![](images/clipboard-3321520775.png)
+
+#### 43.6.2 Ejecución con REST Client
+
+En la 4.1 admisiones registró a la paciente Laura Gómez (`201`):
+
+![](images/clipboard-699928944.png)
+
+El médico no puede registrar pacientes (4.2, `403`), pero sí consultarlos (4.3, `200`):
+
+![](images/clipboard-2238685046.png)
+
+![](images/clipboard-2617679109.png)
+
+Facturación no puede cambiar los datos del paciente (4.4, `403`); admisiones sí actualizó el contacto (4.5, `200`):
+
+![](images/clipboard-2396255777.png)
+
+![](images/clipboard-2638919010.png)
+
+Admisiones tampoco puede borrar pacientes, eso es solo del admin (4.6, `403`):
+
+![](images/clipboard-1682026296.png)
+
+El médico no puede agendar citas (4.7, `403`); admisiones sí la agendó y quedó en `scheduled` (4.8, `201`):
+
+![](images/clipboard-1368622249.png)
+
+![](images/clipboard-3644327031.png)
+
+En la 4.9 admisiones intentó agendar otra cita en la misma franja y respondió `400` `Agenda already has an appointment in that time range`. Esta es distinta a las demás: el usuario sí tenía permiso, pero la regla de negocio del service no dejó cruzar las citas. O sea, el RBAC y las reglas de negocio funcionan por separado.
+
+![](images/clipboard-1460489425.png)
+
+El auditor puede consultar la cita (4.10, `200`), pero no modificarla (4.11, `403`), porque su rol es solo de lectura:
+
+![](images/clipboard-2523629315.png)
+
+![](images/clipboard-3042221137.png)
+
+Facturación no pudo eliminar la cita (4.12) ni admisiones darla de baja (4.13), las dos con `403`. El admin sí la dio de baja (4.14, `200`):
+
+![](images/clipboard-3190895962.png)
+
+![](images/clipboard-1403248551.png)
+
+![](images/clipboard-2324839020.png)
+
+Para la revocación, el admin desactivó la concesión del médico sobre `GET /api/patients` (4.16, `200`) y el médico, con el mismo token que ya tenía, recibió `403` al listar pacientes (4.17):
+
+![](images/clipboard-758884802.png)
+
+![](images/clipboard-1829501402.png)
+
+Después el admin la reactivó (4.18) y el médico volvió a listar pacientes en ese mismo momento (4.19, `200`):
+
+![](images/clipboard-910297311.png)
+
+![](images/clipboard-3134525914.png)
+
+#### 43.6.3 Pruebas en Swagger
+
+Inicié sesión como **medico** (`{ "identifier": "medico", "password": "Medico123!" }`), puse su token en *Authorize* e intenté **`POST /api/patients`** con este paciente:
+
+```json
+{
+  "document_type": "CC",
+  "document_number": "1045678123",
+  "name": "Carlos Ruiz",
+  "birth_date": "1979-11-30",
+  "contact": "3112223344",
+  "status": "active"
+}
+```
+
+Respondió `403`:
+
+![](images/clipboard-2294742023.png)
+
+Con el mismo token consulté a Laura Gómez en **`GET /api/patients/{id}`** y respondió `200`:
+
+![](images/clipboard-2162928243.png)
+
+Cambié a **admisiones** (*Logout*, login y *Authorize* con su token) y repetí el mismo `POST /api/patients`; esta vez creó a Carlos Ruiz (`201`):
+
+![](images/clipboard-294792943.png)
+
+Con admisiones agendé una cita para Carlos Ruiz en **`POST /api/appointments`**, en la misma agenda pero a otra hora para no cruzarla con la del archivo `.http`:
+
+```json
+{
+  "agenda_id": 1,
+  "patient_id": 0,
+  "start_date": "2026-12-15T10:00:00",
+  "end_date": "2026-12-15T10:30:00",
+  "reason": "Primera consulta",
+  "status": "active"
+}
+```
+
+En `patient_id` va el id de Carlos Ruiz. Respondió `201` con la cita en `scheduled`:
+
+![](images/clipboard-1878141838.png)
+
+Cambié a **auditor**: **`GET /api/appointments/{id}`** respondió `200` y **`PATCH /api/appointments/{id}`** con `{ "reason": "Cambio no autorizado" }` respondió `403`:
+
+![](images/clipboard-4109537166.png)
+
+![](images/clipboard-1496417731.png)
+
+Con **admin** busqué en **`GET /api/resource-roles`** la concesión con `role_id = 3` y `resource_id = 1`, y la desactivé con **`PATCH /api/resource-roles/{id}/deactivate`**:
+
+![](images/clipboard-1403499201.png)
+
+Entré como **medico** y **`GET /api/patients`** respondió `403`:
+
+![](images/clipboard-1935018723.png)
+
+Volví a **admin**, reactivé la concesión con **`PATCH /api/resource-roles/{id}/reactivate`** y, otra vez como **medico**, **`GET /api/patients`** respondió `200`:
+
+![](images/clipboard-3915608982.png)
+
+![](images/clipboard-3053921368.png)
+
+#### 43.6.4 Evidencia en DBeaver
+
+Revisé el estado de la concesión del médico, una vez después de revocarla y otra después de restaurarla:
+
+```sql
+SELECT rr.id, r.name AS role, res.method, res.path, rr.status, rr.updatedAt
+FROM resource_roles rr
+JOIN roles r ON r.id = rr.role_id
+JOIN resources res ON res.id = rr.resource_id
+WHERE r.name = 'MEDICO' AND res.method = 'GET' AND res.path = '/api/patients';
+```
+
+Después de revocarla quedó en `inactive`:
+
+![](images/clipboard-3310679100.png)
+
+Y después de restaurarla, otra vez en `active`:
+
+![](images/clipboard-2807914371.png)
+
+Por último, los pacientes y las citas que se crearon en las pruebas:
+
+```sql
+SELECT a.id AS appointment_id, p.name AS patient, p.contact, a.start_date, a.end_date, a.reason, a.state, a.status
+FROM appointments a
+JOIN patients p ON p.id = a.patient_id
+WHERE p.document_number IN ('1032456789', '1045678123')
+ORDER BY a.id;
+```
+
+![](images/clipboard-595904390.png)
+
+La cita de Laura Gómez tiene el contacto actualizado (`3209998877`) y está `inactive` porque el admin la dio de baja; la de Carlos Ruiz sigue `scheduled` y `active`. Las horas salen 5 horas adelantadas (09:00 → 14:00) porque Sequelize guarda las fechas en UTC y Colombia está en UTC-5.
+
+#### 43.6.5 Resultados del tipo 4
+
+| # | Rol | Prueba | Respuesta | Resultado |
+|:---|:---|:---|:---|:---|
+| 4.1 | ADMISIONES | Registrar paciente | `201` | ✅ Exitosa |
+| 4.2 | MEDICO | Registrar paciente | `403` | ❌ Rechazada |
+| 4.3 | MEDICO | Consultar paciente | `200` | ✅ Exitosa |
+| 4.4 | FACTURACION | Modificar paciente | `403` | ❌ Rechazada |
+| 4.5 | ADMISIONES | Modificar contacto del paciente | `200` | ✅ Exitosa |
+| 4.6 | ADMISIONES | Borrar paciente | `403` | ❌ Rechazada |
+| 4.7 | MEDICO | Agendar cita | `403` | ❌ Rechazada |
+| 4.8 | ADMISIONES | Agendar cita | `201` | ✅ Exitosa |
+| 4.9 | ADMISIONES | Agendar en una franja ocupada | `400` (regla de negocio) | ❌ Rechazada |
+| 4.10 | AUDITOR_CLINICO | Consultar cita | `200` | ✅ Exitosa |
+| 4.11 | AUDITOR_CLINICO | Modificar cita | `403` | ❌ Rechazada |
+| 4.12 | FACTURACION | Eliminar cita | `403` | ❌ Rechazada |
+| 4.13 | ADMISIONES | Dar de baja la cita | `403` | ❌ Rechazada |
+| 4.14 | ADMIN | Dar de baja la cita | `200` | ✅ Exitosa |
+| 4.15 | ADMIN | Buscar la concesión del médico | `200` | ✅ Exitosa |
+| 4.16 | ADMIN | Revocar el permiso | `200` | ✅ Exitosa |
+| 4.17 | MEDICO | Listar pacientes sin el permiso | `403` | ❌ Rechazada |
+| 4.18 | ADMIN | Restaurar el permiso | `200` | ✅ Exitosa |
+| 4.19 | MEDICO | Listar pacientes con el permiso restaurado | `200` | ✅ Exitosa |
+
+### 43.7 Resumen de las pruebas
+
+| Tipo de acceso | Exitosas | Rechazadas | Total |
+|:---|---:|---:|---:|
+| 1. Sin autenticación | 1 | 6 | 7 |
+| 2. Solo autenticación | 5 | 5 | 10 |
+| 3. Autenticación + JWT + Refresh | 8 | 6 | 14 |
+| 4. Autenticación + JWT + Refresh + RBAC | 10 | 9 | 19 |
+| **Total** | **24** | **26** | **50** |
+
+No conté los logins que solo sirven para preparar las variables (3.13 y 4.0).
+
+Con estas pruebas quedó claro qué protege cada capa. Sin token las tablas no responden; con identidad pero sin rol, tampoco. El JWT con refresh mantiene segura la sesión: los tokens rotan, si uno se reutiliza se cierra toda la familia y un usuario desactivado pierde el acceso enseguida. Y el RBAC hace que cada rol del centro médico solo pueda hacer lo que le corresponde con pacientes y citas; si se le quita un permiso, deja de valer desde la siguiente petición.
+
+
