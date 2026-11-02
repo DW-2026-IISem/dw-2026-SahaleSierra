@@ -163,7 +163,7 @@ npm test -- --watch=false
 
 ![](images/clipboard-3488264675.png)
 
-## **1A.4 `aside.ts` y `aside.html`** 
+## **1A.4 `aside.ts` y `aside.html`**
 
 #### src/app/layout/aside/aside.ts
 
@@ -347,3 +347,279 @@ npm test -- --watch=false
 ![](images/clipboard-4268713944.png)
 
 ### **Cierre del ISS**
+
+![![](images/clipboard-1733241352.png)](images/clipboard-1428170146.png)
+
+# **Fase I: Frontend — ISS-02 — Núcleo: environment, modelos, servicios y layout**
+
+## **2.1 `environment`: una sola URL para todo el frente**
+
+![](images/clipboard-1467147546.png)
+
+## **2.2 Modelos: reflejar el backend, no inventarlo**
+
+![](images/clipboard-2521636047.png)
+
+### **2.2.1 `api.model.ts` — los tipos que comparten todos**
+
+![](images/clipboard-3389377191.png)
+
+### **2.2.2 Patient, Specialty, Doctor y Service**
+
+![](images/clipboard-848250278.png)
+
+![](images/clipboard-3661645430.png)
+
+![](images/clipboard-2231536051.png)
+
+![](images/clipboard-4224414171.png)
+
+### **2.2.3 DoctorSpecialty, Agenda y Appointment**
+
+![](images/clipboard-1681033399.png)
+
+![](images/clipboard-1751260393.png)
+
+![](images/clipboard-3126130295.png)
+
+### **2.2.4 ClinicalRecord y Authorization**
+
+![](images/clipboard-3899564955.png)
+
+![](images/clipboard-2193399598.png)
+
+### **2.2.5 Encounter e Invoice**
+
+![](images/clipboard-1922581682.png)
+
+![](images/clipboard-2883984774.png)
+
+### **2.2.6 Seguridad: User, Role, Resource y los dos pivotes**
+
+![](images/clipboard-2595704794.png)
+
+![](images/clipboard-103389000.png)
+
+![](images/clipboard-1781251242.png)
+
+![](images/clipboard-3917928951.png)
+
+![](images/clipboard-3408536922.png)
+
+### **2.2.7 `auth.model.ts` y `dashboard.model.ts`**
+
+![](images/clipboard-3000833972.png)
+
+![](images/clipboard-3425836199.png)
+
+## **2.3 Confirmar las envolturas con `curl`**
+
+``` bash
+B=http://localhost:4000/api
+for r in patients specialties doctors doctor-specialties services agendas appointments clinical-records authorizations encounters invoices; do
+  echo -n "$r -> "
+  curl -s $B/$r | node -pe "Object.keys(JSON.parse(require('fs').readFileSync(0))).join(',')"
+done
+```
+
+![](images/clipboard-806297768.png)
+
+``` bash
+curl -s http://localhost:4000/api/encounters | grep -o '"id":[0-9]*,"appointment_id"[^}]*"state":"completed"[^}]*"invoice_id":null' | grep -o '^"id":[0-9]*'
+curl -s -X POST $B/invoices -H 'Content-Type: application/json' \
+  -d '{"number":"FV-ISS02","tax":0,"encounter_ids":[ID_ATENCION]}' \
+  | node -pe "Object.keys(JSON.parse(require('fs').readFileSync(0))).join(',')"
+```
+
+![](images/clipboard-696005545.png)
+
+## **2.4 Servicios HTTP de negocio**
+
+![](images/clipboard-936651556.png)
+
+### **2.4.1 `patient-api.ts` — el patrón completo**
+
+![](images/clipboard-1453304816.png)
+
+### **2.4.2 Los catálogos simples: Specialty, Doctor y Service**
+
+![](images/clipboard-1278279455.png)
+
+![](images/clipboard-3797400000.png)
+
+![](images/clipboard-941340398.png)
+
+### **2.4.3 El pivote DoctorSpecialty y la FK Agenda**
+
+![](images/clipboard-2395658841.png)
+
+![](images/clipboard-81792778.png)
+
+### **2.4.4 Appointment, ClinicalRecord y Authorization**
+
+![](images/clipboard-2116007580.png)
+
+![](images/clipboard-2763197881.png)
+
+![](images/clipboard-967186082.png)
+
+### **2.4.5 Encounter e Invoice (los dos transaccionales)**
+
+![](images/clipboard-3324575793.png)
+
+![](images/clipboard-3394599760.png)
+
+## **2.5 Servicios HTTP de administración de seguridad**
+
+![](images/clipboard-357653334.png)
+
+![](images/clipboard-3624205797.png)
+
+![](images/clipboard-3862447892.png)
+
+![](images/clipboard-1422359690.png)
+
+![](images/clipboard-3011995482.png)
+
+![](images/clipboard-282139347.png)
+
+## **2.6 Pruebas de los servicios con `HttpTestingController`**
+
+#### **`src/app/features/patients/patient-api.spec.ts`** (3 pruebas)
+
+![](images/clipboard-3479265317.png)
+
+#### **`src/app/features/admin/role-users/role-user-api.spec.ts`** (1 prueba)
+
+![](images/clipboard-708866503.png)
+
+#### **`src/app/features/admin/resource-roles/resource-role-api.spec.ts`** (2 pruebas)
+
+![](images/clipboard-1750453580.png)
+
+#### **`src/app/features/encounters/encounter-api.spec.ts`** (1 prueba)
+
+![](images/clipboard-124918560.png)
+
+#### **`src/app/features/invoices/invoice-api.spec.ts`** (2 pruebas: las dos formas del `201`)
+
+![](images/clipboard-2089366940.png)
+
+## **2.7 Utilidades transversales: `toApiMessage` y `NotificationService`**
+
+![](images/clipboard-2514656070.png)
+
+#### src/app/core/utils/api-error.ts
+
+![](images/clipboard-334248065.png)
+
+#### **`src/app/core/utils/api-error.spec.ts`** (4 pruebas)
+
+![](images/clipboard-4276208939.png)
+
+#### src/app/core/services/notification.ts
+
+![](images/clipboard-2082636084.png)
+
+## **2.8 Componentes compartidos: `PageHeader`, `EmptyState`, `StatusTag`**
+
+![](images/clipboard-1893058807.png)
+
+#### page-header
+
+![](images/clipboard-3992493320.png)
+
+#### empty-state
+
+![](images/clipboard-3662839490.png)
+
+#### status-tag
+
+![](images/clipboard-4228291580.png)
+
+#### **`status-tag.spec.ts`** (3 pruebas)
+
+![](images/clipboard-3071014098.png)
+
+## **2.9 `Shell`: conservar el esqueleto al navegar**
+
+![](images/clipboard-1421429810.png)
+
+#### src/app/layout/shell/shell.ts
+
+![](images/clipboard-275368567.png)
+
+#### src/app/layout/shell/shell.html
+
+![](images/clipboard-2296300152.png)
+
+#### **`src/app/layout/shell/shell.spec.ts`** (2 pruebas)
+
+![](images/clipboard-2363670368.png)
+
+## **2.10 Rutas**
+
+#### **`src/app/app.routes.ts`** — reemplazo completo:
+
+![](images/clipboard-3809882104.png)
+
+## **2.11 Registrar `HttpClient` sin interceptores de sesión**
+
+#### **PARCHE — `src/app/app.config.ts`**
+
+**1.** **Debajo de** `import { providePrimeNG } from 'primeng/config';`, **añadí:**
+
+``` typescript
+import { provideHttpClient } from '@angular/common/http'; 
+```
+
+![](images/clipboard-823848629.png)
+
+**2.** **Encima de** `MessageService,` (después del bloque `providePrimeNG({ ... }),`), **añadí:**
+
+``` typescript
+    // Habilita la inyección de HttpClient en los servicios `*Api`.
+    // Sin interceptores de sesión: el authInterceptor llega en ISS-15.
+    provideHttpClient(),
+```
+
+![](images/clipboard-247161791.png)
+
+## **2.12 Comprobar antes de avanzar**
+
+![](images/clipboard-228694975.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. Compila y separa los chunks diferidos
+ng build
+
+# 2. La URL del backend existe una sola vez por entorno
+grep -n "apiUrl" src/environments/environment.ts src/environments/environment.development.ts
+
+# 3. Los 19 modelos existen
+ls src/app/core/models/*.model.ts | wc -l
+
+# 4. Los servicios desenvuelven con map (11 de negocio + 5 de administración)
+grep -rn "\.pipe(" src/app/features --include=*-api.ts | wc -l
+
+# 5. HttpClient registrado, sin interceptores
+grep -n "provideHttpClient" src/app/app.config.ts
+grep -rn "withInterceptors" src/app/app.config.ts || echo "sin interceptores: correcto"
+
+# 6. Las envolturas especiales están bien escritas
+grep -n "assignments\|grants" src/app/features/admin/*/*-api.ts
+
+# 7. Los CSS compartidos no tienen reglas
+for f in src/app/shared/ui/*/*.css src/app/layout/shell/shell.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 8. Pruebas
+npm test -- --watch=false
+```
+
+![](images/clipboard-857771544.png)
+
+## **Cierre del ISS**
