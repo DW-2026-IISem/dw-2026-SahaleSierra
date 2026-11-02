@@ -19,6 +19,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/patients/patient-list/patient-list').then((m) => m.PatientList),
       },
+      
+      {
+        path: 'specialties',
+        title: 'Especialidades · SaludConecta',
+        loadComponent: () =>
+          import('./features/specialties/specialty-list/specialty-list').then(
+            (m) => m.SpecialtyList,
+          ),
+      },
 
     ],
   },
