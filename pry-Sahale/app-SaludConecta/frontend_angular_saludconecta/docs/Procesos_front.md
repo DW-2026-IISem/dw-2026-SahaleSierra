@@ -735,3 +735,193 @@ ng build
 ![](images/clipboard-4215886583.png)
 
 ## **Cierre del ISS**
+
+![![](images/clipboard-4103104547.png)](images/clipboard-1159934236.png)
+
+# **Fase I: Frontend — ISS-04 — CRUD de especialidades**
+
+## **4.2 Generar con el CLI**
+
+![](images/clipboard-784984021.png)
+
+## **4.3 Servicio y su prueba**
+
+**`src/app/features/specialties/specialty-api.spec.ts`** (6 pruebas)
+
+![](images/clipboard-1248312512.png)
+
+## **4.4 `specialty-form.ts`**
+
+![](images/clipboard-2523066084.png)
+
+## **4.5 `specialty-form.html` y `specialty-form.css`**
+
+![](images/clipboard-580942931.png)
+
+## **4.6 `specialty-form.spec.ts`**
+
+![](images/clipboard-1871694266.png)
+
+## **4.7 `specialty-list.ts`**
+
+![](images/clipboard-2698416569.png)
+
+![](images/clipboard-800313899.png)
+
+## **4.8 `specialty-list.html` y `specialty-list.css`**
+
+![](images/clipboard-1709565834.png)
+
+![](images/clipboard-2921502063.png)
+
+## **4.9 `specialty-list.spec.ts`**
+
+![](images/clipboard-2320142798.png)
+
+![](images/clipboard-557577562.png)
+
+## **4.10 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Debajo de** la ruta `patients` (dentro de `children` del `Shell`, antes del `],` que cierra `children`), **añadí:**
+
+![](images/clipboard-3395428357.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **debajo de** la entrada `Pacientes`, **añadí:**
+
+![](images/clipboard-2263019406.png)
+
+## **4.11 Comprobar antes de avanzar**
+
+![](images/clipboard-3533602343.png)
+
+![](images/clipboard-1499659408.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El servicio ya existía y ahora tiene prueba
+ls src/app/features/specialties/specialty-api.ts src/app/features/specialties/specialty-api.spec.ts
+
+# 2. El formulario no llama a la API: solo emite
+grep -n "output<SpecialtyPayload>\|output<void>" src/app/features/specialties/specialty-form/specialty-form.ts
+grep -n "inject(SpecialtyApi)\|HttpClient" src/app/features/specialties/specialty-form/specialty-form.ts || echo "sin API en el formulario: correcto"
+
+# 3. La lista usa computed y filterRows
+grep -n "computed(\|filterRows" src/app/features/specialties/specialty-list/specialty-list.ts
+grep -n "applyFilter" src/app/features/specialties/specialty-list/specialty-list.ts || echo "sin applyFilter: correcto"
+
+# 4. Las plantillas de la tabla usan la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/specialties/specialty-list/specialty-list.html
+grep -n "pTemplate=" src/app/features/specialties/specialty-list/specialty-list.html || echo "sin pTemplate: correcto"
+
+# 5. La ruta existe y el menú apunta a ella
+grep -n "specialties" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 6. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/specialties/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 7. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-1580537825.png)
+
+## **Cierre del ISS**
+
+![![](images/clipboard-3439726944.png)](images/clipboard-1792319964.png)
+
+# **Fase I: Frontend — ISS-05 — CRUD de servicios**
+
+## **5.2 Generar con el CLI**
+
+![](images/clipboard-3841385860.png)
+
+## **5.3 Servicio y su prueba**
+
+**`src/app/features/services/service-api.spec.ts`** (6 pruebas)
+
+![](images/clipboard-404053220.png)
+
+## **5.4 `service-form.ts`**
+
+![](images/clipboard-2108976918.png)
+
+## **5.5 `service-form.html` y `service-form.css`**
+
+![](images/clipboard-445029128.png)
+
+## **5.6 `service-form.spec.ts`**
+
+![](images/clipboard-4050598459.png)
+
+## **5.7 `service-list.ts`**
+
+![](images/clipboard-438851839.png)
+
+![](images/clipboard-1355957198.png)
+
+## **5.8 `service-list.html` y `service-list.css`**
+
+![](images/clipboard-3217065620.png)
+
+![](images/clipboard-969784286.png)
+
+## **5.9 `service-list.spec.ts`**
+
+![](images/clipboard-715764729.png)
+
+![](images/clipboard-3303277548.png)
+
+## **5.10 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Debajo de** la ruta `services` (dentro de `children` del `Shell`, antes del `],` que cierra `children`), **añadí:**
+
+![](images/clipboard-1284603646.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **debajo de** la entrada `Servicios`, **añadí:**
+
+![](images/clipboard-1429351387.png)
+
+## **5.11 Comprobar antes de avanzar**
+
+![](images/clipboard-3243401750.png)
+
+![](images/clipboard-3785570645.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El servicio ya existía y ahora tiene prueba
+ls src/app/features/services/service-api.ts src/app/features/services/service-api.spec.ts
+
+# 2. El formulario no llama a la API: solo emite
+grep -n "output<ServicePayload>\|output<void>" src/app/features/services/service-form/service-form.ts
+grep -n "inject(ServiceApi)\|HttpClient" src/app/features/services/service-form/service-form.ts || echo "sin API en el formulario: correcto"
+
+# 3. La lista usa computed y filterRows
+grep -n "computed(\|filterRows" src/app/features/services/service-list/service-list.ts
+grep -n "applyFilter" src/app/features/services/service-list/service-list.ts || echo "sin applyFilter: correcto"
+
+# 4. Las plantillas de la tabla usan la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/services/service-list/service-list.html
+grep -n "pTemplate=" src/app/features/services/service-list/service-list.html || echo "sin pTemplate: correcto"
+
+# 5. La ruta existe y el menú apunta a ella
+grep -n "services" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 6. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/services/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 7. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-2150156941.png)
+
+## **Cierre del ISS**
