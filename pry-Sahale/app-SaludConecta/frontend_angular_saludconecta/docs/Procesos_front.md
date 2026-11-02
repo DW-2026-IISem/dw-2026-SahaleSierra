@@ -925,3 +925,96 @@ ng build
 ![](images/clipboard-2150156941.png)
 
 ## **Cierre del ISS**
+
+![](images/clipboard-2533986007.png)
+
+# **Fase I: Frontend — ISS-06 — CRUD de médicos**
+
+## **6.2 Generar con el CLI**
+
+![](images/clipboard-2104318963.png)
+
+## **6.3 Servicio y su prueba**
+
+**`src/app/features/doctors/doctor-api.spec.ts`** (6 pruebas)
+
+![](images/clipboard-3155998576.png)
+
+## **6.4 `doctor-form.ts`**
+
+![](images/clipboard-2640129278.png)
+
+## **6.5 `doctor-form.html` y `doctor-form.css`**
+
+![](images/clipboard-2513531302.png)
+
+## **6.6 `doctor-form.spec.ts`**
+
+![](images/clipboard-2692616626.png)
+
+## **6.7 `doctor-list.ts`**
+
+![](images/clipboard-1815582006.png)
+
+![](images/clipboard-1002406759.png)
+
+## **6.8 `doctor-list.html` y `doctor-list.css`**
+
+![](images/clipboard-355460484.png)
+
+## **6.9 `doctor-list.spec.ts`**
+
+![](images/clipboard-3472377700.png)
+
+![](images/clipboard-2480336981.png)
+
+## **6.10 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Debajo de** la ruta `services` (dentro de `children` del `Shell`, antes del `],` que cierra `children`), **añadí:**
+
+![](images/clipboard-3549060674.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **debajo de** la entrada `Servicios`, **añadí:**
+
+![](images/clipboard-2607717937.png)
+
+## **6.11 Comprobar antes de avanzar**
+
+![](images/clipboard-1055792989.png)
+
+![](images/clipboard-1487759108.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El servicio ya existía y ahora tiene prueba
+ls src/app/features/doctors/doctor-api.ts src/app/features/doctors/doctor-api.spec.ts
+
+# 2. El formulario no llama a la API: solo emite
+grep -n "output<DoctorPayload>\|output<void>" src/app/features/doctors/doctor-form/doctor-form.ts
+grep -n "inject(DoctorApi)\|HttpClient" src/app/features/doctors/doctor-form/doctor-form.ts || echo "sin API en el formulario: correcto"
+
+# 3. La lista usa computed y filterRows
+grep -n "computed(\|filterRows" src/app/features/doctors/doctor-list/doctor-list.ts
+grep -n "applyFilter" src/app/features/doctors/doctor-list/doctor-list.ts || echo "sin applyFilter: correcto"
+
+# 4. Las plantillas de la tabla usan la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/doctors/doctor-list/doctor-list.html
+grep -n "pTemplate=" src/app/features/doctors/doctor-list/doctor-list.html || echo "sin pTemplate: correcto"
+
+# 5. La ruta existe y el menú apunta a ella
+grep -n "doctors" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 6. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/doctors/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 7. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-1143056972.png)
+
+## **Cierre del ISS**
