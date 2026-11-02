@@ -36,6 +36,14 @@ export const routes: Routes = [
             (m) => m.ServiceList,
           ),
       },
+      {
+        path: 'doctors',
+        title: 'Médicos · SaludConecta',
+        loadComponent: () =>
+          import('./features/doctors/doctor-list/doctor-list').then(
+            (m) => m.DoctorList,
+          ),
+      },
 
     ],
   },
