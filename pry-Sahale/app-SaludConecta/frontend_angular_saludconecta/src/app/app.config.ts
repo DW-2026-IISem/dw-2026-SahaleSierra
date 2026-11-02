@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
+import { provideHttpClient } from '@angular/common/http';
 import Aura from '@primeuix/themes/aura';
 import { environment } from '../environments/environment';
 
@@ -37,6 +38,11 @@ export const appConfig: ApplicationConfig = {
         },
       },
     }),
+    
+    // Habilita la inyección de HttpClient en los servicios `*Api`.
+    // Sin interceptores de sesión: el authInterceptor llega en ISS-15.
+    provideHttpClient(),
+
 
     MessageService,
     ConfirmationService,

@@ -1,0 +1,32 @@
+<div class="flex min-h-screen flex-col bg-slate-100">
+  <app-header (menuRequested)="onMenuToggle()" />
+
+  <div class="flex flex-1">
+    <!--
+      Escritorio: Aside fijo que el botón del Header puede ocultar.
+      Por debajo de lg no se pinta: el menú vive en el Drawer.
+    -->
+    @if (!sidebarCollapsed()) {
+      <aside class="hidden w-72 shrink-0 lg:block">
+        <app-aside [items]="items" (navigated)="mobileOpen.set(false)" />
+      </aside>
+    }
+
+    <main id="contenido" class="min-w-0 flex-1 p-4 sm:p-6">
+      <div class="mx-auto w-full max-w-7xl">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+
+  <app-footer />
+</div>
+
+<!-- Móvil: el mismo Aside, otra disposición. -->
+<p-drawer [(visible)]="mobileOpen" header="Menú" position="left" styleClass="w-72">
+  <app-aside [items]="items" (navigated)="mobileOpen.set(false)" />
+</p-drawer>
+
+<!-- Anfitriones de las notificaciones y confirmaciones del CRUD (ISS-03). -->
+<p-toast position="top-right" />
+<p-confirmdialog />
