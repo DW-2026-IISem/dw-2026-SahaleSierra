@@ -1,0 +1,7 @@
+/*
+ * Estilos propios del componente App.
+ *
+ * Queda VACÍO a propósito: el aspecto se resuelve con utilidades Tailwind en el
+ * HTML y con el tema Aura de PrimeNG. Angular mantiene el archivo porque
+ * `styleUrl` lo referencia y solo afecta a `<app-root>`.
+ */

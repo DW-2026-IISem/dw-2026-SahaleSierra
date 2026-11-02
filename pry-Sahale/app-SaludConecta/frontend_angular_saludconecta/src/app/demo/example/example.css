@@ -1,0 +1,10 @@
+/*
+ * Única excepción del curso con una regla propia: sirve para explicar el
+ * aislamiento de estilos (ViewEncapsulation). Angular agrega a este selector un
+ * atributo `_ngcontent-…`, así que solo afecta a los elementos de ESTE componente.
+ */
+.example-scope {
+  border: 2px dashed #10b981;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}

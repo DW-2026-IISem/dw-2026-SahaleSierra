@@ -1,0 +1,75 @@
+<div class="grid gap-4 md:grid-cols-2">
+  <!-- Tarjeta 1: el objeto y sus operaciones. -->
+  <p-card>
+    <h2 class="text-lg font-semibold text-slate-900">Objeto servicio</h2>
+    <p class="mb-4 text-sm text-slate-500">Un objeto completo guardado en un signal.</p>
+
+    <!-- Interpolación: muestra un campo del objeto. -->
+    <p class="text-sm text-slate-500">{{ service().name }}</p>
+    <p class="text-2xl font-bold text-slate-900">{{ service().price }}</p>
+    <p class="text-sm text-slate-600">
+      Valor con IVA (demo): <strong>{{ finalPrice() }}</strong>
+    </p>
+
+    <!-- Property binding booleano: el tag cambia de color según `active`. -->
+    <p-tag
+      class="mt-2 inline-block"
+      [value]="statusText()"
+      [severity]="service().active ? 'success' : 'danger'"
+    />
+
+    @if (!service().active) {
+      <p-message class="mt-3 block" severity="warn">
+        Inactivo: el borrado lógico lo oculta de las listas.
+      </p-message>
+    }
+
+    <!-- Property binding + event binding sobre un campo editable. -->
+    <label class="mt-4 block text-sm font-medium text-slate-700" for="example-name">Nombre</label>
+    <input
+      id="example-name"
+      pInputText
+      class="w-full"
+      [value]="service().name"
+      (input)="changeName($event)"
+    />
+    <p class="mt-2 text-sm text-slate-600">Vista previa: {{ service().name }}</p>
+
+    <!-- Event binding con argumento: el botón llama al método con 1000. -->
+    <div class="mt-4 flex flex-wrap gap-2">
+      <button pButton type="button" (click)="changePrice(1000)"><span pButtonLabel>+1000</span></button>
+      <button pButton type="button" severity="secondary" (click)="changePrice(-1000)">
+        <span pButtonLabel>-1000</span>
+      </button>
+      <button pButton type="button" severity="secondary" (click)="toggleStatus()">
+        <span pButtonLabel>Cambiar estado</span>
+      </button>
+      <button pButton type="button" severity="contrast" (click)="reset()">
+        <span pButtonLabel>Reiniciar</span>
+      </button>
+    </div>
+  </p-card>
+
+  <!-- Tarjeta 2: qué es signal, computed y effect. -->
+  <p-card>
+    <h2 class="text-lg font-semibold text-slate-900">signal, computed y effect</h2>
+    <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">
+      <li><strong>signal</strong>: guarda el estado (<code>service</code>).</li>
+      <li><strong>computed</strong>: valor derivado (<code>finalPrice</code>, <code>statusText</code>).</li>
+      <li><strong>effect</strong>: efecto secundario (escribe en la consola).</li>
+    </ul>
+    <p class="mt-3 text-sm text-slate-600">
+      Los servicios de salud suelen estar excluidos de IVA; el 19 % es solo un cálculo didáctico.
+    </p>
+  </p-card>
+
+  <!-- Tarjeta 3: aislamiento de estilos. -->
+  <p-card class="md:col-span-2">
+    <h2 class="text-lg font-semibold text-slate-900">Estilos del componente</h2>
+    <p class="mt-2 text-sm text-slate-700">
+      La caja de abajo usa una clase definida en <code>example.css</code>. Angular le agrega un
+      atributo <code>_ngcontent-…</code> y por eso la regla no afecta a otros componentes.
+    </p>
+    <div class="example-scope mt-3">Soy la clase .example-scope</div>
+  </p-card>
+</div>
