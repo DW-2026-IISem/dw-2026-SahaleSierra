@@ -1,6 +1,52 @@
 <header
-  class="flex h-16 items-center border-b border-slate-200 bg-white px-6 font-semibold"
+  class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6"
 >
-  <!-- Interpolación: `title` es una propiedad de la clase Header. -->
-  <p class="truncate text-sm font-semibold text-slate-900">{{ title }}</p>
+  <!-- Botón de menú: siempre visible; el padre decide qué hacer (aside fijo o Drawer). -->
+  <button
+    pButton
+    type="button"
+    text
+    rounded
+    aria-label="Mostrar u ocultar el menú"
+    (click)="menuRequested.emit()"
+  >
+    <i pButtonIcon class="pi pi-bars"></i>
+  </button>
+
+  <div class="min-w-0 flex-1">
+    <p class="truncate text-sm font-semibold text-slate-900">{{ appName() }}</p>
+    <p class="truncate text-xs text-slate-500">
+      Admisiones, atención clínica y facturación
+    </p>
+  </div>
+
+  @if (showSession() && !authEnabled()) {
+    <p-tag value="Fase I · sin auth" severity="warn" [rounded]="true" />
+  }
+  @if (username()) {
+    <p-tag
+      [value]="roleLabel()"
+      severity="info"
+      [rounded]="true"
+      class="hidden sm:inline-flex"
+    />
+  }
+
+  @if (showSession()) {
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      outlined
+      (click)="userMenuPanel.toggle($event)"
+      aria-label="Menú de usuario"
+    >
+      <p-avatar [label]="initials()" shape="circle" size="normal" />
+      <span class="hidden max-w-32 truncate text-sm font-medium text-slate-700 sm:block">
+        {{ username() }}
+      </span>
+      <i class="pi pi-chevron-down pr-1 text-[10px] text-slate-400"></i>
+    </button>
+    <p-menu #userMenuPanel [model]="userItems()" [popup]="true" appendTo="body" />
+  }
 </header>

@@ -1,7 +1,41 @@
-<nav aria-label="Navegación principal" class="h-full bg-slate-950 p-6 text-white">
-  <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Navegación</p>
-  <p class="mt-2 text-sm">Menú de SaludConecta</p>
-  <p class="mt-4 text-xs text-slate-400">
-    En ISS-01B este bloque pasa a ser un <code>p-panelmenu</code>.
-  </p>
-</nav>
+<div class="flex h-full flex-col border-r border-slate-200 bg-white text-slate-900">
+  <div class="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
+    <img
+      src="/brand/saludconecta-mark.svg"
+      alt="Logo de SaludConecta"
+      class="h-9 w-9 rounded-lg"
+    />
+    <div class="min-w-0">
+      <p class="truncate text-sm font-semibold text-slate-900">{{ appName() }}</p>
+      <p class="text-[11px] uppercase tracking-wider text-slate-400">
+        Centro médico ambulatorio
+      </p>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-y-auto p-3">
+    <nav aria-label="Navegación principal" (click)="onNavigationClick($event)">
+      <p-panelmenu [model]="items()" [multiple]="true" />
+    </nav>
+  </div>
+
+  @if (showSession()) {
+    <div class="border-t border-slate-200 p-4">
+      <p class="text-sm font-medium text-slate-900">{{ username() || 'Invitado' }}</p>
+      <p class="text-xs text-slate-400">{{ roleLabel() }}</p>
+      <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+        <span>{{ permissionCount() }} permisos</span>
+        <button
+          pButton
+          type="button"
+          text
+          rounded
+          aria-label="Cerrar sesión"
+          (click)="logoutRequested.emit()"
+        >
+          <i pButtonIcon class="pi pi-sign-out"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>

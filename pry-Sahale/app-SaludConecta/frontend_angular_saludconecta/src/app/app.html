@@ -1,19 +1,2 @@
-<!-- Contenedor de las cuatro regiones: Tailwind para el alto y la dirección. -->
-<div class="flex min-h-screen flex-col bg-slate-100">
-  <app-header />
-
-  <div class="flex flex-1">
-    <!-- Aside fijo de 16rem; en ISS-01B se oculta en pantallas pequeñas. -->
-    <aside class="w-64 shrink-0">
-      <app-aside />
-    </aside>
-
-    <!-- min-w-0 evita que un contenido ancho desborde el flex y cree scroll. -->
-    <main id="contenido" class="min-w-0 flex-1 p-6">
-      <h1 class="text-2xl font-semibold text-slate-900">{{ title }}</h1>
-      <p class="mt-2 text-slate-600">Bienvenido a SaludConecta.</p>
-    </main>
-  </div>
-
-  <app-footer />
-</div>
+<!-- El router dibuja aquí el componente de la ruta activa (app.routes.ts). -->
+<router-outlet />

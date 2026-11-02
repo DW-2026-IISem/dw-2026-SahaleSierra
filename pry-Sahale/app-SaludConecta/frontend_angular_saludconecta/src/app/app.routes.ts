@@ -3,7 +3,15 @@ import { Routes } from '@angular/router';
 /**
  * Rutas de la aplicación.
  *
- * Vacío a propósito: en ISS-01 la pantalla se compone con etiquetas en `app.html`
- * (`<app-example />`). El router se presenta en ISS-01B, con una pantalla real.
+ * ISS-01B presenta el router con una pantalla real. `loadComponent` descarga
+ * `Prototype` solo cuando se visita su URL: el bundle inicial no lo incluye.
  */
-export const routes: Routes = [];
+export const routes: Routes = [
+  {
+    path: 'prototype',
+    loadComponent: () =>
+      import('./features/prototype/prototype').then((m) => m.Prototype),
+  },
+  { path: '', pathMatch: 'full', redirectTo: 'prototype' },
+  { path: '**', redirectTo: 'prototype' },
+];
