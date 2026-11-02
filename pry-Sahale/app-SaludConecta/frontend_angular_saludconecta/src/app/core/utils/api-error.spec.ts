@@ -10,9 +10,9 @@ describe('toApiMessage', () => {
   it('should join error and detail when the backend sends both', () => {
     const error = new HttpErrorResponse({
       status: 500,
-      error: { error: 'Internal server error', detail: 'SequelizeUniqueConstraintError' },
+      error: { error: 'Internal server error', detail: 'connection lost' },
     });
-    expect(toApiMessage(error)).toBe('Internal server error — SequelizeUniqueConstraintError');
+    expect(toApiMessage(error)).toBe('Internal server error — connection lost');
   });
 
   it('should return the plain text body as is', () => {
@@ -23,5 +23,27 @@ describe('toApiMessage', () => {
   it('should fall back to the Error message or a generic text', () => {
     expect(toApiMessage(new Error('Falló'))).toBe('Falló');
     expect(toApiMessage('algo')).toBe('Error inesperado');
+  });
+
+  it('should translate a unique constraint error into a readable message', () => {
+    const error = new HttpErrorResponse({
+      status: 500,
+      error: {
+        error: 'Internal server error',
+        detail: 'SequelizeUniqueConstraintError: Validation error',
+      },
+    });
+    expect(toApiMessage(error)).toContain('Ya existe un registro');
+  });
+
+  it('should translate a foreign key error and suggest the logical delete', () => {
+    const error = new HttpErrorResponse({
+      status: 500,
+      error: {
+        error: 'Internal server error',
+        detail: 'SequelizeForeignKeyConstraintError: Cannot delete or update a parent row',
+      },
+    });
+    expect(toApiMessage(error)).toContain('baja lógica');
   });
 });

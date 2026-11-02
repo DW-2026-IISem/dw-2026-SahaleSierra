@@ -1,0 +1,156 @@
+<app-page-header
+  title="Pacientes"
+  subtitle="El backend solo lista los pacientes activos; la baja lógica cambia su estado."
+>
+  <p-tag [value]="rows().length + ' activos'" severity="info" [rounded]="true" />
+  <button pButton type="button" (click)="openCreate()">
+    <i pButtonIcon class="pi pi-plus"></i>
+    <span pButtonLabel>Nuevo paciente</span>
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-3xl"
+  >
+    <ng-template #caption>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-search text-slate-400"></i>
+        <input
+          pInputText
+          type="search"
+          aria-label="Buscar pacientes"
+          placeholder="Buscar por nombre, documento o contacto…"
+          [value]="filter()"
+          (input)="filter.set($any($event.target).value)"
+          class="w-full"
+        />
+      </div>
+      @if (filter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} coinciden con «{{ filter() }}».
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="document_number">
+          <div class="flex items-center gap-1">Documento <p-sort-icon field="document_number" /></div>
+        </th>
+        <th pSortableColumn="name">
+          <div class="flex items-center gap-1">Paciente <p-sort-icon field="name" /></div>
+        </th>
+        <th pSortableColumn="birth_date">
+          <div class="flex items-center gap-1">Nacimiento <p-sort-icon field="birth_date" /></div>
+        </th>
+        <th>Contacto</th>
+        <th>Estado</th>
+        <th class="w-40 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-patient>
+      <tr>
+        <td>
+          <p class="font-medium text-slate-800">{{ patient.document_number }}</p>
+          <p class="text-xs text-slate-400">{{ patient.document_type }}</p>
+        </td>
+        <td>
+          <p class="font-medium text-slate-800">{{ patient.name }}</p>
+          <p class="text-xs text-slate-400">#{{ patient.id }}</p>
+        </td>
+        <td class="text-sm text-slate-600">{{ patient.birth_date | date: 'dd/MM/yyyy' }}</td>
+        <td class="text-sm text-slate-700">{{ patient.contact || '—' }}</td>
+        <td><app-status-tag [status]="patient.status" /></td>
+        <td>
+          <div class="flex justify-end gap-1">
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="secondary"
+              icon="pi pi-pencil"
+              aria-label="Editar paciente"
+              pTooltip="Editar"
+              (click)="openEdit(patient)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-ban"
+              aria-label="Dar de baja al paciente"
+              pTooltip="Baja lógica"
+              (click)="deactivate(patient)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="danger"
+              icon="pi pi-trash"
+              aria-label="Eliminar paciente"
+              pTooltip="Eliminar"
+              (click)="remove(patient)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="6">
+          @if (filter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ningún paciente coincide con la búsqueda. Borra el filtro para ver todos."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-users"
+              title="Sin pacientes activos"
+              message="Registra el primero con el botón «Nuevo paciente» o ejecuta el seeder del backend."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="title()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="w-full max-w-2xl mx-4"
+>
+  <app-patient-form
+    [patient]="editing()"
+    [saving]="saving()"
+    [resetKey]="resetKey()"
+    (saved)="save($event)"
+    (cancelled)="dialogVisible.set(false)"
+  />
+</p-dialog>

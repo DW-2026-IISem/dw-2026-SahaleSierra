@@ -1,10 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
+const UNIQUE_MESSAGE =
+  'Ya existe un registro con esos datos únicos (por ejemplo, el mismo número de documento).';
+const FOREIGN_KEY_MESSAGE =
+  'No se puede completar la operación: el registro tiene datos relacionados (historia clínica, citas…). Usa la baja lógica.';
+
 /**
  * Traduce el error HTTP del backend a un texto para el usuario.
  * Express responde `{ error, detail? }` (en inglés); los 403 de RBAC son opacos
- * a propósito. El mensaje se muestra tal cual: la traducción de los más comunes,
- * si hace falta, vive aquí y nunca dispersa por los componentes.
+ * a propósito. Los mensajes se muestran tal cual, salvo los dos errores de base
+ * de datos más comunes (duplicado y clave foránea), que se traducen aquí y
+ * nunca dispersos por los componentes.
  */
 export function toApiMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
@@ -17,7 +23,14 @@ export function toApiMessage(error: unknown): string {
       return body;
     }
     if (body && typeof body === 'object' && body.error) {
-      return body.detail ? `${body.error} — ${body.detail}` : body.error;
+      const detail = body.detail ?? '';
+      if (detail.includes('UniqueConstraint')) {
+        return UNIQUE_MESSAGE;
+      }
+      if (detail.includes('ForeignKeyConstraint')) {
+        return FOREIGN_KEY_MESSAGE;
+      }
+      return detail ? `${body.error} — ${detail}` : body.error;
     }
     return error.message;
   }

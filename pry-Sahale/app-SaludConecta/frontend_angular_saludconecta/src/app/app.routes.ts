@@ -10,8 +10,16 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: [
-      // ISS-03 cambia esta redirección por `patients`; ISS-14 por el dashboard.
-      { path: '', pathMatch: 'full', redirectTo: '/prototype' },
+          // La primera pantalla de negocio es la redirección por defecto.
+      // ISS-14 la cambiará por el dashboard.
+      { path: '', pathMatch: 'full', redirectTo: 'patients' },
+      {
+        path: 'patients',
+        title: 'Pacientes · SaludConecta',
+        loadComponent: () =>
+          import('./features/patients/patient-list/patient-list').then((m) => m.PatientList),
+      },
+
     ],
   },
   { path: '**', redirectTo: 'prototype' },

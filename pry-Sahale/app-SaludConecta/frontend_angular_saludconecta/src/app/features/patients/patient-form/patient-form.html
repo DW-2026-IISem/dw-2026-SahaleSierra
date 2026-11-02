@@ -1,0 +1,125 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div class="grid gap-4 sm:grid-cols-3">
+    <div>
+      <label for="patient-document-type" class="mb-1 block text-sm font-medium text-slate-700">
+        Tipo de documento <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        inputId="patient-document-type"
+        formControlName="document_type"
+        [options]="documentTypes"
+        optionLabel="label"
+        optionValue="value"
+        [fluid]="true"
+      />
+    </div>
+
+    <div class="sm:col-span-2">
+      <label for="patient-document-number" class="mb-1 block text-sm font-medium text-slate-700">
+        Número de documento <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="patient-document-number"
+        pInputText
+        formControlName="document_number"
+        placeholder="1032456789"
+        inputmode="numeric"
+        autocomplete="off"
+        class="w-full"
+      />
+      @if (form.controls.document_number.touched && form.controls.document_number.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          El número de documento es obligatorio (máximo 30 caracteres).
+        </p-message>
+      }
+    </div>
+  </div>
+
+  <div>
+    <label for="patient-name" class="mb-1 block text-sm font-medium text-slate-700">
+      Nombre completo <span class="text-red-500">*</span>
+    </label>
+    <input
+      id="patient-name"
+      pInputText
+      formControlName="name"
+      placeholder="Laura Gómez"
+      autocomplete="name"
+      class="w-full"
+    />
+    @if (form.controls.name.touched && form.controls.name.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        El nombre es obligatorio (máximo 120 caracteres).
+      </p-message>
+    }
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="patient-birth-date" class="mb-1 block text-sm font-medium text-slate-700">
+        Fecha de nacimiento <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="patient-birth-date"
+        type="date"
+        pInputText
+        formControlName="birth_date"
+        [max]="maxBirthDate"
+        class="w-full"
+      />
+      @if (form.controls.birth_date.touched && form.controls.birth_date.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Indica una fecha de nacimiento que no sea futura.
+        </p-message>
+      }
+    </div>
+
+    <div>
+      <label for="patient-contact" class="mb-1 block text-sm font-medium text-slate-700">
+        Contacto <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="patient-contact"
+        pInputText
+        formControlName="contact"
+        placeholder="310 456 7890"
+        autocomplete="tel"
+        class="w-full"
+      />
+      @if (form.controls.contact.touched && form.controls.contact.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          El contacto es obligatorio (máximo 60 caracteres).
+        </p-message>
+      }
+    </div>
+  </div>
+
+  <div>
+    <label for="patient-status" class="mb-1 block text-sm font-medium text-slate-700">
+      Estado
+    </label>
+    <p-select
+      inputId="patient-status"
+      formControlName="status"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [fluid]="true"
+    />
+    @if (patient()) {
+      <p class="mt-1 text-xs text-slate-500">
+        El estado de un paciente existente solo cambia con la baja lógica.
+      </p>
+    }
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>
