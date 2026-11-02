@@ -42,6 +42,7 @@ export class Shell {
    * permisos.
    */
   readonly items: MenuItem[] = [
+    { label: 'Servicios', icon: 'pi pi-briefcase', routerLink: '/services' },
     { label: 'Especialidades', icon: 'pi pi-heart', routerLink: '/specialties' },
     { label: 'Pacientes', icon: 'pi pi-users', routerLink: '/patients' },
     { label: 'Prototipo', icon: 'pi pi-desktop', routerLink: '/prototype' },
