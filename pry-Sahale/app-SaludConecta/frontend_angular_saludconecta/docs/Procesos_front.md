@@ -623,3 +623,115 @@ npm test -- --watch=false
 ![](images/clipboard-857771544.png)
 
 ## **Cierre del ISS**
+
+![](images/clipboard-2816014543.png)
+
+![](images/clipboard-3216086028.png)
+
+# **Fase I: Frontend — ISS-03 — CRUD de pacientes con Signals**
+
+## **3.1 Generar componentes con el CLI**
+
+![](images/clipboard-3628557828.png)
+
+## **3.2 Utilidad de filtro local**
+
+#### src/app/core/utils/filter-rows.ts
+
+![](images/clipboard-570244398.png)
+
+#### **`src/app/core/utils/filter-rows.spec.ts`** (5 pruebas)
+
+![](images/clipboard-4085984323.png)
+
+## **3.3 Mensajes claros para duplicados y claves foráneas (`api-error`)**
+
+**PARCHE — reemplazo completo** de `src/app/core/utils/api-error.ts` (el cambio está en la rama del cuerpo con `error`):
+
+![](images/clipboard-4244884502.png)
+
+**PARCHE — reemplazo completo** de `src/app/core/utils/api-error.spec.ts` (ahora 6 pruebas; la de «detalle» cambia su texto para no chocar con la traducción):
+
+![](images/clipboard-860885995.png)
+
+## **3.4 `patient-form.ts`**
+
+![](images/clipboard-1565852352.png)
+
+## **3.5 `patient-form.html` y `patient-form.css`**
+
+![](images/clipboard-2005691468.png)
+
+## **3.6 `patient-form.spec.ts`**
+
+![](images/clipboard-2108021552.png)
+
+## **3.7 `patient-list.ts`**
+
+![](images/clipboard-740087849.png)
+
+![](images/clipboard-2090511483.png)
+
+## **3.8 `patient-list.html`**
+
+![](images/clipboard-1094147378.png)
+
+![](images/clipboard-3286496839.png)
+
+## **3.9 `patient-list.spec.ts`**
+
+![](images/clipboard-2207694972.png)
+
+![](images/clipboard-2090352146.png)
+
+## **3.10 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** Dentro de `children` del `Shell` **reemplacé** la línea `{ path: '', pathMatch: 'full', redirectTo: '/prototype' },` (y su comentario) por:
+
+![](images/clipboard-3537876438.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **encima de** la entrada `Prototipo`, **añadí:**
+
+![](images/clipboard-310831559.png)
+
+## **3.11 Comprobar antes de avanzar**
+
+![](images/clipboard-3416823218.png)
+
+![](images/clipboard-698753831.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. La utilidad de filtro es pura y está probada
+grep -n "export function filterRows" src/app/core/utils/filter-rows.ts
+ls src/app/core/utils/filter-rows.spec.ts
+
+# 2. El formulario no llama a la API: solo emite
+grep -n "output<PatientPayload>\|output<void>" src/app/features/patients/patient-form/patient-form.ts
+grep -n "inject(PatientApi)\|HttpClient" src/app/features/patients/patient-form/patient-form.ts || echo "sin API en el formulario: correcto"
+
+# 3. La lista usa computed y no tiene métodos de filtrado imperativos
+grep -n "computed(" src/app/features/patients/patient-list/patient-list.ts
+grep -n "applyFilter" src/app/features/patients/patient-list/patient-list.ts || echo "sin applyFilter: correcto"
+
+# 4. Las plantillas de la tabla usan la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/patients/patient-list/patient-list.html
+grep -n "pTemplate=" src/app/features/patients/patient-list/patient-list.html || echo "sin pTemplate: correcto"
+
+# 5. La ruta existe y el menú apunta a ella
+grep -n "patients" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 6. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/patients/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 7. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-4215886583.png)
+
+## **Cierre del ISS**
