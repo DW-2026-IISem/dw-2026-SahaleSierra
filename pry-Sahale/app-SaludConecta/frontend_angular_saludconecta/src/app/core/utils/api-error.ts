@@ -42,6 +42,17 @@ export function toApiMessage(error: unknown): string {
       if (body.error.includes('Appointment already has an authorization')) {
         return 'Esta cita ya tiene una autorización.';
       }
+      // Regla de «Atender cita».
+      if (body.error.includes('Patient must have an active clinical record')) {
+        return (
+          'El paciente no tiene una historia clínica activa. Créala en «Historias clínicas» ' +
+          'y vuelve a atender la cita; mientras tanto la cita sigue programada.'
+        );
+      }
+      const notScheduled = /Appointment must be 'scheduled' \(current: '(\w+)'\)/.exec(body.error);
+      if (notScheduled) {
+        return `Solo se puede atender una cita programada (estado actual: ${notScheduled[1]}).`;
+      }
 
       const detail = body.detail ?? '';
       if (detail.includes('UniqueConstraint')) {

@@ -84,6 +84,14 @@ export const routes: Routes = [
             (m) => m.AuthorizationList,
           ),
       },
+      {
+        path: 'encounters',
+        title: 'Atenciones · SaludConecta',
+        loadComponent: () =>
+          import('./features/encounters/encounter-list/encounter-list').then(
+            (m) => m.EncounterList,
+          ),
+      },
 
     ],
   },

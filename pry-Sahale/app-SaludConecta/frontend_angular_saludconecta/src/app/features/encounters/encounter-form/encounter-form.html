@@ -1,0 +1,184 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label for="encounter-appointment" class="mb-1 block text-sm font-medium text-slate-700">
+      Cita <span class="text-red-500">*</span>
+    </label>
+
+    @if (encounter()) {
+      <!-- Edición: la cita de una atención no cambia. -->
+      <input
+        id="encounter-appointment"
+        pInputText
+        [value]="appointmentLabel()"
+        readonly
+        aria-label="Cita de la atención"
+        class="w-full"
+      />
+      <p class="mt-1 text-xs text-slate-500">La cita de una atención no se puede cambiar.</p>
+    } @else if (appointmentOptions().length === 0) {
+      <p-message severity="warn" size="small" styleClass="w-full">
+        No hay citas programadas para atender.
+      </p-message>
+    } @else {
+      <p-select
+        inputId="encounter-appointment"
+        formControlName="appointment_id"
+        [options]="appointmentOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Elige una cita programada"
+        [filter]="true"
+        filterBy="label"
+        [fluid]="true"
+      />
+      @if (form.controls.appointment_id.touched && form.controls.appointment_id.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Elige la cita que vas a atender.
+        </p-message>
+      }
+      @if (missingRecord()) {
+        <p-message severity="warn" size="small" styleClass="mt-2 w-full">
+          Este paciente no tiene una historia clínica activa. El backend rechazará la atención:
+          créala primero en «Historias clínicas».
+        </p-message>
+      }
+    }
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="encounter-service" class="mb-1 block text-sm font-medium text-slate-700">
+        Servicio <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        inputId="encounter-service"
+        formControlName="service_id"
+        [options]="serviceOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Elige un servicio"
+        [filter]="true"
+        filterBy="label"
+        [fluid]="true"
+      />
+      @if (form.controls.service_id.touched && form.controls.service_id.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Elige el servicio prestado.
+        </p-message>
+      }
+    </div>
+
+    <div>
+      <label for="encounter-state" class="mb-1 block text-sm font-medium text-slate-700">
+        Estado de la atención
+      </label>
+      <p-select
+        inputId="encounter-state"
+        formControlName="state"
+        [options]="stateOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [fluid]="true"
+      />
+      <p class="mt-1 text-xs text-slate-500">Solo las atenciones completadas se pueden facturar.</p>
+    </div>
+  </div>
+
+  <div>
+    <label for="encounter-total" class="mb-1 block text-sm font-medium text-slate-700">Total</label>
+    <p-inputnumber
+      inputId="encounter-total"
+      formControlName="total"
+      mode="currency"
+      currency="COP"
+      locale="es-CO"
+      [min]="0"
+      [maxFractionDigits]="0"
+      [fluid]="true"
+    />
+    @if (billed()) {
+      <p class="mt-1 text-xs text-slate-500">
+        Atención facturada: el total no se puede cambiar.
+      </p>
+    }
+    @if (form.controls.total.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        El total no puede ser negativo.
+      </p-message>
+    }
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="encounter-start" class="mb-1 block text-sm font-medium text-slate-700">Inicio</label>
+      <input
+        id="encounter-start"
+        type="datetime-local"
+        pInputText
+        formControlName="start_date"
+        class="w-full"
+      />
+    </div>
+    <div>
+      <label for="encounter-end" class="mb-1 block text-sm font-medium text-slate-700">Fin</label>
+      <input
+        id="encounter-end"
+        type="datetime-local"
+        pInputText
+        formControlName="end_date"
+        class="w-full"
+      />
+      @if (form.hasError('range') && form.controls.end_date.touched) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          La hora de fin debe ser posterior a la de inicio.
+        </p-message>
+      }
+    </div>
+  </div>
+  <p class="-mt-2 text-xs text-slate-500">
+    Opcionales. Las horas son las de tu equipo; el backend las guarda en UTC.
+  </p>
+
+  <div>
+    <label for="encounter-observations" class="mb-1 block text-sm font-medium text-slate-700">
+      Observaciones
+    </label>
+    <textarea
+      id="encounter-observations"
+      pTextarea
+      formControlName="observations"
+      rows="3"
+      placeholder="Notas de la atención"
+      class="w-full"
+    ></textarea>
+  </div>
+
+  <div>
+    <label for="encounter-status" class="mb-1 block text-sm font-medium text-slate-700">
+      Estado de registro
+    </label>
+    <p-select
+      inputId="encounter-status"
+      formControlName="status"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [fluid]="true"
+    />
+    @if (encounter()) {
+      <p class="mt-1 text-xs text-slate-500">
+        El estado de registro solo cambia con la baja lógica.
+      </p>
+    }
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>{{ encounter() ? 'Guardar' : 'Atender cita' }}</span>
+    </button>
+  </div>
+</form>

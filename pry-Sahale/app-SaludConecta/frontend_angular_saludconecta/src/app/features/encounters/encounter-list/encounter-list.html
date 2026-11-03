@@ -1,0 +1,196 @@
+<app-page-header
+  title="Atenciones"
+  subtitle="Atender una cita crea la atención y pasa la cita a «Atendida». Solo las completadas se facturan."
+>
+  <p-tag [value]="inProgressCount() + ' en curso'" severity="warn" [rounded]="true" />
+  <p-tag
+    [value]="unbilledCount() + ' completadas sin facturar'"
+    severity="info"
+    [rounded]="true"
+  />
+  <button pButton type="button" (click)="openCreate()">
+    <i pButtonIcon class="pi pi-plus"></i>
+    <span pButtonLabel>Atender cita</span>
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-5xl"
+  >
+    <ng-template #caption>
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="flex flex-1 items-center gap-2">
+          <i class="pi pi-search text-slate-400"></i>
+          <input
+            pInputText
+            type="search"
+            aria-label="Buscar atenciones"
+            placeholder="Buscar por paciente, servicio u observaciones…"
+            [value]="filter()"
+            (input)="filter.set($any($event.target).value)"
+            class="w-full"
+          />
+        </div>
+        <p-select
+          class="sm:w-48"
+          [options]="stateOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="stateFilter()"
+          (ngModelChange)="stateFilter.set($event)"
+          [fluid]="true"
+        />
+      </div>
+      @if (filter() || stateFilter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} atenciones coinciden con el filtro.
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="start_date">
+          <div class="flex items-center gap-1">Atención <p-sort-icon field="start_date" /></div>
+        </th>
+        <th>Paciente</th>
+        <th>Servicio</th>
+        <th class="text-right">Total</th>
+        <th>Estado</th>
+        <th>Factura</th>
+        <th class="w-48 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-encounter>
+      <tr>
+        <td class="text-sm">
+          <p class="font-medium text-slate-800">#{{ encounter.id }}</p>
+          <p class="text-xs text-slate-500">{{ encounter.start_date | date: 'dd/MM/yyyy HH:mm' }}</p>
+        </td>
+        <td class="text-sm font-medium text-slate-800">
+          {{ patientName()(encounter.appointment_id) }}
+        </td>
+        <td class="text-sm text-slate-700">{{ serviceName()(encounter.service_id) }}</td>
+        <td class="text-right text-sm text-slate-800">
+          {{ money(encounter.total) | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+        </td>
+        <td><app-state-tag [state]="encounter.state" /></td>
+        <td>
+          @if (encounter.invoice_id) {
+            <p-tag [value]="'Factura #' + encounter.invoice_id" severity="secondary" [rounded]="true" />
+          } @else {
+            <span class="text-xs text-slate-400">Sin facturar</span>
+          }
+        </td>
+        <td>
+          <div class="flex justify-end gap-1">
+            @if (canComplete(encounter)) {
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="success"
+                icon="pi pi-check-circle"
+                aria-label="Completar atención"
+                pTooltip="Completar"
+                (click)="complete(encounter)"
+              ></button>
+            }
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="secondary"
+              icon="pi pi-pencil"
+              aria-label="Editar atención"
+              pTooltip="Editar"
+              (click)="openEdit(encounter)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-ban"
+              aria-label="Dar de baja la atención"
+              pTooltip="Baja lógica"
+              (click)="deactivate(encounter)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="danger"
+              icon="pi pi-trash"
+              aria-label="Eliminar atención"
+              [pTooltip]="canRemove(encounter) ? 'Eliminar' : 'Atención facturada: no se puede eliminar'"
+              [disabled]="!canRemove(encounter)"
+              (click)="remove(encounter)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="7">
+          @if (filter() || stateFilter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ninguna atención coincide con el filtro. Quita el filtro para ver todas."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-clipboard"
+              title="Sin atenciones"
+              message="Atiende la primera cita con el botón «Atender cita» o ejecuta el seeder del backend."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="title()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="w-full max-w-3xl mx-4"
+>
+  <app-encounter-form
+    [encounter]="editing()"
+    [appointmentOptions]="formOptions()"
+    [services]="services()"
+    [appointmentLabel]="editingAppointmentLabel()"
+    [saving]="saving()"
+    [resetKey]="resetKey()"
+    (created)="create($event)"
+    (updated)="update($event)"
+    (unchanged)="onUnchanged()"
+    (cancelled)="dialogVisible.set(false)"
+  />
+</p-dialog>
