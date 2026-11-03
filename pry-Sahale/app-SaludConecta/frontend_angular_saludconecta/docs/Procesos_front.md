@@ -1347,3 +1347,152 @@ ng build
 ![](images/clipboard-3078484446.png)
 
 ## **Cierre del ISS**
+
+![](images/clipboard-1140179845.png)
+
+![](images/clipboard-3784602600.png)
+
+# **Fase I: Frontend — ISS-10 — Citas (transaccional)**
+
+## **10.1 Modelo y reglas del backend**
+
+![](images/clipboard-2636684938.png)
+
+## **10.2 Generar con el CLI**
+
+![](images/clipboard-2638290933.png)
+
+## **10.3 Utilidad de fechas: de `datetime-local` a UTC**
+
+**`src/app/core/utils/datetime.ts`**
+
+![](images/clipboard-1786736814.png)
+
+**`src/app/core/utils/datetime.spec.ts`** (4 pruebas; no dependen de la zona horaria del equipo)
+
+![](images/clipboard-631638537.png)
+
+## **10.4 Traducir el cruce de horario (`api-error`)**
+
+**PARCHE — `src/app/core/utils/api-error.ts`.** **Dentro de** la rama `if (body && typeof body === 'object' && body.error) {`, **encima de** la línea `const detail = body.detail ?? '';`, **añadí:**
+
+![](images/clipboard-2267698015.png)
+
+**`src/app/core/utils/api-error-appointment.spec.ts`** (2 pruebas)
+
+![](images/clipboard-32694714.png)
+
+## **10.5 `StateTag`: el estado de negocio**
+
+![](images/clipboard-1682537356.png)
+
+**`src/app/shared/ui/state-tag/state-tag.spec.ts`** (4 pruebas)
+
+![](images/clipboard-217851459.png)
+
+## **10.6 Prueba del servicio**
+
+**`src/app/features/appointments/appointment-api.spec.ts`** (7 pruebas)
+
+![](images/clipboard-2108006345.png)
+
+## **10.7 `appointment-form.ts`**
+
+![](images/clipboard-2565014598.png)
+
+![](images/clipboard-4285286416.png)
+
+## **10.8 `appointment-form.html` y `appointment-form.css`**
+
+![](images/clipboard-3254558490.png)
+
+## **10.9 `appointment-form.spec.ts`**
+
+![](images/clipboard-540242104.png)
+
+![](images/clipboard-3209373509.png)
+
+## **10.10 `appointment-list.ts`**
+
+![](images/clipboard-3515228822.png)
+
+![](images/clipboard-79916929.png)
+
+![](images/clipboard-1202940905.png)
+
+## **10.11 `appointment-list.html` y `appointment-list.css`**
+
+![](images/clipboard-2291547768.png)
+
+![](images/clipboard-2784300330.png)
+
+![](images/clipboard-2723243764.png)
+
+## **10.12 `appointment-list.spec.ts`**
+
+![](images/clipboard-1161843347.png)
+
+![](images/clipboard-1786675759.png)
+
+![](images/clipboard-1442932340.png)
+
+## **10.13 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Dentro de** `children` del `Shell`, **encima del** `],` que cierra esa lista (debajo de la última ruta hija que tengas), **añadí:**
+
+![](images/clipboard-3499872311.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **encima de** la entrada `Prototipo`, **añadí:**
+
+![](images/clipboard-781222272.png)
+
+## **10.14 Comprobar antes de avanzar**
+
+![](images/clipboard-1465551133.png)
+
+![](images/clipboard-2383180424.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El formulario no llama a la API: solo emite
+grep -n "output<AppointmentPayload>\|output<AppointmentUpdatePayload>\|output<void>" \
+  src/app/features/appointments/appointment-form/appointment-form.ts
+grep -n "inject(AppointmentApi)\|inject(AgendaApi)\|inject(PatientApi)\|HttpClient" \
+  src/app/features/appointments/appointment-form/appointment-form.ts || echo "sin API en el formulario: correcto"
+
+# 2. La lista carga en paralelo y usa computed
+grep -n "forkJoin" src/app/features/appointments/appointment-list/appointment-list.ts
+grep -n "computed(" src/app/features/appointments/appointment-list/appointment-list.ts
+grep -n "applyFilter" src/app/features/appointments/appointment-list/appointment-list.ts || echo "sin applyFilter: correcto"
+
+# 3. Cancelar es un PATCH de state, no una baja
+grep -n "state: 'cancelled'" src/app/features/appointments/appointment-list/appointment-list.ts
+
+# 4. La UI nunca ofrece 'attended'
+grep -rn "'attended'" src/app/features/appointments/appointment-form/ src/app/features/appointments/appointment-list/appointment-list.html || echo "sin attended en formulario ni plantilla: correcto"
+
+# 5. La tabla usa la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/appointments/appointment-list/appointment-list.html
+grep -n "pTemplate=" src/app/features/appointments/appointment-list/appointment-list.html || echo "sin pTemplate: correcto"
+
+# 6. Las traducciones de error y las utilidades existen
+grep -n "Agenda already has an appointment" src/app/core/utils/api-error.ts
+ls src/app/core/utils/datetime.ts src/app/shared/ui/state-tag/state-tag.ts
+
+# 7. La ruta existe y el menú apunta a ella
+grep -n "appointments" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 8. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/appointments/*/*.css src/app/shared/ui/state-tag/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 9. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-2419993133.png)
+
+## **Cierre del ISS**
