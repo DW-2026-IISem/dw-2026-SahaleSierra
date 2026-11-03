@@ -1119,3 +1119,110 @@ ng build
 ![](images/clipboard-3250343767.png)
 
 ## **Cierre del ISS**
+
+![](images/clipboard-2474284390.png)
+
+![](images/clipboard-3321283456.png)
+
+# **Fase I: Frontend — ISS-08 — Agendas de médicos**
+
+## **8.1 Endpoint y contrato**
+
+![](images/clipboard-3249282452.png)
+
+## **8.2 Generar con el CLI**
+
+![](images/clipboard-1642746257.png)
+
+## **8.3 Servicio y su prueba**
+
+**`src/app/features/agendas/agenda-api.spec.ts`** (6 pruebas)
+
+![](images/clipboard-1482388570.png)
+
+## **8.4 `agenda-form.ts`**
+
+![](images/clipboard-477914118.png)
+
+## **8.5 `agenda-form.html` y `agenda-form.css`**
+
+![](images/clipboard-2718007677.png)
+
+## **8.6 `agenda-form.spec.ts`**
+
+![](images/clipboard-3567188526.png)
+
+## **8.7 `agenda-list.ts`**
+
+![](images/clipboard-1678999280.png)
+
+![](images/clipboard-2722041885.png)
+
+## **8.8 `agenda-list.html` y `agenda-list.css`**
+
+![](images/clipboard-229031431.png)
+
+![](images/clipboard-3261828255.png)
+
+## **8.9 `agenda-list.spec.ts`**
+
+![](images/clipboard-4074149635.png)
+
+![](images/clipboard-3736693336.png)
+
+## **8.10 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Debajo de** la ruta `doctor-specialties` (dentro de `children` del `Shell`, antes del `],` que cierra `children`), **añadí:**
+
+![](images/clipboard-2790531446.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **debajo de** la entrada `Médicos y especialidades`, **añadí:**
+
+![](images/clipboard-3675696414.png)
+
+## **8.11 Comprobar antes de avanzar**
+
+![](images/clipboard-173501861.png)
+
+![](images/clipboard-4059417581.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El servicio ya existía y ahora tiene prueba
+ls src/app/features/agendas/agenda-api.ts src/app/features/agendas/agenda-api.spec.ts
+
+# 2. El formulario no llama a la API: solo emite
+grep -n "output<AgendaPayload>\|output<void>" src/app/features/agendas/agenda-form/agenda-form.ts
+grep -n "inject(.*Api)\|HttpClient" src/app/features/agendas/agenda-form/agenda-form.ts || echo "sin API en el formulario: correcto"
+
+# 3. La lista carga en paralelo y usa computed y filterRows
+grep -n "forkJoin" src/app/features/agendas/agenda-list/agenda-list.ts
+grep -n "computed(\|filterRows" src/app/features/agendas/agenda-list/agenda-list.ts
+grep -n "applyFilter" src/app/features/agendas/agenda-list/agenda-list.ts || echo "sin applyFilter: correcto"
+
+# 4. El select guarda el id, no el objeto
+grep -n "optionValue=\"id\"" src/app/features/agendas/agenda-form/agenda-form.html
+
+# 5. Las plantillas de la tabla usan la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/agendas/agenda-list/agenda-list.html
+grep -n "pTemplate=" src/app/features/agendas/agenda-list/agenda-list.html || echo "sin pTemplate: correcto"
+
+# 6. La ruta existe y el menú apunta a ella
+grep -n "agendas" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 7. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/agendas/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 8. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-2316146276.png)
+
+## **Cierre del ISS**
+
+![](images/clipboard-3538518132.png)
