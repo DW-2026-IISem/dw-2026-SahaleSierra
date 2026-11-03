@@ -1018,3 +1018,104 @@ ng build
 ![](images/clipboard-1143056972.png)
 
 ## **Cierre del ISS**
+
+![](images/clipboard-2293167707.png)
+
+![](images/clipboard-3303088606.png)
+
+# **Fase I: Frontend — ISS-07 — Médicos ↔ especialidades (pivote)**
+
+## **7.2 Generar con el CLI**
+
+![](images/clipboard-677922491.png)
+
+## **7.3 Servicio y su prueba**
+
+**`src/app/features/doctor-specialties/doctor-specialty-api.spec.ts`** (6 pruebas)
+
+![](images/clipboard-3490299496.png)
+
+## **7.4 `doctor-specialty-form.ts`**
+
+![](images/clipboard-743315740.png)
+
+## **7.5 `doctor-specialty-form.html` y `doctor-specialty-form.css`**
+
+![](images/clipboard-3172827051.png)
+
+## **7.6 `doctor-specialty-form.spec.ts`**
+
+![](images/clipboard-2417672908.png)
+
+## **7.7 `doctor-specialty-list.ts`**
+
+![](images/clipboard-1501476428.png)
+
+![](images/clipboard-190989579.png)
+
+## **7.8 `doctor-specialty-list.html` y `doctor-specialty-list.css`**
+
+![](images/clipboard-3724391540.png)
+
+![](images/clipboard-2878395470.png)
+
+## **7.9 `doctor-specialty-list.spec.ts`**
+
+![](images/clipboard-4195499342.png)
+
+![](images/clipboard-101931782.png)
+
+## **7.10 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Debajo de** la ruta `doctors` (dentro de `children` del `Shell`, antes del `],` que cierra `children`), **añadí:**
+
+![](images/clipboard-1993348701.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **debajo de** la entrada `Médicos`, **añadí:**
+
+![](images/clipboard-120850018.png)
+
+## **7.11 Comprobar antes de avanzar**
+
+![](images/clipboard-4149196284.png)
+
+![](images/clipboard-2681126370.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El servicio ya existía y ahora tiene prueba
+ls src/app/features/doctor-specialties/doctor-specialty-api.ts src/app/features/doctor-specialties/doctor-specialty-api.spec.ts
+
+# 2. El formulario no llama a la API: solo emite
+grep -n "output<DoctorSpecialtyPayload>\|output<void>" src/app/features/doctor-specialties/doctor-specialty-form/doctor-specialty-form.ts
+grep -n "inject(.*Api)\|HttpClient" src/app/features/doctor-specialties/doctor-specialty-form/doctor-specialty-form.ts || echo "sin API en el formulario: correcto"
+
+# 3. La lista carga en paralelo y usa computed
+grep -n "forkJoin" src/app/features/doctor-specialties/doctor-specialty-list/doctor-specialty-list.ts
+grep -n "computed(" src/app/features/doctor-specialties/doctor-specialty-list/doctor-specialty-list.ts
+grep -n "applyFilter" src/app/features/doctor-specialties/doctor-specialty-list/doctor-specialty-list.ts || echo "sin applyFilter: correcto"
+
+# 4. Los selects guardan el id, no el objeto
+grep -n "optionValue=\"id\"" src/app/features/doctor-specialties/doctor-specialty-form/doctor-specialty-form.html
+
+# 5. Las plantillas de la tabla usan la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/doctor-specialties/doctor-specialty-list/doctor-specialty-list.html
+grep -n "pTemplate=" src/app/features/doctor-specialties/doctor-specialty-list/doctor-specialty-list.html || echo "sin pTemplate: correcto"
+
+# 6. La ruta existe y el menú apunta a ella
+grep -n "doctor-specialties" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 7. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/doctor-specialties/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 8. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-3250343767.png)
+
+## **Cierre del ISS**
