@@ -1620,3 +1620,134 @@ ng build
 ![](images/clipboard-1056280656.png)
 
 ## **Cierre del ISS**
+
+![](images/clipboard-4189673395.png)
+
+![](images/clipboard-1239989633.png)
+
+# **Fase I: Frontend — ISS-12 — Atenciones (regla del PDF: «Atender cita»)**
+
+## **12.1 Modelo y reglas del backend**
+
+![](images/clipboard-1416825168.png)
+
+## **12.2 Generar con el CLI**
+
+![](images/clipboard-380497637.png)
+
+## **12.3 Traducir los errores de la regla (`api-error`)**
+
+**PARCHE — `src/app/core/utils/api-error.ts`.** **Dentro de** la rama `if (body && typeof body === 'object' && body.error) {`, **encima de** la línea `const detail = body.detail ?? '';`, **añadí:**
+
+![](images/clipboard-314779953.png)
+
+**`src/app/core/utils/api-error-encounter.spec.ts`** (2 pruebas)
+
+![](images/clipboard-3979697150.png)
+
+## **12.4 Prueba del servicio**
+
+**`src/app/features/encounters/encounter-api-crud.spec.ts`** (5 pruebas)
+
+![](images/clipboard-3796816542.png)
+
+## **12.5 `encounter-form.ts`**
+
+![](images/clipboard-1082387346.png)
+
+![](images/clipboard-237101860.png)
+
+## **12.6 `encounter-form.html` y `encounter-form.css`**
+
+![](images/clipboard-114762893.png)
+
+![](images/clipboard-3333799204.png)
+
+![](images/clipboard-1214228726.png)
+
+## **12.7 `encounter-form.spec.ts`**
+
+![](images/clipboard-3985666224.png)
+
+![](images/clipboard-3855551760.png)
+
+## **12.8 `encounter-list.ts`**
+
+![](images/clipboard-3693480405.png)
+
+![](images/clipboard-3049108860.png)
+
+![](images/clipboard-3662442933.png)
+
+## **12.9 `encounter-list.html` y `encounter-list.css`**
+
+![](images/clipboard-3002589059.png)
+
+![](images/clipboard-3367462710.png)
+
+![](images/clipboard-1461714247.png)
+
+## **12.10 `encounter-list.spec.ts`**
+
+![](images/clipboard-2430144786.png)
+
+![](images/clipboard-1322130494.png)
+
+![](images/clipboard-194037569.png)
+
+## **12.11 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Dentro de** `children` del `Shell`, **encima del** `],` que cierra esa lista (debajo de la última ruta hija que tengas), **añadí:**
+
+![](images/clipboard-2197329910.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **encima de** la entrada `Prototipo`, **añadí:**
+
+![](images/clipboard-3091248611.png)
+
+## **12.12 Comprobar antes de avanzar**
+
+![](images/clipboard-3471285766.png)
+
+![](images/clipboard-572148932.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El formulario no llama a la API: solo emite
+grep -n "output<EncounterPayload>\|output<EncounterUpdatePayload>\|output<void>" \
+  src/app/features/encounters/encounter-form/encounter-form.ts
+grep -n "inject(EncounterApi)\|inject(AppointmentApi)\|inject(ClinicalRecordApi)\|HttpClient" \
+  src/app/features/encounters/encounter-form/encounter-form.ts || echo "sin API en el formulario: correcto"
+
+# 2. La lista carga en paralelo y usa la respuesta del POST
+grep -n "forkJoin" src/app/features/encounters/encounter-list/encounter-list.ts
+grep -n "next: ({ appointment })" src/app/features/encounters/encounter-list/encounter-list.ts
+
+# 3. «Completar» es un PATCH de state y no se ofrece 'cancelled' al crear
+grep -n "state: 'completed'" src/app/features/encounters/encounter-list/encounter-list.ts
+grep -n "state: value.state === 'in_progress'" src/app/features/encounters/encounter-form/encounter-form.ts
+
+# 4. La tabla usa la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/encounters/encounter-list/encounter-list.html
+grep -n "pTemplate=" src/app/features/encounters/encounter-list/encounter-list.html || echo "sin pTemplate: correcto"
+
+# 5. Las traducciones existen
+grep -n "Patient must have an active clinical record\|Appointment must be" src/app/core/utils/api-error.ts
+
+# 6. La ruta existe y el menú apunta a ella
+grep -n "encounters" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 7. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/encounters/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 8. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-1423748447.png)
+
+## **Cierre del ISS**
