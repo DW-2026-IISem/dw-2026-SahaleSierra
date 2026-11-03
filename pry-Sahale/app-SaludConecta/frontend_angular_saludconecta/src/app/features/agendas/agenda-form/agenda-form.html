@@ -1,0 +1,86 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label for="agenda-name" class="mb-1 block text-sm font-medium text-slate-700">
+      Nombre <span class="text-red-500">*</span>
+    </label>
+    <input
+      id="agenda-name"
+      pInputText
+      formControlName="name"
+      placeholder="Consulta externa · mañana"
+      autocomplete="off"
+      class="w-full"
+    />
+    @if (form.controls.name.touched && form.controls.name.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        El nombre es obligatorio (máximo 120 caracteres).
+      </p-message>
+    }
+  </div>
+
+  <div>
+    <label for="agenda-doctor" class="mb-1 block text-sm font-medium text-slate-700">
+      Médico <span class="text-red-500">*</span>
+    </label>
+    <p-select
+      inputId="agenda-doctor"
+      formControlName="doctor_id"
+      [options]="doctorOptions()"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Selecciona un médico activo"
+      emptyMessage="No hay médicos activos"
+      [filter]="true"
+      filterBy="name"
+      [fluid]="true"
+    />
+    @if (form.controls.doctor_id.touched && form.controls.doctor_id.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        Selecciona el médico responsable de la agenda.
+      </p-message>
+    }
+  </div>
+
+  <div>
+    <label for="agenda-description" class="mb-1 block text-sm font-medium text-slate-700">
+      Descripción
+    </label>
+    <textarea
+      id="agenda-description"
+      pTextarea
+      formControlName="description"
+      rows="3"
+      placeholder="Lunes a viernes, 7:00 a 12:00"
+      class="w-full"
+    ></textarea>
+  </div>
+
+  <div>
+    <label for="agenda-status" class="mb-1 block text-sm font-medium text-slate-700">
+      Estado
+    </label>
+    <p-select
+      inputId="agenda-status"
+      formControlName="status"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [fluid]="true"
+    />
+    @if (agenda()) {
+      <p class="mt-1 text-xs text-slate-500">
+        El estado de una agenda existente solo cambia con la baja lógica.
+      </p>
+    }
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>

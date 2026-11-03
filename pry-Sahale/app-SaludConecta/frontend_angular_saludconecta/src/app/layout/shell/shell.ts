@@ -47,6 +47,7 @@ export class Shell {
     { label: 'Servicios', icon: 'pi pi-briefcase', routerLink: '/services' },
     { label: 'Médicos', icon: 'pi pi-user', routerLink: '/doctors' },
     { label: 'Médicos y especialidades', icon: 'pi pi-link', routerLink: '/doctor-specialties' },
+    { label: 'Agendas', icon: 'pi pi-calendar', routerLink: '/agendas' },
     { label: 'Prototipo', icon: 'pi pi-desktop', routerLink: '/prototype' },
   ];
 

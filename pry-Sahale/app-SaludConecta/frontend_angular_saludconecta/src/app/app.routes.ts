@@ -52,6 +52,14 @@ export const routes: Routes = [
             (m) => m.DoctorSpecialtyList,
           ),
       },
+      {
+        path: 'agendas',
+        title: 'Agendas · SaludConecta',
+        loadComponent: () =>
+          import('./features/agendas/agenda-list/agenda-list').then(
+            (m) => m.AgendaList,
+          ),
+      },
 
     ],
   },
