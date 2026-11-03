@@ -60,6 +60,14 @@ export const routes: Routes = [
             (m) => m.AgendaList,
           ),
       },
+      {
+        path: 'clinical-records',
+        title: 'Historias clínicas · SaludConecta',
+        loadComponent: () =>
+          import('./features/clinical-records/clinical-record-list/clinical-record-list').then(
+            (m) => m.ClinicalRecordList,
+          ),
+      },
 
     ],
   },

@@ -1,0 +1,192 @@
+<app-page-header
+  title="Historias clínicas"
+  subtitle="Una historia por paciente. El backend solo lista las activas."
+>
+  <p-tag [value]="rows().length + ' activas'" severity="info" [rounded]="true" />
+  <p-tag
+    [value]="availablePatients().length + ' pacientes sin historia'"
+    severity="warn"
+    [rounded]="true"
+  />
+  <button pButton type="button" (click)="openCreate()">
+    <i pButtonIcon class="pi pi-plus"></i>
+    <span pButtonLabel>Nueva historia</span>
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+<!-- Búsqueda por paciente: usa la ruta extra GET /api/clinical-records/patient/:id -->
+<div class="mb-4 rounded-xl border border-slate-200 bg-white p-4">
+  <p class="mb-2 text-sm font-medium text-slate-700">Buscar la historia de un paciente</p>
+  <div class="flex flex-col gap-2 sm:flex-row">
+    <p-select
+      class="flex-1"
+      [options]="lookupOptions()"
+      optionLabel="label"
+      optionValue="id"
+      [ngModel]="lookupPatientId()"
+      (ngModelChange)="lookupPatientId.set($event)"
+      [filter]="true"
+      filterBy="label"
+      [showClear]="true"
+      placeholder="Elige un paciente"
+      [fluid]="true"
+    />
+    <button
+      pButton
+      type="button"
+      [disabled]="lookupPatientId() === null"
+      [loading]="lookingUp()"
+      (click)="lookup()"
+    >
+      <i pButtonIcon class="pi pi-search"></i>
+      <span pButtonLabel>Buscar historia</span>
+    </button>
+  </div>
+  <p class="mt-2 text-xs text-slate-500">
+    Si el paciente no tiene historia, podrás crearla desde el mismo aviso.
+  </p>
+</div>
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-3xl"
+  >
+    <ng-template #caption>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-search text-slate-400"></i>
+        <input
+          pInputText
+          type="search"
+          aria-label="Buscar historias clínicas"
+          placeholder="Buscar por historia, paciente o documento…"
+          [value]="filter()"
+          (input)="filter.set($any($event.target).value)"
+          class="w-full"
+        />
+      </div>
+      @if (filter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} coinciden con «{{ filter() }}».
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="name">
+          <div class="flex items-center gap-1">Historia <p-sort-icon field="name" /></div>
+        </th>
+        <th>Paciente</th>
+        <th>Descripción</th>
+        <th>Estado</th>
+        <th class="w-40 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-record>
+      <tr>
+        <td>
+          <p class="font-medium text-slate-800">{{ record.name }}</p>
+          <p class="text-xs text-slate-400">#{{ record.id }}</p>
+        </td>
+        <td>
+          <p class="font-medium text-slate-800">{{ patientName()(record.patient_id) }}</p>
+          <p class="text-xs text-slate-400">{{ patientDocument()(record.patient_id) }}</p>
+        </td>
+        <td class="text-sm text-slate-600">{{ record.description || '—' }}</td>
+        <td><app-status-tag [status]="record.status" /></td>
+        <td>
+          <div class="flex justify-end gap-1">
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="secondary"
+              icon="pi pi-pencil"
+              aria-label="Editar historia clínica"
+              pTooltip="Editar"
+              (click)="openEdit(record)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-ban"
+              aria-label="Dar de baja la historia clínica"
+              pTooltip="Baja lógica"
+              (click)="deactivate(record)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="danger"
+              icon="pi pi-trash"
+              aria-label="Eliminar historia clínica"
+              pTooltip="Eliminar"
+              (click)="remove(record)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="5">
+          @if (filter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ninguna historia coincide con la búsqueda. Borra el filtro para ver todas."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-file-edit"
+              title="Sin historias clínicas activas"
+              message="Crea la primera con el botón «Nueva historia» o ejecuta el seeder del backend."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="title()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="w-full max-w-2xl mx-4"
+>
+  <app-clinical-record-form
+    [record]="editing()"
+    [patients]="formPatients()"
+    [patientLabel]="editingPatientLabel()"
+    [presetPatientId]="presetPatientId()"
+    [saving]="saving()"
+    [resetKey]="resetKey()"
+    (created)="create($event)"
+    (updated)="update($event)"
+    (cancelled)="dialogVisible.set(false)"
+  />
+</p-dialog>

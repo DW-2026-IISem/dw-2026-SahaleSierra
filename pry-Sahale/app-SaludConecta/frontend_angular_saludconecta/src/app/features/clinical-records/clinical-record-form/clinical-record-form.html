@@ -1,0 +1,106 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label for="record-patient" class="mb-1 block text-sm font-medium text-slate-700">
+      Paciente <span class="text-red-500">*</span>
+    </label>
+
+    @if (record()) {
+      <!-- Edición: el paciente de una historia no cambia. -->
+      <input
+        id="record-patient"
+        pInputText
+        [value]="patientLabel()"
+        readonly
+        aria-label="Paciente de la historia clínica"
+        class="w-full"
+      />
+      <p class="mt-1 text-xs text-slate-500">El paciente de una historia clínica no se puede cambiar.</p>
+    } @else if (patientOptions().length === 0) {
+      <p-message severity="warn" size="small" styleClass="w-full">
+        Todos los pacientes activos ya tienen historia clínica.
+      </p-message>
+    } @else {
+      <p-select
+        inputId="record-patient"
+        formControlName="patient_id"
+        [options]="patientOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Elige un paciente sin historia"
+        [filter]="true"
+        filterBy="label"
+        [fluid]="true"
+      />
+      @if (form.controls.patient_id.touched && form.controls.patient_id.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Elige el paciente de la historia clínica.
+        </p-message>
+      }
+      <p class="mt-1 text-xs text-slate-500">
+        Solo aparecen los pacientes activos que todavía no tienen historia.
+      </p>
+    }
+  </div>
+
+  <div>
+    <label for="record-name" class="mb-1 block text-sm font-medium text-slate-700">
+      Nombre de la historia <span class="text-red-500">*</span>
+    </label>
+    <input
+      id="record-name"
+      pInputText
+      formControlName="name"
+      placeholder="HC-1032456789"
+      autocomplete="off"
+      class="w-full"
+    />
+    @if (form.controls.name.touched && form.controls.name.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        El nombre es obligatorio (máximo 120 caracteres).
+      </p-message>
+    }
+  </div>
+
+  <div>
+    <label for="record-description" class="mb-1 block text-sm font-medium text-slate-700">
+      Descripción
+    </label>
+    <textarea
+      id="record-description"
+      pTextarea
+      formControlName="description"
+      rows="3"
+      placeholder="Notas generales de la historia"
+      class="w-full"
+    ></textarea>
+  </div>
+
+  <div>
+    <label for="record-status" class="mb-1 block text-sm font-medium text-slate-700">
+      Estado
+    </label>
+    <p-select
+      inputId="record-status"
+      formControlName="status"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [fluid]="true"
+    />
+    @if (record()) {
+      <p class="mt-1 text-xs text-slate-500">
+        El estado de una historia existente solo cambia con la baja lógica.
+      </p>
+    }
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>

@@ -23,6 +23,15 @@ export function toApiMessage(error: unknown): string {
       return body;
     }
     if (body && typeof body === 'object' && body.error) {
+      
+            // Una historia clínica por paciente: el 400 trae el id y el estado de la existente.
+      const existing = /Patient already has a clinical record \(id (\d+), status (\w+)\)/.exec(
+        body.error,
+      );
+      if (existing) {
+        return `Este paciente ya tiene una historia clínica (id ${existing[1]}, estado ${existing[2]}).`;
+      }
+
       const detail = body.detail ?? '';
       if (detail.includes('UniqueConstraint')) {
         return UNIQUE_MESSAGE;
