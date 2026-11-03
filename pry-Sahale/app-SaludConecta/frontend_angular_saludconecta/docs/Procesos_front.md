@@ -1226,3 +1226,124 @@ ng build
 ## **Cierre del ISS**
 
 ![](images/clipboard-3538518132.png)
+
+![](images/clipboard-4182252981.png)
+
+# **Fase I: Frontend — ISS-09 — Historias clínicas (relación 1:1 con paciente)**
+
+## **9.1 Modelo y reglas del backend**
+
+![](images/clipboard-906670882.png)
+
+## **9.2 Generar con el CLI**
+
+![](images/clipboard-1579678304.png)
+
+## **9.3 Traducir el error de «paciente ya tiene historia» (`api-error`)**
+
+**PARCHE — `src/app/core/utils/api-error.ts`.** **Dentro de** la rama `if (body && typeof body === 'object' && body.error) {`, **encima de** la línea `const detail = body.detail ?? '';`, **añadí:**
+
+![](images/clipboard-4041922592.png)
+
+**`src/app/core/utils/api-error-clinical-record.spec.ts`** (1 prueba, en archivo aparte para no tocar la prueba existente)
+
+![](images/clipboard-109841509.png)
+
+## **9.4 `clinical-record-form.ts`**
+
+![](images/clipboard-2584530279.png)
+
+![](images/clipboard-218743645.png)
+
+## **9.5 `clinical-record-form.html` y `clinical-record-form.css`**
+
+![](images/clipboard-1103534337.png)
+
+## **9.6 `clinical-record-form.spec.ts`**
+
+![](images/clipboard-1231533593.png)
+
+![](images/clipboard-4278235612.png)
+
+## **9.7 `clinical-record-list.ts`**
+
+![](images/clipboard-165698551.png)
+
+![](images/clipboard-1815946764.png)
+
+## **9.8 `clinical-record-list.html` y `clinical-record-list.css`**
+
+![](images/clipboard-1383137325.png)
+
+![](images/clipboard-1084110557.png)
+
+![](images/clipboard-3771958558.png)
+
+## **9.9 `clinical-record-list.spec.ts`**
+
+![](images/clipboard-2266266448.png)
+
+![](images/clipboard-3270944421.png)
+
+## **9.10 Prueba del servicio**
+
+**`src/app/features/clinical-records/clinical-record-api.spec.ts`** (8 pruebas)
+
+![](images/clipboard-386133935.png)
+
+## **9.11 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Dentro de** `children` del `Shell`, **encima del** `],` que cierra esa lista (debajo de la última ruta hija que tengas), **añadí:**
+
+![](images/clipboard-3866899320.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **encima de** la entrada `Prototipo`, **añadí:**
+
+![](images/clipboard-2549376978.png)
+
+## **9.12 Comprobar antes de avanzar**
+
+![](images/clipboard-3266227645.png)
+
+![](images/clipboard-3502970226.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El formulario no llama a la API: solo emite
+grep -n "output<ClinicalRecordPayload>\|output<ClinicalRecordUpdatePayload>\|output<void>" \
+  src/app/features/clinical-records/clinical-record-form/clinical-record-form.ts
+grep -n "inject(ClinicalRecordApi)\|inject(PatientApi)\|HttpClient" \
+  src/app/features/clinical-records/clinical-record-form/clinical-record-form.ts || echo "sin API en el formulario: correcto"
+
+# 2. La lista carga en paralelo y usa computed
+grep -n "forkJoin" src/app/features/clinical-records/clinical-record-list/clinical-record-list.ts
+grep -n "computed(" src/app/features/clinical-records/clinical-record-list/clinical-record-list.ts
+grep -n "applyFilter" src/app/features/clinical-records/clinical-record-list/clinical-record-list.ts || echo "sin applyFilter: correcto"
+
+# 3. La tabla usa la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/clinical-records/clinical-record-list/clinical-record-list.html
+grep -n "pTemplate=" src/app/features/clinical-records/clinical-record-list/clinical-record-list.html || echo "sin pTemplate: correcto"
+
+# 4. optionValue="id" en el select de pacientes
+grep -n 'optionValue="id"' src/app/features/clinical-records/clinical-record-form/clinical-record-form.html
+
+# 5. La traducción del error existe
+grep -n "Patient already has a clinical record" src/app/core/utils/api-error.ts
+
+# 6. La ruta existe y el menú apunta a ella
+grep -n "clinical-records" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 7. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/clinical-records/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 8. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-3078484446.png)
+
+## **Cierre del ISS**
