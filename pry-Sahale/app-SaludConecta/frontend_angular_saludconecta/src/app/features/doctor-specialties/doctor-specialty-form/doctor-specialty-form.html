@@ -1,0 +1,60 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label for="ds-doctor" class="mb-1 block text-sm font-medium text-slate-700">
+      Médico <span class="text-red-500">*</span>
+    </label>
+    <p-select
+      inputId="ds-doctor"
+      formControlName="doctor_id"
+      [options]="doctors()"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Selecciona un médico activo"
+      emptyMessage="No hay médicos activos"
+      [filter]="true"
+      filterBy="name"
+      [fluid]="true"
+    />
+    @if (form.controls.doctor_id.touched && form.controls.doctor_id.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        Selecciona un médico.
+      </p-message>
+    }
+  </div>
+
+  <div>
+    <label for="ds-specialty" class="mb-1 block text-sm font-medium text-slate-700">
+      Especialidad <span class="text-red-500">*</span>
+    </label>
+    <p-select
+      inputId="ds-specialty"
+      formControlName="specialty_id"
+      [options]="specialties()"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Selecciona una especialidad activa"
+      emptyMessage="No hay especialidades activas"
+      [filter]="true"
+      filterBy="name"
+      [fluid]="true"
+    />
+    @if (form.controls.specialty_id.touched && form.controls.specialty_id.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        Selecciona una especialidad.
+      </p-message>
+    }
+    <p class="mt-1 text-xs text-slate-500">
+      Un médico no puede tener dos veces la misma especialidad.
+    </p>
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>

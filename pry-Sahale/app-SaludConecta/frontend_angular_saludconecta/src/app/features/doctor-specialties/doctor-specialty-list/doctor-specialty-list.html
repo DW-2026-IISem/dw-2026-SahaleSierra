@@ -1,0 +1,139 @@
+<app-page-header
+  title="Médicos y especialidades"
+  subtitle="Qué especialidades atiende cada médico. El backend solo lista las asignaciones activas."
+>
+  <p-tag [value]="rows().length + ' asignaciones'" severity="info" [rounded]="true" />
+  <button pButton type="button" (click)="openCreate()">
+    <i pButtonIcon class="pi pi-plus"></i>
+    <span pButtonLabel>Nueva asignación</span>
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-2xl"
+  >
+    <ng-template #caption>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-search text-slate-400"></i>
+        <input
+          pInputText
+          type="search"
+          aria-label="Buscar asignaciones"
+          placeholder="Buscar por médico o especialidad…"
+          [value]="filter()"
+          (input)="filter.set($any($event.target).value)"
+          class="w-full"
+        />
+      </div>
+      @if (filter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} coinciden con «{{ filter() }}».
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th>Médico</th>
+        <th>Especialidad</th>
+        <th>Estado</th>
+        <th class="w-32 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-row>
+      <tr>
+        <td>
+          <p class="font-medium text-slate-800">{{ doctorName()(row.doctor_id) }}</p>
+          <p class="text-xs text-slate-400">Asignación #{{ row.id }}</p>
+        </td>
+        <td>
+          <p-tag
+            [value]="specialtyName()(row.specialty_id)"
+            severity="secondary"
+            [rounded]="true"
+          />
+        </td>
+        <td><app-status-tag [status]="row.status" /></td>
+        <td>
+          <div class="flex justify-end gap-1">
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-ban"
+              aria-label="Dar de baja la asignación"
+              pTooltip="Baja lógica"
+              (click)="deactivate(row)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="danger"
+              icon="pi pi-trash"
+              aria-label="Eliminar la asignación"
+              pTooltip="Eliminar"
+              (click)="remove(row)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4">
+          @if (filter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ninguna asignación coincide con la búsqueda. Borra el filtro para ver todas."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-link"
+              title="Sin asignaciones activas"
+              message="Crea la primera con el botón «Nueva asignación» o ejecuta el seeder del backend."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  header="Nueva asignación"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="w-full max-w-xl mx-4"
+>
+  <app-doctor-specialty-form
+    [doctors]="doctors()"
+    [specialties]="specialties()"
+    [saving]="saving()"
+    [resetKey]="resetKey()"
+    (saved)="save($event)"
+    (cancelled)="dialogVisible.set(false)"
+  />
+</p-dialog>

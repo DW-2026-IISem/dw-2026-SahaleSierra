@@ -44,6 +44,14 @@ export const routes: Routes = [
             (m) => m.DoctorList,
           ),
       },
+      {
+        path: 'doctor-specialties',
+        title: 'Médicos y especialidades · SaludConecta',
+        loadComponent: () =>
+          import('./features/doctor-specialties/doctor-specialty-list/doctor-specialty-list').then(
+            (m) => m.DoctorSpecialtyList,
+          ),
+      },
 
     ],
   },
