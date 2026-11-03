@@ -1496,3 +1496,127 @@ ng build
 ![](images/clipboard-2419993133.png)
 
 ## **Cierre del ISS**
+
+![](images/clipboard-1306761709.png)
+
+![](images/clipboard-2703469172.png)
+
+# **Fase I: Frontend — ISS-11 — Autorizaciones de citas (0..1:1)**
+
+## **11.1 Modelo y reglas del backend**
+
+![](images/clipboard-2502725451.png)
+
+## **11.2 Generar con el CLI**
+
+![](images/clipboard-116875607.png)
+
+## **11.3 Formato de fecha para etiquetas (`formatLocal`)**
+
+**PARCHE — `src/app/core/utils/datetime.ts`** (se **añade al final** del archivo; `pad` ya está definido arriba):
+
+![](images/clipboard-713796424.png)
+
+**`src/app/core/utils/datetime-format.spec.ts`** (2 pruebas; no dependen de la zona horaria)
+
+![](images/clipboard-1797779686.png)
+
+## **11.4 Traducir «la cita ya tiene autorización» (`api-error`)**
+
+**PARCHE — `src/app/core/utils/api-error.ts`.** **Dentro de** la rama `if (body && typeof body === 'object' && body.error) {`, **encima de** la línea `const detail = body.detail ?? '';`, **añadí:**
+
+![](images/clipboard-1660833339.png)
+
+**`src/app/core/utils/api-error-authorization.spec.ts`** (1 prueba)
+
+![](images/clipboard-2293294484.png)
+
+## **11.5 Prueba del servicio**
+
+**`src/app/features/authorizations/authorization-api.spec.ts`** (6 pruebas)
+
+![](images/clipboard-1624287304.png)
+
+## **11.6 `authorization-form.ts`** 
+
+![](images/clipboard-948785219.png)
+
+## **11.7 `authorization-form.html` y `authorization-form.css`**
+
+![](images/clipboard-4206279220.png)
+
+## **11.8 `authorization-form.spec.ts`**
+
+![](images/clipboard-2442781625.png)
+
+## **11.9 `authorization-list.ts`**
+
+![](images/clipboard-3066317321.png)
+
+![](images/clipboard-2463049358.png)
+
+## **11.10 `authorization-list.html` y `authorization-list.css`**
+
+![](images/clipboard-2496835211.png)
+
+![](images/clipboard-542335867.png)
+
+## **11.11 `authorization-list.spec.ts`**
+
+![](images/clipboard-2819681354.png)
+
+![](images/clipboard-2083719635.png)
+
+## **11.12 Ruta y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Dentro de** `children` del `Shell`, **encima del** `],` que cierra esa lista (debajo de la última ruta hija que tengas), **añadí:**
+
+![](images/clipboard-3599760806.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **encima de** la entrada `Prototipo`, **añadí:**
+
+![](images/clipboard-2559786826.png)
+
+## **11.13 Comprobar antes de avanzar**
+
+![](images/clipboard-617474964.png)
+
+![](images/clipboard-1539494202.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El formulario no llama a la API: solo emite
+grep -n "output<AuthorizationPayload>\|output<AuthorizationUpdatePayload>\|output<void>" \
+  src/app/features/authorizations/authorization-form/authorization-form.ts
+grep -n "inject(AuthorizationApi)\|inject(AppointmentApi)\|HttpClient" \
+  src/app/features/authorizations/authorization-form/authorization-form.ts || echo "sin API en el formulario: correcto"
+
+# 2. La lista carga en paralelo y usa computed
+grep -n "forkJoin" src/app/features/authorizations/authorization-list/authorization-list.ts
+grep -n "availableAppointments" src/app/features/authorizations/authorization-list/authorization-list.ts
+
+# 3. La tabla usa la API de PrimeNG 22
+grep -n "#caption\|#header\|#body\|#emptymessage" src/app/features/authorizations/authorization-list/authorization-list.html
+grep -n "pTemplate=" src/app/features/authorizations/authorization-list/authorization-list.html || echo "sin pTemplate: correcto"
+
+# 4. formatLocal y la traducción existen
+grep -n "export function formatLocal" src/app/core/utils/datetime.ts
+grep -n "Appointment already has an authorization" src/app/core/utils/api-error.ts
+
+# 5. La ruta existe y el menú apunta a ella
+grep -n "authorizations" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 6. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/authorizations/*/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 7. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-1056280656.png)
+
+## **Cierre del ISS**
