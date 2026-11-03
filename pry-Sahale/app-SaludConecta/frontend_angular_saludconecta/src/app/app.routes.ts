@@ -68,6 +68,14 @@ export const routes: Routes = [
             (m) => m.ClinicalRecordList,
           ),
       },
+      {
+        path: 'appointments',
+        title: 'Citas · SaludConecta',
+        loadComponent: () =>
+          import('./features/appointments/appointment-list/appointment-list').then(
+            (m) => m.AppointmentList,
+          ),
+      },
 
     ],
   },

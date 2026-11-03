@@ -1,0 +1,187 @@
+<app-page-header
+  title="Citas"
+  subtitle="Programa, edita y cancela citas. Una agenda no admite dos citas que se crucen."
+>
+  <p-tag [value]="scheduledCount() + ' programadas'" severity="info" [rounded]="true" />
+  <button pButton type="button" (click)="openCreate()">
+    <i pButtonIcon class="pi pi-plus"></i>
+    <span pButtonLabel>Programar cita</span>
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    sortField="start_date"
+    [sortOrder]="1"
+    tableStyleClass="min-w-4xl"
+  >
+    <ng-template #caption>
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="flex flex-1 items-center gap-2">
+          <i class="pi pi-search text-slate-400"></i>
+          <input
+            pInputText
+            type="search"
+            aria-label="Buscar citas"
+            placeholder="Buscar por paciente, documento, agenda o motivo…"
+            [value]="filter()"
+            (input)="filter.set($any($event.target).value)"
+            class="w-full"
+          />
+        </div>
+        <p-select
+          class="sm:w-48"
+          [options]="stateOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="stateFilter()"
+          (ngModelChange)="stateFilter.set($event)"
+          [fluid]="true"
+        />
+      </div>
+      @if (filter() || stateFilter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} citas coinciden con el filtro.
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="start_date">
+          <div class="flex items-center gap-1">Fecha y hora <p-sort-icon field="start_date" /></div>
+        </th>
+        <th>Paciente</th>
+        <th>Agenda</th>
+        <th>Motivo</th>
+        <th>Estado</th>
+        <th class="w-48 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-appointment>
+      <tr>
+        <td class="text-sm">
+          <p class="font-medium text-slate-800">
+            {{ appointment.start_date | date: 'dd/MM/yyyy' }}
+          </p>
+          <p class="text-xs text-slate-500">
+            {{ appointment.start_date | date: 'HH:mm' }} – {{ appointment.end_date | date: 'HH:mm' }}
+          </p>
+        </td>
+        <td>
+          <p class="font-medium text-slate-800">{{ patientName()(appointment.patient_id) }}</p>
+          <p class="text-xs text-slate-400">{{ patientDocument()(appointment.patient_id) }}</p>
+        </td>
+        <td class="text-sm text-slate-700">{{ agendaLabel()(appointment.agenda_id) }}</td>
+        <td class="text-sm text-slate-600">{{ appointment.reason || '—' }}</td>
+        <td><app-state-tag [state]="appointment.state" /></td>
+        <td>
+          <div class="flex justify-end gap-1">
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="secondary"
+              icon="pi pi-pencil"
+              aria-label="Editar cita"
+              pTooltip="Editar"
+              [disabled]="!canChange(appointment)"
+              (click)="openEdit(appointment)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-times-circle"
+              aria-label="Cancelar cita"
+              pTooltip="Cancelar cita"
+              [disabled]="!canChange(appointment)"
+              (click)="cancelAppointment(appointment)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-ban"
+              aria-label="Dar de baja la cita"
+              pTooltip="Baja lógica"
+              (click)="deactivate(appointment)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="danger"
+              icon="pi pi-trash"
+              aria-label="Eliminar cita"
+              pTooltip="Eliminar"
+              (click)="remove(appointment)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="6">
+          @if (filter() || stateFilter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ninguna cita coincide con el filtro. Quita el filtro para ver todas."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-calendar"
+              title="Sin citas"
+              message="Programa la primera con el botón «Programar cita» o ejecuta el seeder del backend."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="title()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="w-full max-w-3xl mx-4"
+>
+  <app-appointment-form
+    [appointment]="editing()"
+    [agendas]="agendas()"
+    [doctors]="doctors()"
+    [patients]="patients()"
+    [saving]="saving()"
+    [resetKey]="resetKey()"
+    (created)="create($event)"
+    (updated)="update($event)"
+    (unchanged)="onUnchanged()"
+    (cancelled)="dialogVisible.set(false)"
+  />
+</p-dialog>

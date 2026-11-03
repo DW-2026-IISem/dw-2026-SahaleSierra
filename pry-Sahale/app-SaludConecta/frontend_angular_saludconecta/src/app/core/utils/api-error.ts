@@ -31,6 +31,13 @@ export function toApiMessage(error: unknown): string {
       if (existing) {
         return `Este paciente ya tiene una historia clínica (id ${existing[1]}, estado ${existing[2]}).`;
       }
+      // Cruce de horario en la misma agenda: el 400 trae el id de la cita que choca.
+      const overlap = /Agenda already has an appointment in that time range \(id (\d+)\)/.exec(
+        body.error,
+      );
+      if (overlap) {
+        return `La agenda ya tiene una cita en ese horario (cita #${overlap[1]}). Elige otro rango de fechas.`;
+      }
 
       const detail = body.detail ?? '';
       if (detail.includes('UniqueConstraint')) {

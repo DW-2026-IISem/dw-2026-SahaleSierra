@@ -1,0 +1,140 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="appointment-agenda" class="mb-1 block text-sm font-medium text-slate-700">
+        Agenda <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        inputId="appointment-agenda"
+        formControlName="agenda_id"
+        [options]="agendaOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Elige una agenda"
+        [filter]="true"
+        filterBy="label"
+        [fluid]="true"
+      />
+      @if (form.controls.agenda_id.touched && form.controls.agenda_id.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Elige la agenda de la cita.
+        </p-message>
+      }
+    </div>
+
+    <div>
+      <label for="appointment-patient" class="mb-1 block text-sm font-medium text-slate-700">
+        Paciente <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        inputId="appointment-patient"
+        formControlName="patient_id"
+        [options]="patientOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Elige un paciente"
+        [filter]="true"
+        filterBy="label"
+        [fluid]="true"
+      />
+      @if (form.controls.patient_id.touched && form.controls.patient_id.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Elige el paciente de la cita.
+        </p-message>
+      }
+    </div>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="appointment-start" class="mb-1 block text-sm font-medium text-slate-700">
+        Inicio <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="appointment-start"
+        type="datetime-local"
+        pInputText
+        formControlName="start_date"
+        class="w-full"
+      />
+      @if (form.controls.start_date.touched && form.controls.start_date.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Indica la fecha y hora de inicio.
+        </p-message>
+      }
+    </div>
+
+    <div>
+      <label for="appointment-end" class="mb-1 block text-sm font-medium text-slate-700">
+        Fin <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="appointment-end"
+        type="datetime-local"
+        pInputText
+        formControlName="end_date"
+        class="w-full"
+      />
+      @if (form.controls.end_date.touched && form.controls.end_date.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Indica la fecha y hora de fin.
+        </p-message>
+      } @else if (form.hasError('range') && form.controls.end_date.touched) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          La hora de fin debe ser posterior a la de inicio.
+        </p-message>
+      }
+    </div>
+  </div>
+
+  <p class="-mt-2 text-xs text-slate-500">
+    Las horas son las de tu equipo; el backend las guarda en UTC. Una agenda no admite dos citas
+    que se crucen en el tiempo.
+  </p>
+
+  <div>
+    <label for="appointment-reason" class="mb-1 block text-sm font-medium text-slate-700">
+      Motivo
+    </label>
+    <textarea
+      id="appointment-reason"
+      pTextarea
+      formControlName="reason"
+      rows="3"
+      placeholder="Control de rutina"
+      class="w-full"
+    ></textarea>
+  </div>
+
+  <div>
+    <label for="appointment-status" class="mb-1 block text-sm font-medium text-slate-700">
+      Estado de registro
+    </label>
+    <p-select
+      inputId="appointment-status"
+      formControlName="status"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [fluid]="true"
+    />
+    <p class="mt-1 text-xs text-slate-500">
+      @if (appointment()) {
+        El estado de registro solo cambia con la baja lógica. Para cancelar la cita usa el botón
+        «Cancelar cita» de la tabla.
+      } @else {
+        La cita nace «Programada»; no se elige su estado.
+      }
+    </p>
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>
