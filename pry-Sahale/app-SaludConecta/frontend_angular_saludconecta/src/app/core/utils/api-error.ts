@@ -38,6 +38,10 @@ export function toApiMessage(error: unknown): string {
       if (overlap) {
         return `La agenda ya tiene una cita en ese horario (cita #${overlap[1]}). Elige otro rango de fechas.`;
       }
+      // Una autorización por cita.
+      if (body.error.includes('Appointment already has an authorization')) {
+        return 'Esta cita ya tiene una autorización.';
+      }
 
       const detail = body.detail ?? '';
       if (detail.includes('UniqueConstraint')) {

@@ -50,6 +50,7 @@ export class Shell {
     { label: 'Agendas', icon: 'pi pi-calendar', routerLink: '/agendas' },
     { label: 'Historias clínicas', icon: 'pi pi-file-edit', routerLink: '/clinical-records' },
     { label: 'Citas', icon: 'pi pi-calendar', routerLink: '/appointments' },
+    { label: 'Autorizaciones', icon: 'pi pi-check-circle', routerLink: '/authorizations' },
     { label: 'Prototipo', icon: 'pi pi-desktop', routerLink: '/prototype' },
   ];
 

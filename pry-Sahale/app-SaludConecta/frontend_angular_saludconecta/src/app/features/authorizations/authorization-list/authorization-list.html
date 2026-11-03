@@ -1,0 +1,160 @@
+<app-page-header
+  title="Autorizaciones"
+  subtitle="Una autorización por cita. El backend solo lista las activas."
+>
+  <p-tag [value]="rows().length + ' activas'" severity="info" [rounded]="true" />
+  <p-tag
+    [value]="availableAppointments().length + ' citas sin autorización'"
+    severity="warn"
+    [rounded]="true"
+  />
+  <button pButton type="button" (click)="openCreate()">
+    <i pButtonIcon class="pi pi-plus"></i>
+    <span pButtonLabel>Nueva autorización</span>
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-3xl"
+  >
+    <ng-template #caption>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-search text-slate-400"></i>
+        <input
+          pInputText
+          type="search"
+          aria-label="Buscar autorizaciones"
+          placeholder="Buscar por número, descripción o paciente…"
+          [value]="filter()"
+          (input)="filter.set($any($event.target).value)"
+          class="w-full"
+        />
+      </div>
+      @if (filter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} coinciden con «{{ filter() }}».
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="name">
+          <div class="flex items-center gap-1">Autorización <p-sort-icon field="name" /></div>
+        </th>
+        <th>Cita</th>
+        <th>Descripción</th>
+        <th>Estado</th>
+        <th class="w-40 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-authorization>
+      <tr>
+        <td>
+          <p class="font-medium text-slate-800">{{ authorization.name }}</p>
+          <p class="text-xs text-slate-400">#{{ authorization.id }}</p>
+        </td>
+        <td>
+          <p class="text-sm text-slate-800">{{ appointmentLabel()(authorization.appointment_id) }}</p>
+          @if (appointmentState()(authorization.appointment_id)) {
+            <app-state-tag [state]="appointmentState()(authorization.appointment_id)" />
+          }
+        </td>
+        <td class="text-sm text-slate-600">{{ authorization.description || '—' }}</td>
+        <td><app-status-tag [status]="authorization.status" /></td>
+        <td>
+          <div class="flex justify-end gap-1">
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="secondary"
+              icon="pi pi-pencil"
+              aria-label="Editar autorización"
+              pTooltip="Editar"
+              (click)="openEdit(authorization)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-ban"
+              aria-label="Dar de baja la autorización"
+              pTooltip="Baja lógica"
+              (click)="deactivate(authorization)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="danger"
+              icon="pi pi-trash"
+              aria-label="Eliminar autorización"
+              pTooltip="Eliminar"
+              (click)="remove(authorization)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="5">
+          @if (filter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ninguna autorización coincide con la búsqueda. Borra el filtro para ver todas."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-check-circle"
+              title="Sin autorizaciones activas"
+              message="Crea la primera con el botón «Nueva autorización» o ejecuta el seeder del backend."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="title()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="w-full max-w-2xl mx-4"
+>
+  <app-authorization-form
+    [authorization]="editing()"
+    [appointmentOptions]="formOptions()"
+    [appointmentLabel]="editingAppointmentLabel()"
+    [saving]="saving()"
+    [resetKey]="resetKey()"
+    (created)="create($event)"
+    (updated)="update($event)"
+    (cancelled)="dialogVisible.set(false)"
+  />
+</p-dialog>

@@ -1,0 +1,104 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label for="authorization-appointment" class="mb-1 block text-sm font-medium text-slate-700">
+      Cita <span class="text-red-500">*</span>
+    </label>
+
+    @if (authorization()) {
+      <!-- Edición: la cita de una autorización no cambia. -->
+      <input
+        id="authorization-appointment"
+        pInputText
+        [value]="appointmentLabel()"
+        readonly
+        aria-label="Cita de la autorización"
+        class="w-full"
+      />
+      <p class="mt-1 text-xs text-slate-500">La cita de una autorización no se puede cambiar.</p>
+    } @else if (appointmentOptions().length === 0) {
+      <p-message severity="warn" size="small" styleClass="w-full">
+        Todas las citas activas ya tienen autorización.
+      </p-message>
+    } @else {
+      <p-select
+        inputId="authorization-appointment"
+        formControlName="appointment_id"
+        [options]="appointmentOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Elige una cita sin autorización"
+        [filter]="true"
+        filterBy="label"
+        [fluid]="true"
+      />
+      @if (form.controls.appointment_id.touched && form.controls.appointment_id.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Elige la cita de la autorización.
+        </p-message>
+      }
+      <p class="mt-1 text-xs text-slate-500">Solo aparecen las citas que todavía no tienen autorización.</p>
+    }
+  </div>
+
+  <div>
+    <label for="authorization-name" class="mb-1 block text-sm font-medium text-slate-700">
+      Número de autorización <span class="text-red-500">*</span>
+    </label>
+    <input
+      id="authorization-name"
+      pInputText
+      formControlName="name"
+      placeholder="AUT-00012345"
+      autocomplete="off"
+      class="w-full"
+    />
+    @if (form.controls.name.touched && form.controls.name.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        El número de autorización es obligatorio (máximo 60 caracteres).
+      </p-message>
+    }
+  </div>
+
+  <div>
+    <label for="authorization-description" class="mb-1 block text-sm font-medium text-slate-700">
+      Descripción
+    </label>
+    <textarea
+      id="authorization-description"
+      pTextarea
+      formControlName="description"
+      rows="3"
+      placeholder="Autorización EPS Sura"
+      class="w-full"
+    ></textarea>
+  </div>
+
+  <div>
+    <label for="authorization-status" class="mb-1 block text-sm font-medium text-slate-700">
+      Estado
+    </label>
+    <p-select
+      inputId="authorization-status"
+      formControlName="status"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [fluid]="true"
+    />
+    @if (authorization()) {
+      <p class="mt-1 text-xs text-slate-500">
+        El estado de una autorización existente solo cambia con la baja lógica.
+      </p>
+    }
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>

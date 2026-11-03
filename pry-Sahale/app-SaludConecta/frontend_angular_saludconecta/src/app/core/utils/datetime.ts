@@ -29,3 +29,22 @@ export function toIsoUtc(local: string | null | undefined): string {
   const date = new Date(local);
   return Number.isNaN(date.getTime()) ? '' : date.toISOString();
 }
+
+/**
+ * UTC → `dd/MM/yyyy HH:mm` en hora local, para textos y etiquetas de selects
+ * (no para `<input type="datetime-local">`; para eso está `toLocalInput`).
+ * Un valor vacío o inválido devuelve `''`.
+ */
+export function formatLocal(iso: string | null | undefined): string {
+  if (!iso) {
+    return '';
+  }
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  return (
+    `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ` +
+    `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  );
+}
