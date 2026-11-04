@@ -1,0 +1,62 @@
+<app-page-header title="Mi sesión" subtitle="Identidad, roles y permisos efectivos.">
+  <button pButton type="button" severity="secondary" outlined [loading]="refreshing()" (click)="refresh()">
+    <i pButtonIcon class="pi pi-refresh"></i>
+    <span pButtonLabel>Actualizar permisos</span>
+  </button>
+  <button pButton type="button" severity="danger" outlined [loading]="loggingOut()" (click)="logout()">
+    <i pButtonIcon class="pi pi-sign-out"></i>
+    <span pButtonLabel>Cerrar sesión</span>
+  </button>
+</app-page-header>
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <p-card class="lg:col-span-1">
+    <dl class="space-y-2 text-sm">
+      <div class="flex justify-between">
+        <dt class="text-slate-500">Usuario</dt>
+        <dd class="font-medium text-slate-900">{{ session.user()?.username || '—' }}</dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-slate-500">Correo</dt>
+        <dd class="text-slate-700">{{ session.user()?.email || '—' }}</dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-slate-500">Permisos</dt>
+        <dd class="font-medium text-slate-900">{{ session.permissionCount() }}</dd>
+      </div>
+      <div class="flex flex-wrap gap-1 pt-2">
+        @for (role of session.roleNames(); track role) {
+          <p-tag [value]="role" severity="info" [rounded]="true" />
+        }
+      </div>
+    </dl>
+  </p-card>
+
+  <p-card header="Permisos efectivos" class="lg:col-span-2">
+    <p-table [value]="session.permissions()" dataKey="resource_id" tableStyleClass="min-w-2xl">
+      <ng-template #header>
+        <tr>
+          <th>Método</th>
+          <th>Ruta</th>
+          <th>Descripción</th>
+          <th>Rol</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-permission>
+        <tr>
+          <td><p-tag [value]="permission.method" severity="secondary" [rounded]="true" /></td>
+          <td><code class="text-xs">{{ permission.path }}</code></td>
+          <td class="text-sm text-slate-600">{{ permission.description || '—' }}</td>
+          <td class="text-sm text-slate-700">{{ permission.role_name }}</td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="4" class="text-center text-sm text-slate-500 py-6">
+            No hay permisos efectivos para esta sesión.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>

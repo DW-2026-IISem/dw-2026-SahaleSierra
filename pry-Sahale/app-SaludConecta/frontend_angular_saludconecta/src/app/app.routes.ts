@@ -1,5 +1,15 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth-guard';
+import { guestGuard } from './core/guards/guest-guard';
 
+/**
+ * Rutas de la aplicación.
+ *
+ * - `/login` y `/forbidden` fuera del Shell (no necesitan layout).
+ * - `/` (Shell) protegido por `authGuard`: sin sesión redirige a `/login`.
+ * - Las rutas hijas de `Shell` **no** llevan todavía `permissionGuard`:
+ *   eso es ISS-16.
+ */
 export const routes: Routes = [
   {
     path: 'prototype',
@@ -7,19 +17,41 @@ export const routes: Routes = [
       import('./features/prototype/prototype').then((m) => m.Prototype),
   },
   {
+    path: 'login',
+    title: 'Iniciar sesión · SaludConecta',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
+  },
+  {
+    path: 'forbidden',
+    title: 'Acceso denegado · SaludConecta',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/auth/forbidden/forbidden').then((m) => m.Forbidden),
+  },
+  {
     path: '',
+    canActivate: [authGuard],
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: [
-          // La primera pantalla de negocio es la redirección por defecto.
-      // ISS-14 la cambiará por el dashboard.
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        title: 'Panel · SaludConecta',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+      },
+      {
+        path: 'profile',
+        title: 'Mi sesión · SaludConecta',
+        loadComponent: () => import('./features/auth/profile/profile').then((m) => m.Profile),
+      },
+      // Rutas de negocio: siguen sin permissionGuard hasta ISS-16.
       {
         path: 'patients',
         title: 'Pacientes · SaludConecta',
         loadComponent: () =>
           import('./features/patients/patient-list/patient-list').then((m) => m.PatientList),
       },
-
       {
         path: 'specialties',
         title: 'Especialidades · SaludConecta',
@@ -32,17 +64,13 @@ export const routes: Routes = [
         path: 'services',
         title: 'Servicios · SaludConecta',
         loadComponent: () =>
-          import('./features/services/service-list/service-list').then(
-            (m) => m.ServiceList,
-          ),
+          import('./features/services/service-list/service-list').then((m) => m.ServiceList),
       },
       {
         path: 'doctors',
         title: 'Médicos · SaludConecta',
         loadComponent: () =>
-          import('./features/doctors/doctor-list/doctor-list').then(
-            (m) => m.DoctorList,
-          ),
+          import('./features/doctors/doctor-list/doctor-list').then((m) => m.DoctorList),
       },
       {
         path: 'doctor-specialties',
@@ -56,9 +84,7 @@ export const routes: Routes = [
         path: 'agendas',
         title: 'Agendas · SaludConecta',
         loadComponent: () =>
-          import('./features/agendas/agenda-list/agenda-list').then(
-            (m) => m.AgendaList,
-          ),
+          import('./features/agendas/agenda-list/agenda-list').then((m) => m.AgendaList),
       },
       {
         path: 'clinical-records',
@@ -96,20 +122,14 @@ export const routes: Routes = [
         path: 'invoices',
         title: 'Facturas · SaludConecta',
         loadComponent: () =>
-          import('./features/invoices/invoice-list/invoice-list').then(
-            (m) => m.InvoiceList,
-          ),
+          import('./features/invoices/invoice-list/invoice-list').then((m) => m.InvoiceList),
       },
-      
       {
         path: 'invoices/new',
         title: 'Nueva factura · SaludConecta',
         loadComponent: () =>
-          import('./features/invoices/invoice-form/invoice-form').then(
-            (m) => m.InvoiceForm,
-          ),
+          import('./features/invoices/invoice-form/invoice-form').then((m) => m.InvoiceForm),
       },
-      
       {
         path: 'invoices/:id',
         title: 'Detalle de factura · SaludConecta',
@@ -118,15 +138,7 @@ export const routes: Routes = [
             (m) => m.InvoiceDetail,
           ),
       },
-
-      {
-        path: 'dashboard',
-        title: 'Panel · SaludConecta',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard').then((m) => m.Dashboard),
-      },
-
     ],
   },
-  { path: '**', redirectTo: 'prototype' },
+  { path: '**', redirectTo: 'login' },
 ];

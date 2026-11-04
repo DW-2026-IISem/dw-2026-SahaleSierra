@@ -2150,3 +2150,172 @@ find src/app/core/guards src/app/core/interceptors -type f ! -name '.gitkeep' 2>
 ![](images/clipboard-1690772912.png)
 
 ## **Cierre del ISS**
+
+![![](images/clipboard-3808723137.png)](images/clipboard-2448941472.png)
+
+# **Fase II: Frontend — ISS-15 — Autenticación JWT, perfil y permisos efectivos**
+
+## 15.2 Confirmar el punto de partida del frontend
+
+![](images/clipboard-3689715038.png)
+
+## 15.3 Activar la mitad frontal del interruptor (`requireAuth`)
+
+**PARCHE — `src/environments/environment.ts`.** El archivo ya tiene `requireAuth: true` desde ISS-01; aquí solo lo verifico y lo dejo con el comentario definitivo.
+
+![](images/clipboard-2766823693.png)
+
+Ambos deben imprimir `requireAuth: true,`. Si alguno quedó en `false` (alguien lo cambió para probar la Fase I), se vuelve a poner en `true` con:
+
+![](images/clipboard-3959428701.png)
+
+## 15.4 `SessionStore`
+
+![![](images/clipboard-1400124587.png)](images/clipboard-3739188118.png)
+
+## 15.5 `AuthService`
+
+![](images/clipboard-2655367756.png)
+
+## 15.6 `authInterceptor` con refresh single-flight
+
+![](images/clipboard-1527350529.png)
+
+## 15.7 Registro en `app.config.ts`
+
+**PARCHE — `src/app/app.config.ts`.**
+
+**1.** **Debajo de** `import { provideHttpClient } from '@angular/common/http';`, **añadí**:
+
+![](images/clipboard-3083438175.png)
+
+**2.** **Reemplacé** la línea `provideHttpClient(),` por:
+
+![](images/clipboard-3329940504.png)
+
+## 15.8 `authGuard` y `guestGuard`
+
+![](images/clipboard-2124516804.png)
+
+## 15.9 Componente `Login`
+
+![](images/clipboard-1645176348.png)
+
+![![](images/clipboard-1198388240.png)](images/clipboard-3129915411.png)
+
+## 15.10 Componentes `Profile` y `Forbidden`
+
+![](images/clipboard-977055458.png)
+
+![![](images/clipboard-1643901488.png)](images/clipboard-1004625780.png)
+
+![![](images/clipboard-1569996930.png)](images/clipboard-1358948100.png)
+
+![](images/clipboard-699239871.png)
+
+## 15.11 Logout desde el `Shell`
+
+**PARCHE — `src/app/layout/shell/shell.ts`.**
+
+**1.** **Debajo de** los `import` de Angular y PrimeNG (arriba de la clase), **añadí**:
+
+![](images/clipboard-883832019.png)
+
+**2.** **Dentro de** la clase `Shell`, **debajo de** `private readonly isDesktop = watchMediaQuery(...)`, **añadí**:
+
+![](images/clipboard-1897003284.png)
+
+**3.** **Dentro de** la clase, **debajo de** `onMenuToggle()`, **añadí**:
+
+![](images/clipboard-2806888577.png)
+
+**PARCHE — `src/app/layout/shell/shell.html`.**
+
+Dentro del bloque `@if (!sidebarCollapsed())`, **reemplacé** la línea:
+
+![](images/clipboard-4078494473.png)
+
+Y dentro del bloque `<p-drawer …>`, **reemplacé** la línea:
+
+![](images/clipboard-1330171844.png)
+
+## 15.12 Rutas
+
+**PARCHE — `src/app/app.routes.ts`.** Reemplazo completo del archivo (el cambio abarca casi todo: nueva ruta `/login`, nuevos guards en `Shell`, `/profile` y `/forbidden`):
+
+![](images/clipboard-3281318996.png)
+
+## 15.13 Pruebas
+
+**`src/app/core/services/session-store.spec.ts`** (8 pruebas)
+
+![](images/clipboard-4155915492.png)
+
+**`src/app/core/services/auth.spec.ts`** (6 pruebas)
+
+![](images/clipboard-3415160326.png)
+
+**`src/app/core/interceptors/auth-interceptor.spec.ts`** (6 pruebas)
+
+![](images/clipboard-2073911025.png)
+
+**`src/app/features/auth/login/login.spec.ts`** (4 pruebas)
+
+![](images/clipboard-3190261138.png)
+
+**`src/app/core/guards/rbac-guards.spec.ts`** (4 pruebas)
+
+![](images/clipboard-30904411.png)
+
+## 15.14 Comprobar antes de avanzar
+
+![](images/clipboard-3941046487.png)
+
+![](images/clipboard-3310884753.png)
+
+![](images/clipboard-1042737672.png)
+
+![](images/clipboard-3566924767.png)
+
+## Verificación del ISS
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+# 1. Los cinco guards/servicios/interceptor existen
+ls src/app/core/services/session-store.ts \
+   src/app/core/services/auth.ts \
+   src/app/core/interceptors/auth-interceptor.ts \
+   src/app/core/guards/auth-guard.ts \
+   src/app/core/guards/guest-guard.ts
+
+# 2. Los tres componentes nuevos existen con sus cuatro archivos
+ls src/app/features/auth/login src/app/features/auth/profile src/app/features/auth/forbidden
+
+# 3. provideHttpClient con withInterceptors([authInterceptor]) y SIN errorInterceptor
+grep -n "provideHttpClient" src/app/app.config.ts
+grep -n "withInterceptors(\[authInterceptor\])" src/app/app.config.ts
+grep -n "errorInterceptor" src/app/app.config.ts || echo "sin errorInterceptor todavía (ISS-16): correcto"
+
+# 4. Rutas: /login y /forbidden existen, Shell protegido por authGuard, rutas hijas SIN permissionGuard
+grep -n "path: 'login'\|path: 'forbidden'\|authGuard\|guestGuard" src/app/app.routes.ts
+grep -n "permissionGuard" src/app/app.routes.ts || echo "sin permissionGuard todavía (ISS-16): correcto"
+
+# 5. Shell conecta logoutRequested con onLogout
+grep -n "onLogout\|logoutRequested" src/app/layout/shell/shell.ts src/app/layout/shell/shell.html
+
+# 6. requireAuth está en true en ambos entornos
+grep -n "requireAuth" src/environments/environment.ts src/environments/environment.development.ts
+
+# 7. No hay todavía las piezas de ISS-16
+grep -rn "appHasPermission\|errorInterceptor\|authOnlyGuard" src/app --include=*.ts --exclude=*.spec.ts \
+  || echo "sin piezas de ISS-16: correcto"
+
+# 8. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-2864732364.png)
+
+## Cierre del ISS

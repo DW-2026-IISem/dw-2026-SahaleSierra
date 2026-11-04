@@ -8,7 +8,11 @@
     -->
     @if (!sidebarCollapsed()) {
       <aside class="hidden w-72 shrink-0 lg:block">
-        <app-aside [items]="items" (navigated)="mobileOpen.set(false)" />
+       <app-aside
+          [items]="items"
+          (navigated)="mobileOpen.set(false)"
+          (logoutRequested)="onLogout()"
+      />
       </aside>
     }
 
@@ -24,7 +28,11 @@
 
 <!-- Móvil: el mismo Aside, otra disposición. -->
 <p-drawer [(visible)]="mobileOpen" header="Menú" position="left" styleClass="w-72">
-  <app-aside [items]="items" (navigated)="mobileOpen.set(false)" />
+  <app-aside
+  [items]="items"
+  (navigated)="mobileOpen.set(false)"
+  (logoutRequested)="onLogout()"
+/>
 </p-drawer>
 
 <!-- Anfitriones de las notificaciones y confirmaciones del CRUD (ISS-03). -->

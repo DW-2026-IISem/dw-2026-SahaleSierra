@@ -10,6 +10,8 @@ import {
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { provideHttpClient } from '@angular/common/http';
+import { withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './core/interceptors/auth-interceptor';
 import Aura from '@primeuix/themes/aura';
 import { environment } from '../environments/environment';
 
@@ -39,9 +41,9 @@ export const appConfig: ApplicationConfig = {
       },
     }),
     
-    // Habilita la inyección de HttpClient en los servicios `*Api`.
-    // Sin interceptores de sesión: el authInterceptor llega en ISS-15.
-    provideHttpClient(),
+    // Adjunta el Bearer y, ante un 401, refresca el par con single-flight.
+    // El errorInterceptor (toast de 403/500/offline) es ISS-16.
+    provideHttpClient(withInterceptors([authInterceptor])),
 
 
     MessageService,

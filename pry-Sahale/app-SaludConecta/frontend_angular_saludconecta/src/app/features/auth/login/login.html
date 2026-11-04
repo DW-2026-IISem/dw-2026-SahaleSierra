@@ -1,0 +1,51 @@
+<div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
+  <h1 class="text-xl font-semibold text-slate-900">SaludConecta</h1>
+  <p class="mt-1 text-sm text-slate-500">Inicia sesión para continuar.</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="mt-6 space-y-4">
+    <div>
+      <label for="login-identifier" class="mb-1 block text-sm font-medium text-slate-700">
+        Usuario o correo
+      </label>
+      <input
+        id="login-identifier"
+        pInputText
+        formControlName="identifier"
+        autocomplete="username"
+        class="w-full"
+      />
+      @if (form.controls.identifier.touched && form.controls.identifier.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Indica tu usuario o correo.
+        </p-message>
+      }
+    </div>
+
+    <div>
+      <label for="login-password" class="mb-1 block text-sm font-medium text-slate-700">
+        Contraseña
+      </label>
+      <p-password
+        inputId="login-password"
+        formControlName="password"
+        [feedback]="false"
+        [toggleMask]="true"
+        [fluid]="true"
+      />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Indica tu contraseña.
+        </p-message>
+      }
+    </div>
+
+    @if (error()) {
+      <p-message severity="error" styleClass="w-full">{{ error() }}</p-message>
+    }
+
+    <button pButton type="submit" class="w-full" [loading]="loading()">
+      <i pButtonIcon class="pi pi-sign-in"></i>
+      <span pButtonLabel>Entrar</span>
+    </button>
+  </form>
+</div>

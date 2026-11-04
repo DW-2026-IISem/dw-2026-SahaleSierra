@@ -1,0 +1,21 @@
+<div class="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-sm">
+  <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+    <i class="pi pi-lock text-xl"></i>
+  </div>
+  <h1 class="mt-4 text-lg font-semibold text-slate-900">Acceso denegado</h1>
+  <p class="mt-1 text-sm text-slate-500">
+    Tu sesión no tiene el permiso necesario para esta pantalla.
+  </p>
+
+  @if (permission) {
+    <div class="mt-4 rounded-xl bg-slate-900 px-4 py-3 text-left">
+      <p class="text-[11px] uppercase text-slate-400">Permiso requerido</p>
+      <code class="text-sm text-emerald-300">{{ permission }}</code>
+    </div>
+  }
+
+  <button pButton type="button" class="mt-4 w-full" (click)="back()">
+    <i pButtonIcon class="pi pi-home"></i>
+    <span pButtonLabel>Volver al panel</span>
+  </button>
+</div>
