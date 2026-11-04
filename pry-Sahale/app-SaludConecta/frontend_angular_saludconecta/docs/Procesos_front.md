@@ -2319,3 +2319,83 @@ ng build
 ![](images/clipboard-2864732364.png)
 
 ## Cierre del ISS
+
+![![](images/clipboard-2960800355.png)](images/clipboard-2436577280.png)
+
+# Fase II: Frontend — ISS-16 — Guards y RBAC en las pantallas de negocio
+
+## 16.2 `permissionGuard`
+
+![](images/clipboard-3101371712.png)
+
+## 16.3 `authOnlyGuard`
+
+![](images/clipboard-458825547.png)
+
+## 16.4 Directiva `*appHasPermission`
+
+![](images/clipboard-2665652015.png)
+
+## 16.5 `errorInterceptor`
+
+![](images/clipboard-1397165407.png)
+
+![](images/clipboard-244536419.png)
+
+## 16.6 `nav.config.ts` y `navGroups()`
+
+![](images/clipboard-2420827794.png)
+
+## 16.7 `Shell` conectado a `SessionStore`
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** Reemplazo completo del archivo (el cambio abarca imports, `session`, `navGroups`, `initials`, `roleLabel`, `userItems`, `onUserMenuNavigate` y `onLogout`). Es el mismo `Shell` de ISS-15 más la sesión real:
+
+![](images/clipboard-1775083517.png)
+
+**PARCHE — `src/app/layout/shell/shell.html`.** Reemplazo completo (el cambio es casi total: pasar `[items]`, `[showSession]`, `[username]`, `[initials]`, `[roleLabel]`, `[permissionCount]` y `[userItems]` a `Aside` y `Header`):
+
+![](images/clipboard-3700066575.png)
+
+## 16.8 Registro de `errorInterceptor` en `app.config.ts`
+
+**PARCHE — `src/app/app.config.ts`.**
+
+**1.** **Debajo de** `import { authInterceptor } from './core/interceptors/auth-interceptor';`, **añadí**:
+
+![](images/clipboard-2310433069.png)
+
+**2.** **Reemplazé** la línea:
+
+![](images/clipboard-1639955739.png)
+
+## 16.9 `data.permission` en las 11 rutas de negocio y `authOnlyGuard` en `/profile`
+
+**PARCHE — `src/app/app.routes.ts`.** Reemplazo completo del archivo. Añadidos: `permissionGuard` y `authOnlyGuard` en imports, `canActivate` + `data.permission` en las 11 rutas hijas del `Shell`, `authOnlyGuard` en `/profile`. La redirección vacía **no** lleva `data`.
+
+![](images/clipboard-4078997557.png)
+
+## 16.10 Pruebas
+
+### `src/app/core/guards/rbac-guards-extended.spec.ts` (7 pruebas)
+
+![](images/clipboard-2197354788.png)
+
+### `src/app/shared/directives/has-permission.spec.ts` (4 pruebas)
+
+![](images/clipboard-3805084750.png)
+
+### `src/app/core/interceptors/error-interceptor.spec.ts` (5 pruebas)
+
+![](images/clipboard-3845056458.png)
+
+### `src/app/layout/shell/shell-rbac.spec.ts` (5 pruebas)
+
+![](images/clipboard-369362733.png)
+
+## 16.11 Comprobar antes de avanzar
+
+![![](images/clipboard-4181344647.png)](images/clipboard-3790584066.png)
+
+![](images/clipboard-2212153779.png)
+
+## Cierre del ISS

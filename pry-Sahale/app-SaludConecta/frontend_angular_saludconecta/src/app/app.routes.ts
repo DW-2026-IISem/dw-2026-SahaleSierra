@@ -1,14 +1,20 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
+import { authOnlyGuard } from './core/guards/auth-only-guard';
 import { guestGuard } from './core/guards/guest-guard';
+import { permissionGuard } from './core/guards/permission-guard';
 
 /**
  * Rutas de la aplicación.
  *
- * - `/login` y `/forbidden` fuera del Shell (no necesitan layout).
- * - `/` (Shell) protegido por `authGuard`: sin sesión redirige a `/login`.
- * - Las rutas hijas de `Shell` **no** llevan todavía `permissionGuard`:
- *   eso es ISS-16.
+ * - `/login`: pública (fuera del Shell) con `guestGuard`.
+ * - `/forbidden`: fuera del Shell, con `authGuard` (todo usuario autenticado
+ *   debe poder ver por qué se le deniega una ruta).
+ * - `/` (Shell): protegido por `authGuard`. Cada ruta hija de negocio lleva
+ *   `permissionGuard` y `data.permission` con el mismo string que devuelve
+ *   `GET /api/permissions` (`'METHOD /api/path'`).
+ * - `/profile`: `authOnlyGuard` (no existe sin sesión).
+ * - `/admin/*`: no se declara aquí; se crea en ISS-17.
  */
 export const routes: Routes = [
   {
@@ -33,28 +39,35 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: [
+      // Redirección vacía: no lleva `data` (no hay componente que autorizar).
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
         path: 'dashboard',
         title: 'Panel · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/patients' },
         loadComponent: () =>
           import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
         path: 'profile',
         title: 'Mi sesión · SaludConecta',
+        canActivate: [authOnlyGuard],
         loadComponent: () => import('./features/auth/profile/profile').then((m) => m.Profile),
       },
-      // Rutas de negocio: siguen sin permissionGuard hasta ISS-16.
       {
         path: 'patients',
         title: 'Pacientes · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/patients' },
         loadComponent: () =>
           import('./features/patients/patient-list/patient-list').then((m) => m.PatientList),
       },
       {
         path: 'specialties',
         title: 'Especialidades · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/specialties' },
         loadComponent: () =>
           import('./features/specialties/specialty-list/specialty-list').then(
             (m) => m.SpecialtyList,
@@ -63,18 +76,24 @@ export const routes: Routes = [
       {
         path: 'services',
         title: 'Servicios · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/services' },
         loadComponent: () =>
           import('./features/services/service-list/service-list').then((m) => m.ServiceList),
       },
       {
         path: 'doctors',
         title: 'Médicos · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/doctors' },
         loadComponent: () =>
           import('./features/doctors/doctor-list/doctor-list').then((m) => m.DoctorList),
       },
       {
         path: 'doctor-specialties',
         title: 'Médicos y especialidades · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/doctor-specialties' },
         loadComponent: () =>
           import('./features/doctor-specialties/doctor-specialty-list/doctor-specialty-list').then(
             (m) => m.DoctorSpecialtyList,
@@ -83,12 +102,16 @@ export const routes: Routes = [
       {
         path: 'agendas',
         title: 'Agendas · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/agendas' },
         loadComponent: () =>
           import('./features/agendas/agenda-list/agenda-list').then((m) => m.AgendaList),
       },
       {
         path: 'clinical-records',
         title: 'Historias clínicas · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/clinical-records' },
         loadComponent: () =>
           import('./features/clinical-records/clinical-record-list/clinical-record-list').then(
             (m) => m.ClinicalRecordList,
@@ -97,6 +120,8 @@ export const routes: Routes = [
       {
         path: 'appointments',
         title: 'Citas · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/appointments' },
         loadComponent: () =>
           import('./features/appointments/appointment-list/appointment-list').then(
             (m) => m.AppointmentList,
@@ -105,6 +130,8 @@ export const routes: Routes = [
       {
         path: 'authorizations',
         title: 'Autorizaciones · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/authorizations' },
         loadComponent: () =>
           import('./features/authorizations/authorization-list/authorization-list').then(
             (m) => m.AuthorizationList,
@@ -113,6 +140,8 @@ export const routes: Routes = [
       {
         path: 'encounters',
         title: 'Atenciones · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/encounters' },
         loadComponent: () =>
           import('./features/encounters/encounter-list/encounter-list').then(
             (m) => m.EncounterList,
@@ -121,18 +150,24 @@ export const routes: Routes = [
       {
         path: 'invoices',
         title: 'Facturas · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/invoices' },
         loadComponent: () =>
           import('./features/invoices/invoice-list/invoice-list').then((m) => m.InvoiceList),
       },
       {
         path: 'invoices/new',
         title: 'Nueva factura · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'POST /api/invoices' },
         loadComponent: () =>
           import('./features/invoices/invoice-form/invoice-form').then((m) => m.InvoiceForm),
       },
       {
         path: 'invoices/:id',
         title: 'Detalle de factura · SaludConecta',
+        canActivate: [permissionGuard],
+        data: { permission: 'GET /api/invoices/:id' },
         loadComponent: () =>
           import('./features/invoices/invoice-detail/invoice-detail').then(
             (m) => m.InvoiceDetail,

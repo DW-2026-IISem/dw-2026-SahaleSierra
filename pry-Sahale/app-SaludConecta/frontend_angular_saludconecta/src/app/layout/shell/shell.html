@@ -1,18 +1,26 @@
 <div class="flex min-h-screen flex-col bg-slate-100">
-  <app-header (menuRequested)="onMenuToggle()" />
+  <app-header
+    [showSession]="true"
+    [username]="session.user()?.username ?? ''"
+    [initials]="initials()"
+    [roleLabel]="roleLabel()"
+    [authEnabled]="session.authEnabled"
+    [userItems]="userItems"
+    (menuRequested)="onMenuToggle()"
+  />
 
   <div class="flex flex-1">
-    <!--
-      Escritorio: Aside fijo que el botón del Header puede ocultar.
-      Por debajo de lg no se pinta: el menú vive en el Drawer.
-    -->
     @if (!sidebarCollapsed()) {
       <aside class="hidden w-72 shrink-0 lg:block">
-       <app-aside
-          [items]="items"
+        <app-aside
+          [items]="navGroups()"
+          [showSession]="true"
+          [username]="session.user()?.username ?? ''"
+          [roleLabel]="roleLabel()"
+          [permissionCount]="session.permissionCount()"
           (navigated)="mobileOpen.set(false)"
           (logoutRequested)="onLogout()"
-      />
+        />
       </aside>
     }
 
@@ -26,15 +34,17 @@
   <app-footer />
 </div>
 
-<!-- Móvil: el mismo Aside, otra disposición. -->
 <p-drawer [(visible)]="mobileOpen" header="Menú" position="left" styleClass="w-72">
   <app-aside
-  [items]="items"
-  (navigated)="mobileOpen.set(false)"
-  (logoutRequested)="onLogout()"
-/>
+    [items]="navGroups()"
+    [showSession]="true"
+    [username]="session.user()?.username ?? ''"
+    [roleLabel]="roleLabel()"
+    [permissionCount]="session.permissionCount()"
+    (navigated)="mobileOpen.set(false)"
+    (logoutRequested)="onLogout()"
+  />
 </p-drawer>
 
-<!-- Anfitriones de las notificaciones y confirmaciones del CRUD (ISS-03). -->
 <p-toast position="top-right" />
 <p-confirmdialog />

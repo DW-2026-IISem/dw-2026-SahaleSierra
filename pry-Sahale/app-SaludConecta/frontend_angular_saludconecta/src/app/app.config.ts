@@ -12,6 +12,7 @@ import { providePrimeNG } from 'primeng/config';
 import { provideHttpClient } from '@angular/common/http';
 import { withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
+import { errorInterceptor } from './core/interceptors/error-interceptor';
 import Aura from '@primeuix/themes/aura';
 import { environment } from '../environments/environment';
 
@@ -41,9 +42,10 @@ export const appConfig: ApplicationConfig = {
       },
     }),
     
-    // Adjunta el Bearer y, ante un 401, refresca el par con single-flight.
-    // El errorInterceptor (toast de 403/500/offline) es ISS-16.
-    provideHttpClient(withInterceptors([authInterceptor])),
+    // Orden intencional: auth añade Bearer y refresca 401; error muestra 403/500/0.
+    // El 401 no llega al errorInterceptor porque auth lo resuelve con refresh
+    // o con redirect a /login.
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
 
 
     MessageService,

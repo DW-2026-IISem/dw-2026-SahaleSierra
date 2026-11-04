@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Router, RouterOutlet } from '@angular/router';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -6,20 +6,23 @@ import { DrawerModule } from 'primeng/drawer';
 import { ToastModule } from 'primeng/toast';
 import { watchMediaQuery } from '../../core/utils/media-query';
 import { AuthService } from '../../core/services/auth';
+import { NotificationService } from '../../core/services/notification';
+import { SessionStore } from '../../core/services/session-store';
 import { Aside } from '../aside/aside';
 import { Footer } from '../footer/footer';
 import { Header } from '../header/header';
+import { NAV, NavGroup } from './nav.config';
 
 /**
  * Layout persistente de la aplicación.
  *
- * El Header, el Aside y el Footer se montan **una sola vez**; solo la región
- * central cambia con `<router-outlet />`. Reutilizar el layout evita remontar
- * el menú (y perder el scroll o el foco) al navegar.
+ * Desde ISS-16 se conecta a `SessionStore`:
+ *  - pasa usuario, rol y conteo de permisos al Header y al Aside;
+ *  - calcula `navGroups()` filtrando `NAV` por `canPermission()`;
+ *  - oculta el grupo Seguridad cuando `authEnabled` es `false`;
+ *  - conecta el logout del Aside y del menú de usuario.
  *
- * Fase II (ISS-15): el botón de logout del Aside ejecuta `AuthService.logout()`
- * y navega a `/login`. La sesión completa (username, roles, menú filtrado) se
- * conecta en ISS-16.
+ * Los ítems de `/admin/*` del grupo Seguridad se añaden en ISS-17.
  */
 @Component({
   host: { class: 'block' },
@@ -31,44 +34,66 @@ import { Header } from '../header/header';
 export class Shell {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly notify = inject(NotificationService);
+  private readonly session = inject(SessionStore);
 
   /** `lg` de Tailwind: desde aquí el Aside es fijo y el botón lo alterna. */
   private readonly isDesktop = watchMediaQuery('(min-width: 1024px)');
 
-  /** Escritorio: Aside fijo visible u oculto. */
   readonly sidebarCollapsed = signal(false);
-
-  /** Móvil: Drawer abierto. */
   readonly mobileOpen = signal(false);
 
-  /**
-   * Menú de la Fase I: cada ISS agrega su opción. En ISS-16 se arma según los
-   * permisos efectivos.
-   */
-  readonly items: MenuItem[] = [
-    { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/dashboard' },
-    { label: 'Pacientes', icon: 'pi pi-users', routerLink: '/patients' },
-    { label: 'Especialidades', icon: 'pi pi-heart', routerLink: '/specialties' },
-    { label: 'Servicios', icon: 'pi pi-briefcase', routerLink: '/services' },
-    { label: 'Médicos', icon: 'pi pi-user', routerLink: '/doctors' },
+  // ─── Sesión expuesta a Header y Aside ────────────────────────────────────
+
+  /** Iniciales para el avatar; dos letras del username en mayúsculas. */
+  readonly initials = computed(() => {
+    const username = this.session.user()?.username ?? '';
+    return username.slice(0, 2).toUpperCase() || 'IN';
+  });
+
+  /** Etiqueta del rol principal: el primero de `roleNames()`, o "Sin rol". */
+  readonly roleLabel = computed(() => this.session.roleNames()[0] ?? 'Sin rol');
+
+  /** Menú de usuario del Header: Mi sesión + Cerrar sesión. */
+  readonly userItems: MenuItem[] = [
     {
-      label: 'Médicos y especialidades',
-      icon: 'pi pi-link',
-      routerLink: '/doctor-specialties',
+      label: 'Mi sesión',
+      icon: 'pi pi-user',
+      command: () => void this.router.navigate(['/profile']),
     },
-    { label: 'Agendas', icon: 'pi pi-calendar', routerLink: '/agendas' },
-    { label: 'Historias clínicas', icon: 'pi pi-file-edit', routerLink: '/clinical-records' },
-    { label: 'Citas', icon: 'pi pi-calendar', routerLink: '/appointments' },
-    { label: 'Autorizaciones', icon: 'pi pi-check-circle', routerLink: '/authorizations' },
-    { label: 'Atenciones', icon: 'pi pi-clipboard', routerLink: '/encounters' },
-    { label: 'Facturas', icon: 'pi pi-receipt', routerLink: '/invoices' },
-    { label: 'Mi sesión', icon: 'pi pi-user', routerLink: '/profile' },
+    {
+      label: 'Cerrar sesión',
+      icon: 'pi pi-sign-out',
+      command: () => this.onLogout(),
+    },
   ];
 
+  // ─── Menú lateral ────────────────────────────────────────────────────────
+
   /**
-   * Un solo botón, dos disposiciones: en escritorio alterna el Aside fijo; por
-   * debajo de `lg` abre el Drawer.
+   * Grupos del menú filtrados por los permisos efectivos de la sesión.
+   * Si un grupo queda sin hojas visibles, se omite. Los grupos `authOnly` se
+   * ocultan cuando `authEnabled` es `false` (modo laboratorio).
    */
+  readonly navGroups = computed<MenuItem[]>(() =>
+    NAV.filter((group) => !group.authOnly || this.session.authEnabled)
+      .map<MenuItem>((group) => ({
+        label: group.label,
+        icon: group.icon,
+        expanded: true,
+        items: group.items
+          .filter((leaf) => !leaf.permission || this.session.canPermission(leaf.permission))
+          .map<MenuItem>((leaf) => ({
+            label: leaf.label,
+            icon: leaf.icon,
+            routerLink: leaf.routerLink,
+          })),
+      }))
+      .filter((group) => (group.items?.length ?? 0) > 0),
+  );
+
+  // ─── Disposición ─────────────────────────────────────────────────────────
+
   protected onMenuToggle(): void {
     if (this.isDesktop()) {
       this.sidebarCollapsed.update((collapsed) => !collapsed);
@@ -81,6 +106,7 @@ export class Shell {
   protected onLogout(): void {
     this.auth.logout().subscribe({
       next: () => {
+        this.notify.info('Sesión cerrada');
         void this.router.navigate(['/login']);
       },
     });
