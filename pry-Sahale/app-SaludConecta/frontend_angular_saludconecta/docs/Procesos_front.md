@@ -3131,12 +3131,4 @@ Con el commit de cierre, la **Fase II está cerrada** y el proyecto entregado.
 | Fase II — Administración | 5 pantallas de RBAC admin | ISS-17, 17A, 17B |
 | Fase II — Cierre | Build, calidad y checklist | ISS-18 (este) |
 
-**Siguiente paso (opcional, fuera del alcance del curso):**
-
-- Desplegar el backend Express y el frontend en un servidor real.
-
-- Configurar la `primeUiLicense` de producción.
-
-- Añadir un endpoint `GET /api/dashboard` en el backend para reducir las 4 llamadas del panel a 1.
-
-- Añadir un E2E (Playwright o Cypress) que recorra login → crear paciente → crear cita → atender cita → crear factura.
+![](images/clipboard-1647281361.png)
