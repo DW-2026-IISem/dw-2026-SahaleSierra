@@ -20,7 +20,8 @@ export interface DemoService {
  *
  * Explica con un objeto dentro de un `signal`: estado, derivados (`computed`),
  * efecto (`effect`) y los cuatro eventos de la plantilla. No entra en el menú,
- * no tiene ruta y no se usa en ningún ISS posterior.
+ * no tiene ruta y no se usa en ningún ISS posterior. Se conserva como material
+ * de consulta.
  */
 @Component({
   host: { class: 'block' },
@@ -41,11 +42,19 @@ export class Example {
     this.service().active ? 'Activo' : 'Inactivo',
   );
 
-  // EFECTO: se ejecuta al crear y en cada cambio del objeto.
+  // EFECTO: se ejecuta al crear y en cada cambio del objeto. La propiedad
+  // `log` no se lee en ningún sitio, pero es lo que mantiene vivo el efecto.
+  // `void this.log;` en el constructor evita el aviso de `--noUnusedLocals`
+  // sin cambiar el comportamiento.
   private readonly log = effect(() => {
     const { name, price, active } = this.service();
     console.log(`[example] ${name} · precio ${price} · ${active ? 'activo' : 'inactivo'}`);
   });
+
+  constructor() {
+    // Referencia explícita para que TypeScript sepa que `log` se usa.
+    void this.log;
+  }
 
   // Métodos que la plantilla llama desde los eventos.
   protected changeName(event: Event): void {

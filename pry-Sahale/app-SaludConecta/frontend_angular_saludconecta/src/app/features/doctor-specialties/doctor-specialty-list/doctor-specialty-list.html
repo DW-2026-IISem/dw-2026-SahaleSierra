@@ -78,11 +78,12 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-ban"
               aria-label="Dar de baja la asignación"
               pTooltip="Baja lógica"
               (click)="deactivate(row)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/doctor-specialties/:id'">
 <button
@@ -91,11 +92,12 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar la asignación"
               pTooltip="Eliminar"
               (click)="remove(row)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

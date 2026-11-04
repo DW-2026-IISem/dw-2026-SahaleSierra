@@ -117,11 +117,12 @@
               text
               rounded
               severity="secondary"
-              icon="pi pi-pencil"
               aria-label="Editar historia clínica"
               pTooltip="Editar"
               (click)="openEdit(record)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/clinical-records/:id/deactivate'">
 <button
@@ -130,11 +131,12 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-ban"
               aria-label="Dar de baja la historia clínica"
               pTooltip="Baja lógica"
               (click)="deactivate(record)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/clinical-records/:id'">
 <button
@@ -143,11 +145,12 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar historia clínica"
               pTooltip="Eliminar"
               (click)="remove(record)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

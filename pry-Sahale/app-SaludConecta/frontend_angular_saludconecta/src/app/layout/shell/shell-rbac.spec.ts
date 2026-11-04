@@ -92,7 +92,6 @@ describe('Shell · RBAC', () => {
       'Atención clínica',
       'Facturación',
       'Catálogos',
-      'Prototipo',
     ]);
   });
 
@@ -100,7 +99,7 @@ describe('Shell · RBAC', () => {
     const fixture = await render(MEDICO_PERMISSIONS);
     const labels = (fixture.componentInstance.navGroups() as { label: string }[]).map((g) => g.label);
 
-    expect(labels).toEqual(['Panel', 'Admisiones', 'Atención clínica', 'Catálogos', 'Prototipo']);
+    expect(labels).toEqual(['Panel', 'Admisiones', 'Atención clínica', 'Catálogos']);
   });
 
   it('exposes the session to Header and Aside', async () => {
@@ -149,7 +148,6 @@ describe('Shell · RBAC', () => {
       'Atención clínica',
       'Facturación',
       'Catálogos',
-      'Prototipo',
     ]);
 
     const grupos = fixture.componentInstance.navGroups() as {

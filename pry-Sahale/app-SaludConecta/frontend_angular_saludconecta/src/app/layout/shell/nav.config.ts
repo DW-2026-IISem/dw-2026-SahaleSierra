@@ -156,9 +156,4 @@ export const NAV: NavGroup[] = [
       },
     ],
   },
-  {
-    label: 'Prototipo',
-    icon: 'pi pi-desktop',
-    items: [{ label: 'Prototipo', icon: 'pi pi-desktop', routerLink: '/prototype' }],
-  },
 ];

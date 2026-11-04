@@ -74,11 +74,12 @@
               text
               rounded
               severity="secondary"
-              icon="pi pi-pencil"
               aria-label="Editar médico"
               pTooltip="Editar"
               (click)="openEdit(doctor)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/doctors/:id/deactivate'">
 <button
@@ -87,11 +88,12 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-ban"
               aria-label="Dar de baja el médico"
               pTooltip="Baja lógica"
               (click)="deactivate(doctor)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/doctors/:id'">
 <button
@@ -100,11 +102,12 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar médico"
               pTooltip="Eliminar"
               (click)="remove(doctor)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

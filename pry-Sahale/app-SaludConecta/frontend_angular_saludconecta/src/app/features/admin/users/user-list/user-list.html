@@ -67,11 +67,12 @@
                 text
                 rounded
                 severity="info"
-                icon="pi pi-shield"
                 aria-label="Ver permisos del usuario"
                 pTooltip="Ver permisos"
                 (click)="viewPermissions(user)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-shield"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/users/:id/password'">
               <button
@@ -80,11 +81,12 @@
                 text
                 rounded
                 severity="warn"
-                icon="pi pi-key"
                 aria-label="Cambiar contraseña"
                 pTooltip="Cambiar contraseña"
                 (click)="openPassword(user)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-key"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/users/:id'">
               <button
@@ -93,11 +95,12 @@
                 text
                 rounded
                 severity="secondary"
-                icon="pi pi-pencil"
                 aria-label="Editar usuario"
                 pTooltip="Editar"
                 (click)="openEdit(user)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/users/:id/deactivate'">
               <button
@@ -106,11 +109,12 @@
                 text
                 rounded
                 severity="warn"
-                icon="pi pi-ban"
                 aria-label="Dar de baja al usuario"
                 pTooltip="Baja lógica"
                 (click)="deactivate(user)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/users/:id'">
               <button
@@ -119,11 +123,12 @@
                 text
                 rounded
                 severity="danger"
-                icon="pi pi-trash"
                 aria-label="Eliminar usuario"
                 pTooltip="Eliminar"
                 (click)="remove(user)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

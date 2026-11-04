@@ -18,11 +18,6 @@ import { permissionGuard } from './core/guards/permission-guard';
  */
 export const routes: Routes = [
   {
-    path: 'prototype',
-    loadComponent: () =>
-      import('./features/prototype/prototype').then((m) => m.Prototype),
-  },
-  {
     path: 'login',
     title: 'Iniciar sesión · SaludConecta',
     canActivate: [guestGuard],

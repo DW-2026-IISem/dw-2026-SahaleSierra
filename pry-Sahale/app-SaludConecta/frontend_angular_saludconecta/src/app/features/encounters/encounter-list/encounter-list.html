@@ -107,11 +107,12 @@
                 text
                 rounded
                 severity="success"
-                icon="pi pi-check-circle"
                 aria-label="Completar atención"
                 pTooltip="Completar"
                 (click)="complete(encounter)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-check-circle"></i>
+              </button>
               }
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/encounters/:id'">
@@ -121,11 +122,12 @@
               text
               rounded
               severity="secondary"
-              icon="pi pi-pencil"
               aria-label="Editar atención"
               pTooltip="Editar"
               (click)="openEdit(encounter)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/encounters/:id/deactivate'">
 <button
@@ -134,11 +136,12 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-ban"
               aria-label="Dar de baja la atención"
               pTooltip="Baja lógica"
               (click)="deactivate(encounter)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/encounters/:id'">
 <button
@@ -147,12 +150,13 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar atención"
               [pTooltip]="canRemove(encounter) ? 'Eliminar' : 'Atención facturada: no se puede eliminar'"
               [disabled]="!canRemove(encounter)"
               (click)="remove(encounter)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

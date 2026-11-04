@@ -74,11 +74,12 @@
               text
               rounded
               severity="secondary"
-              icon="pi pi-pencil"
               aria-label="Editar especialidad"
               pTooltip="Editar"
               (click)="openEdit(specialty)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/specialties/:id/deactivate'">
 <button
@@ -87,11 +88,12 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-ban"
               aria-label="Dar de baja la especialidad"
               pTooltip="Baja lógica"
               (click)="deactivate(specialty)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/specialties/:id'">
 <button
@@ -100,11 +102,12 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar especialidad"
               pTooltip="Eliminar"
               (click)="remove(specialty)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

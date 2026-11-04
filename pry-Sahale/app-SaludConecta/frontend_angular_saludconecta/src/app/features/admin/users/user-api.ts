@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { UpdatePayload } from '../../../core/models/api.model';
 import { EffectivePermission } from '../../../core/models/auth.model';
 import { ChangePasswordPayload, User, UserPayload } from '../../../core/models/user.model';
 /** PATCH /api/users/:id solo acepta username, email y avatar. */

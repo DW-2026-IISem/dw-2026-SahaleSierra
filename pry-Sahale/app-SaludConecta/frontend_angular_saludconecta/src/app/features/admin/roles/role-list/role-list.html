@@ -62,11 +62,12 @@
                 text
                 rounded
                 severity="secondary"
-                icon="pi pi-pencil"
                 aria-label="Editar rol"
                 pTooltip="Editar"
                 (click)="openEdit(role)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/roles/:id/deactivate'">
               <button
@@ -75,11 +76,12 @@
                 text
                 rounded
                 severity="warn"
-                icon="pi pi-ban"
                 aria-label="Dar de baja el rol"
                 pTooltip="Baja lógica"
                 (click)="deactivate(role)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/roles/:id'">
               <button
@@ -88,11 +90,12 @@
                 text
                 rounded
                 severity="danger"
-                icon="pi pi-trash"
                 aria-label="Eliminar rol"
                 pTooltip="Eliminar"
                 (click)="remove(role)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

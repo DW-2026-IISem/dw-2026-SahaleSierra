@@ -11,7 +11,7 @@ import { SessionStore } from '../../core/services/session-store';
 import { Aside } from '../aside/aside';
 import { Footer } from '../footer/footer';
 import { Header } from '../header/header';
-import { NAV, NavGroup } from './nav.config';
+import { NAV } from './nav.config';
 
 /**
  * Layout persistente de la aplicación.

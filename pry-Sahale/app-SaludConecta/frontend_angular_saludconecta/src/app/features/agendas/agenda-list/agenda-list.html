@@ -82,11 +82,12 @@
               text
               rounded
               severity="secondary"
-              icon="pi pi-pencil"
               aria-label="Editar agenda"
               pTooltip="Editar"
               (click)="openEdit(agenda)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/agendas/:id/deactivate'">
 <button
@@ -95,11 +96,12 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-ban"
               aria-label="Dar de baja la agenda"
               pTooltip="Baja lógica"
               (click)="deactivate(agenda)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/agendas/:id'">
 <button
@@ -108,11 +110,12 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar agenda"
               pTooltip="Eliminar"
               (click)="remove(agenda)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

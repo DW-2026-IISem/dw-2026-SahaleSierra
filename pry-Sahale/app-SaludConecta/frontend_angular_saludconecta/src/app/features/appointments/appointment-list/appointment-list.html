@@ -98,12 +98,13 @@
               text
               rounded
               severity="secondary"
-              icon="pi pi-pencil"
               aria-label="Editar cita"
               pTooltip="Editar"
               [disabled]="!canChange(appointment)"
               (click)="openEdit(appointment)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/appointments/:id'">
 <button
@@ -112,12 +113,13 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-times-circle"
               aria-label="Cancelar cita"
               pTooltip="Cancelar cita"
               [disabled]="!canChange(appointment)"
               (click)="cancelAppointment(appointment)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-times-circle"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/appointments/:id/deactivate'">
 <button
@@ -126,11 +128,12 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-ban"
               aria-label="Dar de baja la cita"
               pTooltip="Baja lógica"
               (click)="deactivate(appointment)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/appointments/:id'">
 <button
@@ -139,11 +142,12 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar cita"
               pTooltip="Eliminar"
               (click)="remove(appointment)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

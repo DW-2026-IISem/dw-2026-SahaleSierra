@@ -3024,3 +3024,119 @@ npx tsc --noEmit -p tsconfig.app.json
 ![](images/clipboard-894104518.png)
 
 ## Cierre del ISS
+
+![](images/clipboard-3443209362.png)
+
+# Fase II: Frontend — ISS-18 — Build, calidad y cierre del proyecto
+
+## 18.1 Verificación de la matriz RBAC con los 5 roles
+
+### 18.1.1 `admin / Admin123!`
+
+![](images/clipboard-1564301131.png)
+
+![](images/clipboard-3738159223.png)
+
+![](images/clipboard-1652751478.png)
+
+![](images/clipboard-2621226294.png)
+
+### 18.1.2 `admisiones / Admisiones123!`
+
+![](images/clipboard-1509523636.png)
+
+![](images/clipboard-1913251083.png)
+
+![](images/clipboard-2392538746.png)
+
+### 18.1.3 `medico / Medico123!`
+
+![](images/clipboard-3229562107.png)
+
+![](images/clipboard-2173498538.png)
+
+![](images/clipboard-3992376387.png)
+
+### 18.1.4 `facturacion / Facturacion123!`
+
+![](images/clipboard-2285044954.png)
+
+![](images/clipboard-2301336001.png)
+
+![](images/clipboard-3498554044.png)
+
+### 18.1.5 `auditor / Auditor123!`
+
+![](images/clipboard-1206865133.png)
+
+![](images/clipboard-1416756903.png)
+
+## 18.3 Análisis del bundle
+
+![](images/clipboard-805766114.png)
+
+![](images/clipboard-16687853.png)
+
+## Verificación del ISS
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+# 1. Compilación y tipado estricto
+npx tsc --noEmit -p tsconfig.app.json
+npx tsc --noEmit -p tsconfig.app.json --noUnusedLocals --noUnusedParameters
+
+# 2. Pruebas
+npm test -- --watch=false
+
+# 3. Prototype eliminado
+ls src/app/features/prototype 2>/dev/null && echo "TODAVÍA EXISTE" || echo "prototype eliminado"
+grep -rn "prototype" src/app/app.routes.ts src/app/layout/shell/nav.config.ts \
+  && echo "queda rastro en rutas/nav" || echo "sin rastro en rutas/nav"
+
+# 4. demo/example intacto
+ls src/app/demo/example/
+grep -rn "demo/example" src/app --include=*.ts --include=*.html \
+  | grep -v "src/app/demo/example/" \
+  || echo "demo/example aislado"
+
+# 5. Build de producción
+ng build
+ng build 2>&1 | grep -i "budget\|warning" || echo "sin warnings de presupuesto"
+
+# 6. README
+grep -n "Admin123\|AUDITOR\|primeui" README.md
+
+# 7. Suite final
+echo "Total de archivos de pruebas:"
+find src -name "*.spec.ts" | wc -l
+```
+
+![](images/clipboard-727267006.png)
+
+## Cierre del proyecto
+
+Con el commit de cierre, la **Fase II está cerrada** y el proyecto entregado.
+
+**Estado final del proyecto:**
+
+| **Fase** | **Cobertura** | **ISS** |
+|:---|:---|:---|
+| Fase 0 — Preparación | Entorno + interruptor `AUTH_ENABLED` | ISS-00 |
+| Fase I — Bootstrap | Angular 22, Tailwind, PrimeNG, esqueleto, menú, prototipo | ISS-01, 01A, 01B |
+| Fase I — Núcleo | Modelos, servicios, utilidades, `Shell` | ISS-02 |
+| Fase I — Negocio | 11 CRUD + dashboard + detalle de factura | ISS-03 a ISS-14 |
+| Fase II — Sesión | JWT + refresh single-flight + guards | ISS-15, ISS-16 |
+| Fase II — RBAC | `*appHasPermission` + nav filtrado | ISS-16A |
+| Fase II — Administración | 5 pantallas de RBAC admin | ISS-17, 17A, 17B |
+| Fase II — Cierre | Build, calidad y checklist | ISS-18 (este) |
+
+**Siguiente paso (opcional, fuera del alcance del curso):**
+
+- Desplegar el backend Express y el frontend en un servidor real.
+
+- Configurar la `primeUiLicense` de producción.
+
+- Añadir un endpoint `GET /api/dashboard` en el backend para reducir las 4 llamadas del panel a 1.
+
+- Añadir un E2E (Playwright o Cypress) que recorra login → crear paciente → crear cita → atender cita → crear factura.

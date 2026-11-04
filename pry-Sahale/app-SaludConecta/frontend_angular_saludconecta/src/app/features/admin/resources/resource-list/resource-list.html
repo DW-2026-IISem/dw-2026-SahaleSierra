@@ -83,11 +83,12 @@
                 text
                 rounded
                 severity="secondary"
-                icon="pi pi-pencil"
                 aria-label="Editar recurso"
                 pTooltip="Editar"
                 (click)="openEdit(resource)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/resources/:id/deactivate'">
               <button
@@ -96,11 +97,12 @@
                 text
                 rounded
                 severity="warn"
-                icon="pi pi-ban"
                 aria-label="Dar de baja el recurso"
                 pTooltip="Baja lógica"
                 (click)="deactivate(resource)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/resources/:id'">
               <button
@@ -109,11 +111,12 @@
                 text
                 rounded
                 severity="danger"
-                icon="pi pi-trash"
                 aria-label="Eliminar recurso"
                 pTooltip="Eliminar"
                 (click)="remove(resource)"
-              ></button>
+              >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

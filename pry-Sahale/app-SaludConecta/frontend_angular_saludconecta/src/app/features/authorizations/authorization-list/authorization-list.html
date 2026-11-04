@@ -86,11 +86,12 @@
               text
               rounded
               severity="secondary"
-              icon="pi pi-pencil"
               aria-label="Editar autorización"
               pTooltip="Editar"
               (click)="openEdit(authorization)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-pencil"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'PATCH /api/authorizations/:id/deactivate'">
 <button
@@ -99,11 +100,12 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-ban"
               aria-label="Dar de baja la autorización"
               pTooltip="Baja lógica"
               (click)="deactivate(authorization)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/authorizations/:id'">
 <button
@@ -112,11 +114,12 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar autorización"
               pTooltip="Eliminar"
               (click)="remove(authorization)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>

@@ -100,12 +100,13 @@
               text
               rounded
               severity="success"
-              icon="pi pi-check-circle"
               aria-label="Marcar la factura como pagada"
               pTooltip="Marcar pagada"
               [disabled]="!canPay(invoice)"
               (click)="markPaid(invoice)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-check-circle"></i>
+              </button>
             </ng-container>
             <button
               pButton
@@ -113,12 +114,13 @@
               text
               rounded
               severity="warn"
-              icon="pi pi-times-circle"
               aria-label="Anular la factura"
               pTooltip="Anular"
               [disabled]="!canCancel(invoice)"
               (click)="cancel(invoice)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-times-circle"></i>
+              </button>
             <ng-container *appHasPermission="'PATCH /api/invoices/:id/deactivate'">
 <button
               pButton
@@ -126,11 +128,12 @@
               text
               rounded
               severity="secondary"
-              icon="pi pi-ban"
               aria-label="Dar de baja la factura"
               pTooltip="Baja lógica"
               (click)="deactivate(invoice)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-ban"></i>
+              </button>
             </ng-container>
             <ng-container *appHasPermission="'DELETE /api/invoices/:id'">
 <button
@@ -139,11 +142,12 @@
               text
               rounded
               severity="danger"
-              icon="pi pi-trash"
               aria-label="Eliminar la factura"
               pTooltip="Eliminar"
               (click)="remove(invoice)"
-            ></button>
+            >
+                <i pButtonIcon class="pi pi-trash"></i>
+              </button>
             </ng-container>
           </div>
         </td>
