@@ -1,0 +1,161 @@
+<app-page-header title="Recursos" subtitle="Catálogo de pares (método, ruta) del RBAC.">
+  <p-tag [value]="rows().length + ' recursos'" severity="info" [rounded]="true" />
+  <ng-container *appHasPermission="'POST /api/resources'">
+    <button pButton type="button" (click)="openCreate()">
+      <i pButtonIcon class="pi pi-plus"></i>
+      <span pButtonLabel>Nuevo recurso</span>
+    </button>
+  </ng-container>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">{{ error() }}</p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-3xl"
+  >
+    <ng-template #caption>
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="flex flex-1 items-center gap-2">
+          <i class="pi pi-search text-slate-400"></i>
+          <input
+            pInputText
+            type="search"
+            aria-label="Buscar recursos"
+            placeholder="Buscar por ruta, método o descripción…"
+            [value]="filter()"
+            (input)="filter.set($any($event.target).value)"
+            class="w-full"
+          />
+        </div>
+        <p-select
+          class="sm:w-40"
+          [options]="methodOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="methodFilter()"
+          (ngModelChange)="methodFilter.set($event)"
+          [fluid]="true"
+        />
+      </div>
+      @if (filter() || methodFilter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} coinciden con el filtro.
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th>Método</th>
+        <th>Ruta</th>
+        <th>Descripción</th>
+        <th>Estado</th>
+        <th class="w-40 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-resource>
+      <tr>
+        <td>
+          <p-tag
+            [value]="resource.method"
+            [severity]="severityFor(resource.method)"
+            [rounded]="true"
+          />
+        </td>
+        <td><code class="text-xs">{{ resource.path }}</code></td>
+        <td class="text-sm text-slate-600">{{ resource.description || '—' }}</td>
+        <td><app-status-tag [status]="resource.status" /></td>
+        <td>
+          <div class="flex justify-end gap-1">
+            <ng-container *appHasPermission="'PATCH /api/resources/:id'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="secondary"
+                icon="pi pi-pencil"
+                aria-label="Editar recurso"
+                pTooltip="Editar"
+                (click)="openEdit(resource)"
+              ></button>
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/resources/:id/deactivate'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="warn"
+                icon="pi pi-ban"
+                aria-label="Dar de baja el recurso"
+                pTooltip="Baja lógica"
+                (click)="deactivate(resource)"
+              ></button>
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/resources/:id'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="danger"
+                icon="pi pi-trash"
+                aria-label="Eliminar recurso"
+                pTooltip="Eliminar"
+                (click)="remove(resource)"
+              ></button>
+            </ng-container>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="5">
+          @if (filter() || methodFilter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ningún recurso coincide con el filtro."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-list"
+              title="Sin recursos"
+              message="Crea el primero con «Nuevo recurso»."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="title()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="w-full max-w-lg mx-4"
+>
+  <app-resource-form
+    [resource]="editing()"
+    [saving]="saving()"
+    [resetKey]="resetKey()"
+    (saved)="save($event)"
+    (cancelled)="dialogVisible.set(false)"
+  />
+</p-dialog>

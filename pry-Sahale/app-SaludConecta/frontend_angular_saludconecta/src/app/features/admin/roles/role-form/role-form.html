@@ -1,0 +1,44 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label for="role-name" class="mb-1 block text-sm font-medium text-slate-700">
+      Nombre <span class="text-red-500">*</span>
+    </label>
+    <input
+      id="role-name"
+      pInputText
+      formControlName="name"
+      placeholder="ADMIN"
+      autocomplete="off"
+      class="w-full"
+    />
+    @if (form.controls.name.touched && form.controls.name.invalid) {
+      <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+        Entre 2 y 50 caracteres.
+      </p-message>
+    }
+    <p class="mt-1 text-xs text-slate-500">Se guarda en mayúsculas.</p>
+  </div>
+
+  <div>
+    <label for="role-description" class="mb-1 block text-sm font-medium text-slate-700">
+      Descripción
+    </label>
+    <textarea
+      id="role-description"
+      pTextarea
+      formControlName="description"
+      rows="3"
+      class="w-full"
+    ></textarea>
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>

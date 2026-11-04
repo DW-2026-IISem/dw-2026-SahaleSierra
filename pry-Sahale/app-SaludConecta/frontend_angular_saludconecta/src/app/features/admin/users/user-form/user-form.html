@@ -1,0 +1,92 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="user-username" class="mb-1 block text-sm font-medium text-slate-700">
+        Usuario <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="user-username"
+        pInputText
+        formControlName="username"
+        placeholder="admin"
+        autocomplete="off"
+        class="w-full"
+      />
+      @if (form.controls.username.touched && form.controls.username.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Entre 3 y 100 caracteres.
+        </p-message>
+      }
+    </div>
+
+    <div>
+      <label for="user-email" class="mb-1 block text-sm font-medium text-slate-700">
+        Correo <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="user-email"
+        type="email"
+        pInputText
+        formControlName="email"
+        placeholder="admin@saludconecta.local"
+        autocomplete="email"
+        class="w-full"
+      />
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Formato de correo inválido.
+        </p-message>
+      }
+    </div>
+  </div>
+
+  @if (!user()) {
+    <div>
+      <label for="user-password" class="mb-1 block text-sm font-medium text-slate-700">
+        Contraseña <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="user-password"
+        type="password"
+        pInputText
+        formControlName="password"
+        placeholder="Mínimo 8 caracteres"
+        autocomplete="new-password"
+        class="w-full"
+      />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          La contraseña es obligatoria (mínimo 8 caracteres).
+        </p-message>
+      }
+      <p class="mt-1 text-xs text-slate-500">
+        Solo se pide al crear. Para cambiar la contraseña de un usuario existente, usa
+        «Cambiar contraseña» en la tabla.
+      </p>
+    </div>
+  }
+
+  <div>
+    <label for="user-avatar" class="mb-1 block text-sm font-medium text-slate-700">
+      Avatar (URL)
+    </label>
+    <input
+      id="user-avatar"
+      pInputText
+      formControlName="avatar"
+      placeholder="https://..."
+      autocomplete="off"
+      class="w-full"
+    />
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>

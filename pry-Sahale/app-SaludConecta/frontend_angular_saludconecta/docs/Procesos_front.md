@@ -2764,3 +2764,171 @@ npx tsc --noEmit -p tsconfig.app.json
 ![](images/clipboard-3352035881.png)
 
 ## Cierre del ISS
+
+![](images/clipboard-1007731350.png)
+
+# Fase II: Frontend — ISS-17A — CRUD de usuarios, roles y recursos
+
+## 17A.3 Generar componentes con el CLI
+
+![](images/clipboard-2029897665.png)
+
+## 17A.4 `UserForm` (con password al crear, sin password al editar)
+
+#### src/app/features/admin/users/user-form/user-form.ts
+
+#### ![](images/clipboard-3829124781.png)
+
+#### src/app/features/admin/users/user-form/user-form.html
+
+#### ![](images/clipboard-3354002891.png)
+
+#### src/app/features/admin/users/user-form/user-form.css
+
+![](images/clipboard-2890035371.png)
+
+## 17A.5 `UserList` (con «Ver permisos»)
+
+#### src/app/features/admin/users/user-list/user-list.ts
+
+![](images/clipboard-2762057003.png)
+
+![](images/clipboard-2158056650.png)
+
+#### src/app/features/admin/users/user-list/user-list.html
+
+![](images/clipboard-4132020147.png)
+
+![](images/clipboard-3372425823.png)
+
+#### src/app/features/admin/users/user-list/user-list.css
+
+![](images/clipboard-531089011.png)
+
+## 17A.6 `RoleForm`
+
+#### src/app/features/admin/roles/role-form/role-form.ts
+
+![](images/clipboard-137222048.png)
+
+#### src/app/features/admin/roles/role-form/role-form.html
+
+![](images/clipboard-3698533383.png)
+
+## 17A.7 `RoleList`
+
+#### src/app/features/admin/roles/role-list/role-list.ts
+
+![](images/clipboard-2282361442.png)
+
+#### src/app/features/admin/roles/role-list/role-list.html
+
+![](images/clipboard-2967543487.png)
+
+![](images/clipboard-3141304093.png)
+
+## 17A.8 `ResourceForm`
+
+#### src/app/features/admin/resources/resource-form/resource-form.ts
+
+![](images/clipboard-1710479850.png)
+
+#### src/app/features/admin/resources/resource-form/resource-form.html
+
+![](images/clipboard-1193968376.png)
+
+![](images/clipboard-358621519.png)
+
+## 17A.9 `ResourceList` (con filtro por método)
+
+#### src/app/features/admin/resources/resource-list/resource-list.ts
+
+![](images/clipboard-2020513128.png)
+
+![](images/clipboard-2134819584.png)
+
+#### src/app/features/admin/resources/resource-list/resource-list.html
+
+![](images/clipboard-1610002370.png)
+
+![](images/clipboard-677132088.png)
+
+![](images/clipboard-3560496195.png)
+
+## 17A.10 Envolver botones con `*appHasPermission`
+
+![](images/clipboard-3599998534.png)
+
+## 17A.11 Descomentar las 3 rutas `/admin/*`
+
+![](images/clipboard-3090443900.png)
+
+## 17A.12 Pruebas
+
+### `src/app/features/admin/users/user-form/user-form.spec.ts` (6 pruebas)
+
+![](images/clipboard-2083025455.png)
+
+### `src/app/features/admin/roles/role-form/role-form.spec.ts` (4 pruebas)
+
+![](images/clipboard-2930893504.png)
+
+### `src/app/features/admin/resources/resource-form/resource-form.spec.ts` (4 pruebas)
+
+![](images/clipboard-2188419264.png)
+
+### `src/app/features/admin/users/user-list/user-list.spec.ts` (9 pruebas)
+
+![](images/clipboard-502932379.png)
+
+### ![](images/clipboard-3781529410.png)
+
+### `src/app/features/admin/roles/role-list/role-list.spec.ts` (8 pruebas)
+
+![](images/clipboard-2584750798.png)
+
+### `src/app/features/admin/resources/resource-list/resource-list.spec.ts` (9 pruebas)
+
+![](images/clipboard-718960637.png)
+
+## 17A.13 Comprobar antes de avanzar
+
+![](images/clipboard-1409141980.png)
+
+![](images/clipboard-4005022218.png)
+
+![](images/clipboard-3980868128.png)
+
+![](images/clipboard-968021971.png)
+
+## Verificación del ISS
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+# 1. Los 6 componentes existen con 4 archivos cada uno
+for c in users/user-form users/user-list roles/role-form roles/role-list resources/resource-form resources/resource-list; do
+  ls "src/app/features/admin/$c" | wc -l
+done
+# Debe imprimir 5 (ts, html, css, spec.ts, y el spec suele estar en una carpeta separada según CLI)
+# En este ISS los .spec.ts están en la misma carpeta; el conteo será 4.
+
+# 2. Envoltorios de botones admin
+grep -c "appHasPermission" \
+  src/app/features/admin/users/user-list/user-list.html \
+  src/app/features/admin/roles/role-list/role-list.html \
+  src/app/features/admin/resources/resource-list/resource-list.html
+# Debe imprimir 6, 4, 4
+
+# 3. Rutas admin descomentadas y pivotes comentados
+grep -n "path: 'admin/users'\|path: 'admin/roles'\|path: 'admin/resources'" src/app/app.routes.ts
+grep -n "// path: 'admin/role-users'\|// path: 'admin/resource-roles'" src/app/app.routes.ts
+
+# 4. Pruebas y build
+npm test -- --watch=false
+npx tsc --noEmit -p tsconfig.app.json
+```
+
+![](images/clipboard-3168322364.png)
+
+## Cierre del ISS

@@ -1,0 +1,268 @@
+<app-page-header title="Usuarios" subtitle="Usuarios del sistema con sus roles efectivos.">
+  <p-tag [value]="rows().length + ' usuarios'" severity="info" [rounded]="true" />
+  <ng-container *appHasPermission="'POST /api/users'">
+    <button pButton type="button" (click)="openCreate()">
+      <i pButtonIcon class="pi pi-plus"></i>
+      <span pButtonLabel>Nuevo usuario</span>
+    </button>
+  </ng-container>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">{{ error() }}</p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-3xl"
+  >
+    <ng-template #caption>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-search text-slate-400"></i>
+        <input
+          pInputText
+          type="search"
+          aria-label="Buscar usuarios"
+          placeholder="Buscar por usuario o correo…"
+          [value]="filter()"
+          (input)="filter.set($any($event.target).value)"
+          class="w-full"
+        />
+      </div>
+      @if (filter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} coinciden con «{{ filter() }}».
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th>Usuario</th>
+        <th>Correo</th>
+        <th>Estado</th>
+        <th class="w-56 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-user>
+      <tr>
+        <td>
+          <p class="font-medium text-slate-800">{{ user.username }}</p>
+          <p class="text-xs text-slate-400">#{{ user.id }}</p>
+        </td>
+        <td class="text-sm text-slate-700">{{ user.email }}</td>
+        <td><app-status-tag [status]="user.status" /></td>
+        <td>
+          <div class="flex justify-end gap-1">
+            <ng-container *appHasPermission="'GET /api/users/:id/permissions'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="info"
+                icon="pi pi-shield"
+                aria-label="Ver permisos del usuario"
+                pTooltip="Ver permisos"
+                (click)="viewPermissions(user)"
+              ></button>
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/users/:id/password'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="warn"
+                icon="pi pi-key"
+                aria-label="Cambiar contraseña"
+                pTooltip="Cambiar contraseña"
+                (click)="openPassword(user)"
+              ></button>
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/users/:id'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="secondary"
+                icon="pi pi-pencil"
+                aria-label="Editar usuario"
+                pTooltip="Editar"
+                (click)="openEdit(user)"
+              ></button>
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/users/:id/deactivate'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="warn"
+                icon="pi pi-ban"
+                aria-label="Dar de baja al usuario"
+                pTooltip="Baja lógica"
+                (click)="deactivate(user)"
+              ></button>
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/users/:id'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="danger"
+                icon="pi pi-trash"
+                aria-label="Eliminar usuario"
+                pTooltip="Eliminar"
+                (click)="remove(user)"
+              ></button>
+            </ng-container>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4">
+          @if (filter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ningún usuario coincide con la búsqueda."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-user"
+              title="Sin usuarios"
+              message="Crea el primero con «Nuevo usuario»."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="title()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="w-full max-w-2xl mx-4"
+>
+  <app-user-form
+    [user]="editing()"
+    [saving]="saving()"
+    [resetKey]="resetKey()"
+    (saved)="save($event)"
+    (cancelled)="dialogVisible.set(false)"
+  />
+</p-dialog>
+
+<p-dialog
+  [visible]="permissionsVisible()"
+  (visibleChange)="permissionsVisible.set($event)"
+  [header]="'Permisos de ' + (permissionsUser()?.username ?? '')"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="w-full max-w-3xl mx-4"
+>
+  <div class="mb-3 flex flex-wrap gap-1">
+    @for (role of permissionsRoles(); track role.id) {
+      <p-tag [value]="role.name" severity="info" [rounded]="true" />
+    }
+  </div>
+  <p-table
+    [value]="permissionsRows()"
+    [loading]="permissionsLoading()"
+    dataKey="resource_id"
+    tableStyleClass="min-w-2xl"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Método</th>
+        <th>Ruta</th>
+        <th>Descripción</th>
+        <th>Rol</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-permission>
+      <tr>
+        <td><p-tag [value]="permission.method" severity="secondary" [rounded]="true" /></td>
+        <td><code class="text-xs">{{ permission.path }}</code></td>
+        <td class="text-sm text-slate-600">{{ permission.description || '—' }}</td>
+        <td class="text-sm text-slate-700">{{ permission.role_name }}</td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4" class="py-6 text-center text-sm text-slate-500">
+          Este usuario no tiene permisos efectivos.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<p-dialog
+  [visible]="passwordVisible()"
+  (visibleChange)="passwordVisible.set($event)"
+  [header]="'Cambiar contraseña de ' + (passwordUser()?.username ?? '')"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="w-full max-w-md mx-4"
+>
+  <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" class="space-y-3">
+    <div>
+      <label for="pwd-current" class="mb-1 block text-sm font-medium text-slate-700">
+        Contraseña actual
+      </label>
+      <input
+        id="pwd-current"
+        type="password"
+        pInputText
+        formControlName="current_password"
+        class="w-full"
+      />
+    </div>
+    <div>
+      <label for="pwd-new" class="mb-1 block text-sm font-medium text-slate-700">
+        Nueva contraseña
+      </label>
+      <input
+        id="pwd-new"
+        type="password"
+        pInputText
+        formControlName="new_password"
+        class="w-full"
+      />
+      @if (passwordForm.controls.new_password.touched && passwordForm.controls.new_password.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          Mínimo 8 caracteres.
+        </p-message>
+      }
+    </div>
+    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+      <button pButton type="button" severity="secondary" outlined (click)="passwordVisible.set(false)">
+        <span pButtonLabel>Cancelar</span>
+      </button>
+      <button pButton type="submit" [loading]="passwordSaving()">
+        <span pButtonLabel>Guardar</span>
+      </button>
+    </div>
+  </form>
+</p-dialog>

@@ -1,0 +1,58 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div class="grid gap-4 sm:grid-cols-[auto_1fr]">
+    <div class="sm:w-40">
+      <label for="resource-method" class="mb-1 block text-sm font-medium text-slate-700">
+        Método <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        inputId="resource-method"
+        formControlName="method"
+        [options]="methodOptions"
+        optionLabel="label"
+        optionValue="value"
+        [fluid]="true"
+      />
+    </div>
+    <div>
+      <label for="resource-path" class="mb-1 block text-sm font-medium text-slate-700">
+        Ruta <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="resource-path"
+        pInputText
+        formControlName="path"
+        placeholder="/api/patients/:id"
+        autocomplete="off"
+        class="w-full"
+      />
+      @if (form.controls.path.touched && form.controls.path.invalid) {
+        <p-message severity="error" size="small" variant="simple" styleClass="mt-1">
+          La ruta debe empezar por «/».
+        </p-message>
+      }
+    </div>
+  </div>
+
+  <div>
+    <label for="resource-description" class="mb-1 block text-sm font-medium text-slate-700">
+      Descripción
+    </label>
+    <textarea
+      id="resource-description"
+      pTextarea
+      formControlName="description"
+      rows="3"
+      class="w-full"
+    ></textarea>
+  </div>
+
+  <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+    <button pButton type="button" severity="secondary" outlined (click)="cancelled.emit()">
+      <span pButtonLabel>Cancelar</span>
+    </button>
+    <button pButton type="submit" [loading]="saving()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Guardar</span>
+    </button>
+  </div>
+</form>
