@@ -1,0 +1,162 @@
+<app-page-header
+  title="Asignaciones de rol"
+  subtitle="Qué roles tiene cada usuario. Retirar es baja lógica; reasignar reactiva."
+>
+  <p-tag [value]="rows().length + ' asignaciones'" severity="info" [rounded]="true" />
+  <ng-container *appHasPermission="'POST /api/role-users'">
+    <button pButton type="button" (click)="openCreate()">
+      <i pButtonIcon class="pi pi-plus"></i>
+      <span pButtonLabel>Asignar rol</span>
+    </button>
+  </ng-container>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">{{ error() }}</p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-2xl"
+  >
+    <ng-template #caption>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-search text-slate-400"></i>
+        <input
+          pInputText
+          type="search"
+          aria-label="Buscar asignaciones"
+          placeholder="Buscar por usuario, correo o rol…"
+          [value]="filter()"
+          (input)="filter.set($any($event.target).value)"
+          class="w-full"
+        />
+      </div>
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th>Usuario</th>
+        <th>Rol</th>
+        <th>Estado</th>
+        <th class="w-32 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-row>
+      <tr>
+        <td>
+          <p class="font-medium text-slate-800">{{ userName()(row.user_id) }}</p>
+          <p class="text-xs text-slate-400">{{ userEmail()(row.user_id) }}</p>
+        </td>
+        <td>
+          <p-tag [value]="roleName()(row.role_id)" severity="info" [rounded]="true" />
+        </td>
+        <td><app-status-tag [status]="row.status" /></td>
+        <td>
+          <div class="flex justify-end">
+            <ng-container *appHasPermission="'PATCH /api/role-users/:id/deactivate'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="warn"
+                icon="pi pi-ban"
+                aria-label="Retirar rol"
+                pTooltip="Retirar"
+                (click)="retirar(row)"
+              ></button>
+            </ng-container>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4">
+          @if (filter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ninguna asignación coincide con la búsqueda."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-link"
+              title="Sin asignaciones"
+              message="Asigna el primer rol con «Asignar rol»."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  header="Asignar rol"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="w-full max-w-lg mx-4"
+>
+  <div class="space-y-4">
+    <div>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Usuario</label>
+      <p-select
+        [appendTo]="'body'"
+        
+        [options]="userOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Selecciona un usuario activo"
+        [filter]="true"
+        filterBy="label"
+        [ngModel]="selectedUserId()"
+        (ngModelChange)="selectedUserId.set($event)"
+        [fluid]="true"
+      />
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Rol</label>
+      <p-select
+        [appendTo]="'body'"
+        
+        [options]="roleOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Selecciona un rol activo"
+        [ngModel]="selectedRoleId()"
+        (ngModelChange)="selectedRoleId.set($event)"
+        [fluid]="true"
+      />
+      <p class="mt-1 text-xs text-slate-500">
+        Si el usuario ya tenía este rol y se retiró, el backend lo reactiva.
+      </p>
+    </div>
+    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+      <button pButton type="button" severity="secondary" outlined (click)="dialogVisible.set(false)">
+        <span pButtonLabel>Cancelar</span>
+      </button>
+      <button
+        pButton
+        type="button"
+        [loading]="saving()"
+        [disabled]="selectedUserId() === null || selectedRoleId() === null"
+        (click)="save()"
+      >
+        <i pButtonIcon class="pi pi-check"></i>
+        <span pButtonLabel>Asignar</span>
+      </button>
+    </div>
+  </div>
+</p-dialog>

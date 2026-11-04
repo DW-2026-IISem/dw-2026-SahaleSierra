@@ -2932,3 +2932,95 @@ npx tsc --noEmit -p tsconfig.app.json
 ![](images/clipboard-3168322364.png)
 
 ## Cierre del ISS
+
+![](images/clipboard-2612372049.png)
+
+# Fase II: Frontend — ISS-17B — Pivotes de seguridad (asignaciones y concesiones)
+
+## 17B.3 Generar con el CLI
+
+![](images/clipboard-4104043168.png)
+
+## 17B.4 `RoleUserList`
+
+#### src/app/features/admin/role-users/role-user-list/role-user-list.ts
+
+![](images/clipboard-3807218073.png)
+
+![](images/clipboard-3744621237.png)
+
+#### src/app/features/admin/role-users/role-user-list/role-user-list.html
+
+![](images/clipboard-2825929440.png)
+
+![](images/clipboard-801276425.png)
+
+## 17B.5 `ResourceRoleList`
+
+#### src/app/features/admin/resource-roles/resource-role-list/resource-role-list.ts
+
+![](images/clipboard-2709228704.png)
+
+![](images/clipboard-3997333780.png)
+
+#### src/app/features/admin/resource-roles/resource-role-list/resource-role-list.html
+
+![](images/clipboard-1105300764.png)
+
+![](images/clipboard-1944890305.png)
+
+![](images/clipboard-3590277204.png)
+
+## 17B.6 Descomentar las 2 rutas `/admin/*` de pivotes
+
+**PARCHE — `src/app/app.routes.ts`.** Reemplazo el bloque donde están los 2 pivotes comentados por las 2 rutas activas.
+
+![](images/clipboard-3004441917.png)
+
+## 17B.7 Pruebas
+
+### `src/app/features/admin/role-users/role-user-list/role-user-list.spec.ts` (8 pruebas)
+
+![](images/clipboard-1798469603.png)
+
+### `src/app/features/admin/resource-roles/resource-role-list/resource-role-list.spec.ts` (9 pruebas)
+
+![](images/clipboard-15251741.png)
+
+![](images/clipboard-2174272148.png)
+
+## 17B.8 Comprobar antes de avanzar
+
+![](images/clipboard-3080607007.png)
+
+![](images/clipboard-315774231.png)
+
+## Verificación del ISS
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+# 1. Componentes existen con sus 4 archivos
+for c in role-users/role-user-list resource-roles/resource-role-list; do
+  echo "=== $c ==="
+  ls "src/app/features/admin/$c"
+done
+
+# 2. Envoltorios
+grep -c "appHasPermission" \
+  src/app/features/admin/role-users/role-user-list/role-user-list.html \
+  src/app/features/admin/resource-roles/resource-role-list/resource-role-list.html
+# Debe imprimir 2 y 2
+
+# 3. Las 5 rutas admin están activas (ningún "// path: 'admin/")
+grep -c "path: 'admin/" src/app/app.routes.ts          # 5
+grep -c "// path: 'admin/" src/app/app.routes.ts      # 0
+
+# 4. Pruebas y build
+npm test -- --watch=false
+npx tsc --noEmit -p tsconfig.app.json
+```
+
+![](images/clipboard-894104518.png)
+
+## Cierre del ISS

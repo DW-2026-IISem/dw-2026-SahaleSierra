@@ -207,26 +207,26 @@ export const routes: Routes = [
             (m) => m.ResourceList,
          ),
       },
-      //{
-      //  path: 'admin/role-users',
-     //   title: 'Asignaciones de rol · SaludConecta',
-      //  canActivate: [authOnlyGuard, permissionGuard],
-      //  data: { permission: 'GET /api/role-users' },
-       // loadComponent: () =>
-      //    import('./features/admin/role-users/role-user-list/role-user-list').then(
-      //      (m) => m.RoleUserList,
-      //    ),
-      //},
-      //{
-      //  path: 'admin/resource-roles',
-      //  title: 'Concesiones de rol · SaludConecta',
-      //  canActivate: [authOnlyGuard, permissionGuard],
-      //  data: { permission: 'GET /api/resource-roles' },
-      //  loadComponent: () =>
-      //    import('./features/admin/resource-roles/resource-role-list/resource-role-list').then(
-      //      (m) => m.ResourceRoleList,
-      //    ),
-      //},      
+      {
+        path: 'admin/role-users',
+        title: 'Asignaciones de rol · SaludConecta',
+        canActivate: [authOnlyGuard, permissionGuard],
+        data: { permission: 'GET /api/role-users' },
+        loadComponent: () =>
+          import('./features/admin/role-users/role-user-list/role-user-list').then(
+            (m) => m.RoleUserList,
+          ),
+      },
+      {
+        path: 'admin/resource-roles',
+        title: 'Concesiones de rol · SaludConecta',
+        canActivate: [authOnlyGuard, permissionGuard],
+        data: { permission: 'GET /api/resource-roles' },
+        loadComponent: () =>
+          import('./features/admin/resource-roles/resource-role-list/resource-role-list').then(
+            (m) => m.ResourceRoleList,
+          ),
+      },      
     ],
   },
   { path: '**', redirectTo: 'login' },

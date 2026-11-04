@@ -1,0 +1,197 @@
+<app-page-header
+  title="Concesiones de permiso"
+  subtitle="Qué recursos puede ejecutar cada rol. Revocar es baja lógica; reconceder reactiva."
+>
+  <p-tag [value]="rows().length + ' concesiones'" severity="info" [rounded]="true" />
+  <ng-container *appHasPermission="'POST /api/resource-roles'">
+    <button pButton type="button" (click)="openCreate()">
+      <i pButtonIcon class="pi pi-plus"></i>
+      <span pButtonLabel>Conceder permiso</span>
+    </button>
+  </ng-container>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">{{ error() }}</p-message>
+}
+
+<div class="mb-3 flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row">
+  <p-select
+    class="flex-1"
+    [options]="roleOptions()"
+    optionLabel="label"
+    optionValue="id"
+    [showClear]="true"
+    [filter]="true"
+    placeholder="Filtrar por rol"
+    [ngModel]="filterRoleId()"
+    (ngModelChange)="filterRoleId.set($event); onFilterChange()"
+    [fluid]="true"
+  />
+  <p-select
+    class="flex-1"
+    [options]="resourceOptions()"
+    optionLabel="label"
+    optionValue="id"
+    [showClear]="true"
+    [filter]="true"
+    filterBy="label"
+    placeholder="Filtrar por recurso"
+    [ngModel]="filterResourceId()"
+    (ngModelChange)="filterResourceId.set($event); onFilterChange()"
+    [fluid]="true"
+  />
+  <input
+    class="flex-1"
+    pInputText
+    type="search"
+    aria-label="Buscar concesiones"
+    placeholder="Buscar por rol o recurso…"
+    [value]="filterText()"
+    (input)="filterText.set($any($event.target).value)"
+  />
+</div>
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    tableStyleClass="min-w-3xl"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Rol</th>
+        <th>Recurso</th>
+        <th>Estado</th>
+        <th class="w-32 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-row>
+      <tr>
+        <td>
+          <p-tag [value]="roleName()(row.role_id)" severity="info" [rounded]="true" />
+        </td>
+        <td class="text-sm">
+          @if (row.resource; as resource) {
+            <p-tag [value]="resource.method" [severity]="severityFor(resource.method)" [rounded]="true" />
+            <code class="ml-2 text-xs">{{ resource.path }}</code>
+          } @else {
+            {{ resourceLabel()(row.resource_id) }}
+          }
+        </td>
+        <td><app-status-tag [status]="row.status" /></td>
+        <td>
+          <div class="flex justify-end">
+            <ng-container *appHasPermission="'PATCH /api/resource-roles/:id/deactivate'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="warn"
+                icon="pi pi-ban"
+                aria-label="Revocar permiso"
+                pTooltip="Revocar"
+                (click)="revocar(row)"
+              ></button>
+            </ng-container>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4">
+          @if (filterRoleId() !== null || filterResourceId() !== null || filterText()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ninguna concesión coincide con el filtro."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-lock"
+              title="Sin concesiones"
+              message="Concede el primer permiso con «Conceder permiso»."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  header="Conceder permiso"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="w-full max-w-2xl mx-4"
+>
+  <div class="space-y-4">
+    <div>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Rol</label>
+      <p-select [appendTo]="'body'"
+        [options]="roleOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Selecciona un rol activo"
+        [ngModel]="selectedRoleId()"
+        (ngModelChange)="selectedRoleId.set($event)"
+        [fluid]="true"
+      />
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Recurso</label>
+      <p-select [appendTo]="'body'"
+        [options]="resourceOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Selecciona un recurso"
+        [filter]="true"
+        filterBy="label"
+        [ngModel]="selectedResourceId()"
+        (ngModelChange)="selectedResourceId.set($event)"
+        [fluid]="true"
+      >
+        <ng-template #selectedItem let-resource>
+          <span class="flex items-center gap-2">
+            <p-tag [value]="resource.method" [severity]="severityFor(resource.method)" [rounded]="true" />
+            <code class="text-xs">{{ resource.path }}</code>
+          </span>
+        </ng-template>
+        <ng-template #item let-resource>
+          <span class="flex items-center gap-2">
+            <p-tag [value]="resource.method" [severity]="severityFor(resource.method)" [rounded]="true" />
+            <code class="text-xs">{{ resource.path }}</code>
+          </span>
+        </ng-template>
+      </p-select>
+      <p class="mt-1 text-xs text-slate-500">
+        Si el par ya existía inactivo, el backend lo reactiva.
+      </p>
+    </div>
+    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+      <button pButton type="button" severity="secondary" outlined (click)="dialogVisible.set(false)">
+        <span pButtonLabel>Cancelar</span>
+      </button>
+      <button
+        pButton
+        type="button"
+        [loading]="saving()"
+        [disabled]="selectedRoleId() === null || selectedResourceId() === null"
+        (click)="save()"
+      >
+        <i pButtonIcon class="pi pi-check"></i>
+        <span pButtonLabel>Conceder</span>
+      </button>
+    </div>
+  </div>
+</p-dialog>
