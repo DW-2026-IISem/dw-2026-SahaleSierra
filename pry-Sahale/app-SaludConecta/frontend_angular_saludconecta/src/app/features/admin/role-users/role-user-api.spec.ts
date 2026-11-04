@@ -1,12 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../../environments/environment';
 import { RoleUser } from '../../../core/models/role-user.model';
 import { RoleUserApi } from './role-user-api';
+
+const BASE = `${environment.apiUrl}/role-users`;
 
 describe('RoleUserApi', () => {
   let api: RoleUserApi;
@@ -27,8 +26,18 @@ describe('RoleUserApi', () => {
     let result: RoleUser[] | undefined;
     api.list().subscribe((rows) => (result = rows));
 
-    http.expectOne(`${environment.apiUrl}/role-users`).flush({ assignments: [assignment] });
+    http.expectOne(BASE).flush({ assignments: [assignment] });
 
     expect(result).toEqual([assignment]);
+  });
+
+  it('should reactivate with PATCH /:id/reactivate (no DELETE)', () => {
+    api.reactivate(1).subscribe();
+
+    const request = http.expectOne(`${BASE}/1/reactivate`);
+    expect(request.request.method).toBe('PATCH');
+    request.flush({ message: 'Assignment reactivated' });
+
+    http.expectNone(`${BASE}/1`);
   });
 });

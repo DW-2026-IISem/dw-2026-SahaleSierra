@@ -4,7 +4,8 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { UpdatePayload } from '../../../core/models/api.model';
 import { Role, RolePayload } from '../../../core/models/role.model';
-
+/** PUT /api/roles/:id — reemplazo completo. */
+export type RoleReplacePayload = Omit<RolePayload, 'status'>;
 /** /api/roles — JWT + RBAC. */
 @Injectable({ providedIn: 'root' })
 export class RoleApi {
@@ -29,6 +30,12 @@ export class RoleApi {
       .pipe(map((r) => r.role));
   }
 
+  replace(id: number, payload: RoleReplacePayload): Observable<Role> {
+    return this.http
+      .put<{ role: Role }>(`${this.base}/${id}`, payload)
+      .pipe(map((response) => response.role));
+  }
+  
   deactivate(id: number): Observable<unknown> {
     return this.http.patch(`${this.base}/${id}/deactivate`, {});
   }

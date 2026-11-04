@@ -173,6 +173,60 @@ export const routes: Routes = [
             (m) => m.InvoiceDetail,
           ),
       },
+      // Rutas de administración RBAC (ISS-17). Sus componentes llegan en
+      // ISS-17A (CRUD de usuarios, roles y recursos) e ISS-17B (pivotes).
+      // Los `loadComponent` resuelven el import dinámico al navegar; mientras
+      // el archivo no exista, el error aparece al abrir la URL, no al compilar.
+      //{
+      //  path: 'admin/users',
+      //  title: 'Usuarios · SaludConecta',
+      //  canActivate: [authOnlyGuard, permissionGuard],
+      //  data: { permission: 'GET /api/users' },
+      //  loadComponent: () =>
+      //    import('./features/admin/users/user-list/user-list').then(
+      //      (m) => m.UserList,
+       //   ),
+      //},
+      //{
+      //  path: 'admin/roles',
+      //  title: 'Roles · SaludConecta',
+      //  canActivate: [authOnlyGuard, permissionGuard],
+      //  data: { permission: 'GET /api/roles' },
+      //  loadComponent: () =>
+      //    import('./features/admin/roles/role-list/role-list').then(
+      //      (m) => m.RoleList,
+       //   ),
+      //},
+      //{
+      //  path: 'admin/resources',
+      //  title: 'Recursos · SaludConecta',
+      //  canActivate: [authOnlyGuard, permissionGuard],
+      //  data: { permission: 'GET /api/resources' },
+      //  loadComponent: () =>
+      //    import('./features/admin/resources/resource-list/resource-list').then(
+      //      (m) => m.ResourceList,
+      //    ),
+      //},
+      //{
+      //  path: 'admin/role-users',
+     //   title: 'Asignaciones de rol · SaludConecta',
+      //  canActivate: [authOnlyGuard, permissionGuard],
+      //  data: { permission: 'GET /api/role-users' },
+       // loadComponent: () =>
+      //    import('./features/admin/role-users/role-user-list/role-user-list').then(
+      //      (m) => m.RoleUserList,
+      //    ),
+      //},
+      //{
+      //  path: 'admin/resource-roles',
+      //  title: 'Concesiones de rol · SaludConecta',
+      //  canActivate: [authOnlyGuard, permissionGuard],
+      //  data: { permission: 'GET /api/resource-roles' },
+      //  loadComponent: () =>
+      //    import('./features/admin/resource-roles/resource-role-list/resource-role-list').then(
+      //      (m) => m.ResourceRoleList,
+      //    ),
+      //},      
     ],
   },
   { path: '**', redirectTo: 'login' },

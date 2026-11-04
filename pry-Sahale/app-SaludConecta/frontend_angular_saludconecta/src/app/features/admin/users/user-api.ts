@@ -5,7 +5,8 @@ import { environment } from '../../../../environments/environment';
 import { UpdatePayload } from '../../../core/models/api.model';
 import { EffectivePermission } from '../../../core/models/auth.model';
 import { ChangePasswordPayload, User, UserPayload } from '../../../core/models/user.model';
-
+/** PATCH /api/users/:id solo acepta username, email y avatar. */
+export type UserPatchPayload = Partial<Pick<UserPayload, 'username' | 'email' | 'avatar'>>;
 /** /api/users — JWT + RBAC. No hay ruta para reactivar usuarios. */
 @Injectable({ providedIn: 'root' })
 export class UserApi {
@@ -25,10 +26,10 @@ export class UserApi {
     return this.http.post<{ user: User }>(this.base, payload).pipe(map((r) => r.user));
   }
 
-  update(id: number, payload: UpdatePayload<UserPayload>): Observable<User> {
+   update(id: number, payload: UserPatchPayload): Observable<User> {
     return this.http
       .patch<{ user: User }>(`${this.base}/${id}`, payload)
-      .pipe(map((r) => r.user));
+      .pipe(map((response) => response.user));
   }
 
   /** PATCH /api/users/:id/password */

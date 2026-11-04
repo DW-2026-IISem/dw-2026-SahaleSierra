@@ -123,8 +123,37 @@ export const NAV: NavGroup[] = [
     label: 'Seguridad',
     icon: 'pi pi-shield',
     authOnly: true,
-    items: [
-      // En ISS-17: usuarios, roles, recursos, asignaciones, permisos.
+       items: [
+      {
+        label: 'Usuarios',
+        icon: 'pi pi-user-edit',
+        routerLink: '/admin/users',
+        permission: 'GET /api/users',
+      },
+      {
+        label: 'Roles',
+        icon: 'pi pi-shield',
+        routerLink: '/admin/roles',
+        permission: 'GET /api/roles',
+      },
+      {
+        label: 'Recursos',
+        icon: 'pi pi-list',
+        routerLink: '/admin/resources',
+        permission: 'GET /api/resources',
+      },
+      {
+        label: 'Asignaciones',
+        icon: 'pi pi-link',
+        routerLink: '/admin/role-users',
+        permission: 'GET /api/role-users',
+      },
+      {
+        label: 'Concesiones',
+        icon: 'pi pi-lock',
+        routerLink: '/admin/resource-roles',
+        permission: 'GET /api/resource-roles',
+      },
     ],
   },
   {

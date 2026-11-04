@@ -2647,3 +2647,120 @@ PY
 ![](images/clipboard-4277368577.png)
 
 ## Cierre del ISS
+
+![](images/clipboard-2386311881.png)
+
+# Fase II: Frontend — ISS-17 — Núcleo de administración RBAC
+
+## 17.2 Completar `UserApi`
+
+**PARCHE — `src/app/features/admin/users/user-api.ts`.**
+
+**1.** **Debajo de** `import { ChangePasswordPayload, User, UserPayload } from '../../../core/models/user.model';`, **añadí**:
+
+![](images/clipboard-3608314482.png)
+
+**2.** **Reemplacé** el método `update` por:
+
+![](images/clipboard-1342295252.png)
+
+## 17.3 Completar `RoleApi`
+
+**PARCHE — `src/app/features/admin/roles/role-api.ts`.**
+
+**1.** **Debajo de** `import { Role, RolePayload } from '../../../core/models/role.model';`, **añadí**:
+
+![](images/clipboard-58201344.png)
+
+**2.** **Debajo de** `update(...)`, **añadí**:
+
+![](images/clipboard-3244528062.png)
+
+## 17.4 Completar `ResourceApi`
+
+**PARCHE — `src/app/features/admin/resources/resource-api.ts`.**
+
+**1.** **Debajo de** `import { Resource, ResourcePayload } from '../../../core/models/resource.model';`, **añadí**:
+
+![](images/clipboard-2015875687.png)\
+**2.** **Debajo de** `update(...)`, **añadí**:
+
+![](images/clipboard-2224510633.png)
+
+## 17.5 Completar `RoleUserApi`
+
+`RoleUserApi` de ISS-02 tenía `list`, `get`, `create`, `deactivate`, `reactivate`. Está completo, no cambia.
+
+## 17.6 Completar `ResourceRoleApi`
+
+`ResourceRoleApi` de ISS-02 tenía `list(filters)`, `get`, `create`, `deactivate`, `reactivate`, con filtros `role_id` y `resource_id` por `HttpParams`. Está completo, no cambia.
+
+## 17.7 Rutas `/admin/*`
+
+![](images/clipboard-644529504.png)
+
+## 17.8 Ítems del grupo **Seguridad** en `NAV`
+
+**PARCHE — `src/app/layout/shell/nav.config.ts`.** **Dentro de** `NAV`, en el grupo `'Seguridad'`, **reemplacé** `items: []` por:
+
+![](images/clipboard-133686803.png)
+
+## 17.9 Pruebas de los 5 servicios
+
+### `src/app/features/admin/users/user-api.spec.ts` (7 pruebas)
+
+![](images/clipboard-3117099169.png)
+
+### `src/app/features/admin/roles/role-api.spec.ts` (6 pruebas)
+
+![](images/clipboard-328884828.png)
+
+### `src/app/features/admin/resources/resource-api.spec.ts` (6 pruebas)
+
+![](images/clipboard-2720443599.png)
+
+### Añadir 1 prueba extra a `role-user-api.spec.ts` y `resource-role-api.spec.ts` (para cubrir `reactivate`)
+
+**PARCHE — `src/app/features/admin/role-users/role-user-api.spec.ts`.** **Al final del `describe`**, **antes del** `});` que lo cierra, **añadí**:
+
+![](images/clipboard-4275652549.png)
+
+**PARCHE — `src/app/features/admin/resource-roles/resource-role-api.spec.ts`.** **Al final del `describe`**, **antes del** `});` que lo cierra, **añadí**:
+
+![](images/clipboard-3266522319.png)
+
+## 17.10 Comprobar antes de avanzar
+
+![](images/clipboard-377674871.png)
+
+## Verificación del ISS
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+# 1. Los métodos nuevos existen en los servicios
+grep -n "changePassword\|permissions(" src/app/features/admin/users/user-api.ts
+grep -n "replace(" src/app/features/admin/roles/role-api.ts src/app/features/admin/resources/resource-api.ts
+grep -n "reactivate(" src/app/features/admin/role-users/role-user-api.ts src/app/features/admin/resource-roles/resource-role-api.ts
+
+# 2. Las 5 rutas admin con su canActivate y data
+grep -c "path: 'admin/" src/app/app.routes.ts   # 5
+grep -c "authOnlyGuard, permissionGuard" src/app/app.routes.ts   # 5
+grep -c "data: { permission: 'GET /api/users'\|data: { permission: 'GET /api/roles'\|data: { permission: 'GET /api/resources'\|data: { permission: 'GET /api/role-users'\|data: { permission: 'GET /api/resource-roles'" src/app/app.routes.ts   # 5
+
+# 3. El grupo Seguridad tiene los 5 ítems con permiso
+grep -c "routerLink: '/admin/" src/app/layout/shell/nav.config.ts   # 5
+
+# 4. Pruebas de los servicios
+ls src/app/features/admin/users/user-api.spec.ts \
+   src/app/features/admin/roles/role-api.spec.ts \
+   src/app/features/admin/resources/resource-api.spec.ts
+
+# 5. Pruebas y build
+npm test -- --watch=false
+npx tsc --noEmit -p tsconfig.app.json
+```
+
+![](images/clipboard-3352035881.png)
+
+## Cierre del ISS

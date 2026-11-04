@@ -4,7 +4,8 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { UpdatePayload } from '../../../core/models/api.model';
 import { Resource, ResourcePayload } from '../../../core/models/resource.model';
-
+/** PUT /api/resources/:id — reemplazo completo. */
+export type ResourceReplacePayload = Omit<ResourcePayload, 'status'>;
 /** /api/resources — JWT + RBAC. Duplicado (method, path) → 409. */
 @Injectable({ providedIn: 'root' })
 export class ResourceApi {
@@ -33,6 +34,12 @@ export class ResourceApi {
       .pipe(map((r) => r.resource));
   }
 
+  replace(id: number, payload: ResourceReplacePayload): Observable<Resource> {
+    return this.http
+      .put<{ resource: Resource }>(`${this.base}/${id}`, payload)
+      .pipe(map((response) => response.resource));
+  }
+  
   deactivate(id: number): Observable<unknown> {
     return this.http.patch(`${this.base}/${id}/deactivate`, {});
   }
