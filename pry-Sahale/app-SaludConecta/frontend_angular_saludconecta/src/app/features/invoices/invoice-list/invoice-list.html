@@ -1,0 +1,155 @@
+<app-page-header
+  title="Facturas"
+  subtitle="Cada factura agrupa atenciones completadas de un mismo paciente. El backend solo lista las activas."
+>
+  <p-tag [value]="rows().length + ' facturas'" severity="info" [rounded]="true" />
+  <a pButton routerLink="/invoices/new">
+    <i pButtonIcon class="pi pi-plus"></i>
+    <span pButtonLabel>Nueva factura</span>
+  </a>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+<div class="rounded-xl border border-slate-200 bg-white">
+  <p-table
+    [value]="visibleRows()"
+    [loading]="loading()"
+    [paginator]="visibleRows().length > 10"
+    [rows]="10"
+    dataKey="id"
+    sortField="invoice_date"
+    [sortOrder]="-1"
+    tableStyleClass="min-w-3xl"
+  >
+    <ng-template #caption>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-search text-slate-400"></i>
+        <input
+          pInputText
+          type="search"
+          aria-label="Buscar facturas"
+          placeholder="Buscar por número o estado…"
+          [value]="filter()"
+          (input)="filter.set($any($event.target).value)"
+          class="w-full"
+        />
+      </div>
+      @if (filter()) {
+        <p class="mt-2 text-xs text-slate-500">
+          {{ visibleRows().length }} de {{ rows().length }} coinciden con «{{ filter() }}».
+        </p>
+      }
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="number">
+          <div class="flex items-center gap-1">Factura <p-sort-icon field="number" /></div>
+        </th>
+        <th pSortableColumn="invoice_date">
+          <div class="flex items-center gap-1">Fecha <p-sort-icon field="invoice_date" /></div>
+        </th>
+        <th class="text-right">Subtotal</th>
+        <th class="text-right">Impuesto</th>
+        <th class="text-right">Total</th>
+        <th>Estado</th>
+        <th class="w-44 text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-invoice>
+      <tr>
+        <td>
+          <p class="font-medium text-slate-800">{{ invoice.number }}</p>
+          <p class="text-xs text-slate-400">#{{ invoice.id }}</p>
+        </td>
+        <td class="text-sm text-slate-600">{{ invoice.invoice_date | date: 'dd/MM/yyyy' }}</td>
+        <td class="text-right text-sm">
+          {{ invoice.subtotal | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+        </td>
+        <td class="text-right text-sm">
+          {{ invoice.tax | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+        </td>
+        <td class="text-right font-medium text-slate-800">
+          {{ invoice.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+        </td>
+        <td><app-state-tag [state]="invoice.state" /></td>
+        <td>
+          <div class="flex justify-end gap-1">
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="success"
+              icon="pi pi-check-circle"
+              aria-label="Marcar la factura como pagada"
+              pTooltip="Marcar pagada"
+              [disabled]="!canPay(invoice)"
+              (click)="markPaid(invoice)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-times-circle"
+              aria-label="Anular la factura"
+              pTooltip="Anular"
+              [disabled]="!canCancel(invoice)"
+              (click)="cancel(invoice)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="secondary"
+              icon="pi pi-ban"
+              aria-label="Dar de baja la factura"
+              pTooltip="Baja lógica"
+              (click)="deactivate(invoice)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="danger"
+              icon="pi pi-trash"
+              aria-label="Eliminar la factura"
+              pTooltip="Eliminar"
+              (click)="remove(invoice)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="7">
+          @if (filter()) {
+            <app-empty-state
+              icon="pi pi-search"
+              title="Sin coincidencias"
+              message="Ninguna factura coincide con la búsqueda. Borra el filtro para ver todas."
+            />
+          } @else {
+            <app-empty-state
+              icon="pi pi-receipt"
+              title="Sin facturas activas"
+              message="Crea la primera con el botón «Nueva factura»."
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

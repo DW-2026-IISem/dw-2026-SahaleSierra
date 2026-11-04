@@ -1,0 +1,190 @@
+<app-page-header
+  title="Nueva factura"
+  subtitle="Elige un paciente, marca las atenciones completadas que se facturan y revisa el total antes de registrar."
+>
+  <a pButton routerLink="/invoices" severity="secondary" outlined>
+    <i pButtonIcon class="pi pi-arrow-left"></i>
+    <span pButtonLabel>Volver a facturas</span>
+  </a>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="space-y-4 lg:col-span-2">
+    <p-card header="1 · Paciente">
+      <label for="invoice-patient" class="mb-1 block text-sm font-medium text-slate-700">
+        Paciente con atenciones por facturar
+      </label>
+      <p-select
+        inputId="invoice-patient"
+        [ngModel]="patientId()"
+        (ngModelChange)="selectPatient($event)"
+        [options]="patientOptions()"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Selecciona un paciente"
+        emptyMessage="No hay atenciones completadas sin facturar"
+        [filter]="true"
+        filterBy="label"
+        [loading]="loading()"
+        [fluid]="true"
+      />
+    </p-card>
+
+    <p-card header="2 · Atenciones a facturar">
+      @if (patientId() === null) {
+        <app-empty-state
+          icon="pi pi-user"
+          title="Elige un paciente"
+          message="Aquí aparecerán sus atenciones completadas y sin factura."
+        />
+      } @else {
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p class="text-sm text-slate-600">
+            {{ selectedRows().length }} de {{ rows().length }} seleccionadas
+          </p>
+          <div class="flex gap-2">
+            <button pButton type="button" size="small" outlined (click)="selectAll()">
+              <span pButtonLabel>Seleccionar todas</span>
+            </button>
+            <button
+              pButton
+              type="button"
+              size="small"
+              severity="secondary"
+              outlined
+              [disabled]="selectedRows().length === 0"
+              (click)="clearSelection()"
+            >
+              <span pButtonLabel>Quitar selección</span>
+            </button>
+          </div>
+        </div>
+
+        <p-table [value]="rows()" dataKey="id" tableStyleClass="min-w-xl">
+          <ng-template #header>
+            <tr>
+              <th class="w-12"></th>
+              <th>Servicio</th>
+              <th>Fecha de la cita</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </ng-template>
+
+          <ng-template #body let-row>
+            <tr>
+              <td>
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="isSelected(row.id)"
+                  (onChange)="toggle(row.id)"
+                  [ariaLabel]="'Facturar la atención ' + row.id"
+                />
+              </td>
+              <td>
+                <p class="font-medium text-slate-800">{{ row.serviceName }}</p>
+                <p class="text-xs text-slate-400">
+                  Atención #{{ row.id }}@if (row.observations) { · {{ row.observations }} }
+                </p>
+              </td>
+              <td class="text-sm text-slate-600">
+                {{ row.startDate ? (row.startDate | date: 'dd/MM/yyyy HH:mm') : '—' }}
+              </td>
+              <td class="text-right font-medium">
+                {{ row.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="4">
+                <app-empty-state
+                  icon="pi pi-receipt"
+                  title="Sin atenciones por facturar"
+                  message="Este paciente no tiene atenciones completadas sin factura."
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    </p-card>
+  </div>
+
+  <div class="lg:sticky lg:top-20 lg:self-start">
+    <p-card header="3 · Resumen">
+      <div class="space-y-4">
+        <div>
+          <label for="invoice-number" class="mb-1 block text-sm font-medium text-slate-700">
+            Número de factura <span class="text-red-500">*</span>
+          </label>
+          <input
+            id="invoice-number"
+            pInputText
+            [value]="invoiceNumber()"
+            (input)="invoiceNumber.set($any($event.target).value)"
+            placeholder="FV-100001"
+            autocomplete="off"
+            class="w-full"
+          />
+          <p class="mt-1 text-xs text-slate-500">
+            Sugerido a partir de la última factura; debe ser único.
+          </p>
+        </div>
+
+        <div>
+          <label for="invoice-tax" class="mb-1 block text-sm font-medium text-slate-700">
+            Impuesto (valor)
+          </label>
+          <p-inputnumber
+            inputId="invoice-tax"
+            [ngModel]="tax()"
+            (ngModelChange)="setTax($event)"
+            mode="currency"
+            currency="COP"
+            locale="es-CO"
+            [maxFractionDigits]="0"
+            [min]="0"
+            [fluid]="true"
+          />
+        </div>
+
+        <dl class="space-y-2 border-t border-slate-200 pt-4 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-slate-500">Subtotal</dt>
+            <dd class="font-medium">{{ subtotal() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-slate-500">Impuesto</dt>
+            <dd>{{ taxAmount() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd>
+          </div>
+          <div class="flex justify-between border-t border-slate-200 pt-2 text-base">
+            <dt class="font-semibold">Total</dt>
+            <dd class="font-semibold">{{ total() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd>
+          </div>
+        </dl>
+        <p class="text-xs text-slate-500">
+          Vista previa: el backend calcula el subtotal y el total definitivos al registrar.
+        </p>
+
+        <button
+          pButton
+          type="button"
+          class="w-full"
+          [loading]="saving()"
+          [disabled]="loading()"
+          (click)="save()"
+        >
+          <i pButtonIcon class="pi pi-check"></i>
+          <span pButtonLabel>Registrar factura</span>
+        </button>
+      </div>
+    </p-card>
+  </div>
+</div>

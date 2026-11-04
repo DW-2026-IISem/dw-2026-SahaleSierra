@@ -52,6 +52,7 @@ export class Shell {
     { label: 'Citas', icon: 'pi pi-calendar', routerLink: '/appointments' },
     { label: 'Autorizaciones', icon: 'pi pi-check-circle', routerLink: '/authorizations' },
     { label: 'Atenciones', icon: 'pi pi-clipboard', routerLink: '/encounters' },
+    { label: 'Facturas', icon: 'pi pi-receipt', routerLink: '/invoices' },
     { label: 'Prototipo', icon: 'pi pi-desktop', routerLink: '/prototype' },
   ];
 

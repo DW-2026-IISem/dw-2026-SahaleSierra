@@ -92,6 +92,22 @@ export const routes: Routes = [
             (m) => m.EncounterList,
           ),
       },
+      {
+        path: 'invoices',
+        title: 'Facturas · SaludConecta',
+        loadComponent: () =>
+          import('./features/invoices/invoice-list/invoice-list').then(
+            (m) => m.InvoiceList,
+          ),
+      },
+      {
+        path: 'invoices/new',
+        title: 'Nueva factura · SaludConecta',
+        loadComponent: () =>
+          import('./features/invoices/invoice-form/invoice-form').then(
+            (m) => m.InvoiceForm,
+          ),
+      },
 
     ],
   },
