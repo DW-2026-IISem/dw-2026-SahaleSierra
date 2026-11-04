@@ -1751,3 +1751,117 @@ ng build
 ![](images/clipboard-1423748447.png)
 
 ## **Cierre del ISS**
+
+![](images/clipboard-977795653.png)
+
+![](images/clipboard-1108778567.png)
+
+# **Fase I: Frontend — ISS-13 — Facturas (borrador en memoria)**
+
+## **13.1 Endpoint y contrato**
+
+![](images/clipboard-1903060998.png)
+
+## **13.2 Generar con el CLI**
+
+![](images/clipboard-4291241132.png)
+
+## **13.4 `StateTag` (solo si no existe)**
+
+## **13.5 `invoice-list.ts`**
+
+![](images/clipboard-4079180787.png)
+
+## **13.6 `invoice-list.html` y `invoice-list.css`**
+
+![](images/clipboard-2166381627.png)
+
+![](images/clipboard-1822200064.png)
+
+## **13.7 `invoice-list.spec.ts`**
+
+![](images/clipboard-2767443963.png)
+
+![](images/clipboard-3237066301.png)
+
+## **13.8 `invoice-form.ts`**
+
+![](images/clipboard-3151069048.png)
+
+![](images/clipboard-3697822696.png)
+
+![](images/clipboard-3254287547.png)
+
+## **13.9 `invoice-form.html` y `invoice-form.css`**
+
+![](images/clipboard-2001606487.png)
+
+![](images/clipboard-3601469994.png)
+
+![](images/clipboard-1800073928.png)
+
+## **13.10 `invoice-form.spec.ts`**
+
+![](images/clipboard-1324976342.png)
+
+![](images/clipboard-2856737572.png)
+
+![](images/clipboard-2166911960.png)
+
+## **13.11 Rutas y menú**
+
+**PARCHE — `src/app/app.routes.ts`.** **Debajo de** la última ruta de negocio (`encounters`, de ISS-12; dentro de `children` del `Shell`, antes del `],` que cierra `children`), **añadí:**
+
+![](images/clipboard-2075978984.png)
+
+**PARCHE — `src/app/layout/shell/shell.ts`.** En `readonly items: MenuItem[] = [ ... ]`, **debajo de** la entrada `Atenciones`, **añadí:**
+
+![](images/clipboard-1696614861.png)
+
+## **13.12 Comprobar antes de avanzar**
+
+![](images/clipboard-1541270238.png)
+
+![](images/clipboard-4272954322.png)
+
+## **Verificación del ISS**
+
+``` bash
+# 1. El servicio y su prueba ya existían; StateTag existe (creado aquí o en ISS-10)
+ls src/app/features/invoices/invoice-api.ts src/app/features/invoices/invoice-api.spec.ts
+ls src/app/shared/ui/state-tag/state-tag.ts
+
+# 2. El borrador son signals: sin FormGroup
+grep -n "FormGroup\|FormBuilder" src/app/features/invoices/invoice-form/invoice-form.ts || echo "sin FormGroup: correcto"
+
+# 3. Carga en paralelo, totales derivados y DECIMAL convertido
+grep -n "forkJoin" src/app/features/invoices/invoice-form/invoice-form.ts
+grep -n "readonly subtotal\|readonly taxAmount\|readonly total" src/app/features/invoices/invoice-form/invoice-form.ts
+grep -n "toNumber" src/app/features/invoices/invoice-form/invoice-form.ts
+
+# 4. El POST no lleva subtotal ni total
+grep -n "encounter_ids" src/app/features/invoices/invoice-form/invoice-form.ts
+grep -n "subtotal:\|total:" src/app/features/invoices/invoice-form/invoice-form.ts | grep -n "create" || echo "sin subtotal ni total en el POST: correcto"
+
+# 5. Las plantillas de las tablas usan la API de PrimeNG 22
+grep -n "#header\|#body\|#emptymessage" src/app/features/invoices/invoice-list/invoice-list.html src/app/features/invoices/invoice-form/invoice-form.html
+grep -n "pTemplate=" src/app/features/invoices/*/*.html || echo "sin pTemplate: correcto"
+
+# 6. Las rutas existen y el menú apunta a ellas
+grep -n "invoices" src/app/app.routes.ts src/app/layout/shell/shell.ts
+
+# 7. Los CSS no tienen reglas (ninguno contiene llaves)
+for f in src/app/features/invoices/*/*.css src/app/shared/ui/state-tag/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 8. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-2744197677.png)
+
+## **Cierre del ISS**
+
+![](images/clipboard-723700261.png)
