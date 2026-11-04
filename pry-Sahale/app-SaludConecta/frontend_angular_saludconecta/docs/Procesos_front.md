@@ -1865,3 +1865,288 @@ ng build
 ## **Cierre del ISS**
 
 ![](images/clipboard-723700261.png)
+
+![](images/clipboard-3187182245.png)
+
+# **Fase I: Frontend — ISS-14 — Detalle de factura, dashboard y cierre de la Fase I**
+
+## **14.1 Contrato, reglas y confirmación con `curl`**
+
+![](images/clipboard-498080220.png)
+
+## **14.2 Confirmar lo que ya existe**
+
+![](images/clipboard-437594458.png)
+
+## **14.3 Generar con CLI**
+
+![](images/clipboard-2850222138.png)
+
+## **14.4 Estados de negocio: reutilizo `StateTag`**
+
+![](images/clipboard-1548056448.png)
+
+## **14.6 `invoice-detail.ts`**
+
+![](images/clipboard-3003870213.png)
+
+## **14.7 `invoice-detail.html`**
+
+![](images/clipboard-3731289969.png)
+
+## **14.8 `invoice-detail.css`**
+
+![](images/clipboard-3141448373.png)
+
+## **14.9 `invoice-detail.spec.ts`**
+
+![](images/clipboard-3379951154.png)
+
+![](images/clipboard-3158674476.png)
+
+## **14.10 `dashboard.ts`**
+
+![](images/clipboard-1132998822.png)
+
+![](images/clipboard-3159611557.png)
+
+## **14.11 `dashboard.html`**
+
+![](images/clipboard-1019528223.png)
+
+![](images/clipboard-3118570854.png)
+
+## **14.12 `dashboard.css`**
+
+![](images/clipboard-1071197727.png)
+
+## **14.13 `dashboard.spec.ts`**
+
+![](images/clipboard-132268502.png)
+
+![](images/clipboard-1685938747.png)
+
+## **14.14 Rutas: `dashboard` e `invoices/:id`**
+
+**PARCHE en `src/app/app.routes.ts`**, en tres pasos. Todos van **dentro de `children` de la ruta `''` que monta `Shell`**.
+
+1.  **Ruta `dashboard`.** Si el `grep` ya mostró `path: 'dashboard'`, no la dupliques: comprueba que su `import(...)` apunte a `./features/dashboard/dashboard` y `m.Dashboard`. Si no existe, añade como **última entrada de `children`** (justo antes del `],` que cierra `children`):
+
+``` typescript
+      {
+        path: 'dashboard',
+        title: 'Panel · SaludConecta',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+      },
+```
+
+2.  **Ruta `invoices/:id`.** Añádela **debajo de la ruta `dashboard`** (y, si el ISS-13 ya definió rutas como `invoices` o `invoices/new`, **debajo de ellas**: una ruta literal debe ir antes que `invoices/:id` para que `new` no se lea como un `id`):
+
+``` typescript
+      {
+        path: 'invoices/:id',
+        title: 'Detalle de factura · SaludConecta',
+        loadComponent: () =>
+          import('./features/invoices/invoice-detail/invoice-detail').then(
+            (m) => m.InvoiceDetail,
+          ),
+      },
+```
+
+3.  **Redirección inicial.** Reemplacé el destino de la hija vacía para que `/` abra el panel (el ISS-03 la había apuntado a la primera pantalla de negocio):
+
+``` typescript
+// Antes (la hija con pathMatch: 'full'):
+{ path: '', pathMatch: 'full', redirectTo: 'patients' },
+// Después:
+{ path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+```
+
+![](images/clipboard-3517461218.png)
+
+![](images/clipboard-3412708922.png)
+
+## **14.15 Menú agrupado por proceso (y Dashboard arriba)**
+
+**1. Veo qué entradas tengo hoy**, para conservar los textos e iconos de las que ya existen:
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+grep -n "label:" src/app/layout/shell/shell.ts
+```
+
+**2. PARCHE — `src/app/layout/shell/shell.ts`.** **Reemplacé** el arreglo `readonly items: MenuItem[] = [ ... ];` completo (desde `readonly items` hasta su `];`) por este. Los grupos van abiertos (`expanded: true`) y solo las hojas llevan `routerLink`:
+
+``` typescript
+  readonly items: MenuItem[] = [
+    { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/dashboard' },
+    {
+      label: 'Admisiones',
+      icon: 'pi pi-id-card',
+      expanded: true,
+      items: [
+        { label: 'Pacientes', icon: 'pi pi-users', routerLink: '/patients' },
+        { label: 'Citas', icon: 'pi pi-calendar', routerLink: '/appointments' },
+        { label: 'Autorizaciones', icon: 'pi pi-check-circle', routerLink: '/authorizations' },
+      ],
+    },
+    {
+      label: 'Atención clínica',
+      icon: 'pi pi-heart',
+      expanded: true,
+      items: [
+        { label: 'Historias clínicas', icon: 'pi pi-file-edit', routerLink: '/clinical-records' },
+        { label: 'Atenciones', icon: 'pi pi-clipboard', routerLink: '/encounters' },
+      ],
+    },
+    {
+      label: 'Facturación',
+      icon: 'pi pi-wallet',
+      expanded: true,
+      items: [{ label: 'Facturas', icon: 'pi pi-receipt', routerLink: '/invoices' }],
+    },
+    {
+      label: 'Catálogos',
+      icon: 'pi pi-book',
+      expanded: true,
+      items: [
+        { label: 'Especialidades', icon: 'pi pi-heart', routerLink: '/specialties' },
+        { label: 'Servicios', icon: 'pi pi-briefcase', routerLink: '/services' },
+        { label: 'Médicos', icon: 'pi pi-user', routerLink: '/doctors' },
+        { label: 'Médicos y especialidades', icon: 'pi pi-link', routerLink: '/doctor-specialties' },
+        { label: 'Agendas', icon: 'pi pi-calendar-plus', routerLink: '/agendas' },
+      ],
+    },
+    { label: 'Prototipo', icon: 'pi pi-desktop', routerLink: '/prototype' },
+  ];
+```
+
+> Si en el `grep` del paso 1 tus entradas de *Médicos y especialidades* o *Agendas* usan otro texto o icono, conserva los tuyos dentro del grupo **Catálogos**. Si todavía no tienes esas dos pantallas (ISS-07 e ISS-08), quita sus dos líneas: un `routerLink` a una ruta inexistente te llevaría a `/prototype` por el comodín `**`.
+
+![](images/clipboard-3611621046.png)
+
+**3. PARCHE — `src/app/layout/aside/aside.ts`.** El `Aside` cierra el Drawer en móvil con cualquier clic dentro del `<nav>`. Con un menú plano eso bastaba; con grupos, tocar el **encabezado de un grupo** (que solo abre o cierra su sección) también cerraría el Drawer. **Reemplacé** el método `onNavigationClick` completo por:
+
+``` typescript
+  /**
+   * Solo un enlace real (`<a href>`) es navegación. El encabezado de un grupo del
+   * PanelMenu no tiene `href`: abre y cierra su sección y no debe cerrar el Drawer.
+   */
+  onNavigationClick(event: Event): void {
+    if ((event.target as HTMLElement).closest('a[href]')) {
+      this.navigated.emit();
+    }
+  }
+```
+
+![](images/clipboard-1725714770.png)
+
+## **14.16 Enlace «Ver detalle» desde la lista de facturas**
+
+La lista de facturas es la del ISS-13. Allí ya quedaron importados `RouterLink` y `TooltipModule` (paso 13.5), así que **no** se toca `invoice-list.ts`: volver a importar `RouterLink` provocaría un error de identificador duplicado. Compruebo el punto de anclaje:
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+grep -n "RouterLink\|TooltipModule" src/app/features/invoices/invoice-list/invoice-list.ts
+grep -n "let-invoice\|flex justify-end" src/app/features/invoices/invoice-list/invoice-list.html
+```
+
+![](images/clipboard-2004545676.png)
+
+Deben aparecer `RouterLink` y `TooltipModule` (import y `imports: [...]`), `let-invoice` y la celda de acciones.
+
+**PARCHE — `src/app/features/invoices/invoice-list/invoice-list.html`.** Dentro de la celda de acciones (`<div class="flex justify-end gap-1">`), **como primer botón**, **añadí** este enlace:
+
+``` html
+<a
+  pButton
+  text
+  rounded
+  severity="secondary"
+  icon="pi pi-eye"
+  aria-label="Ver detalle de la factura"
+  pTooltip="Ver detalle"
+  [routerLink]="['/invoices', invoice.id]"
+></a>
+```
+
+![](images/clipboard-1919676999.png)
+
+## **14.17 Comprobar antes de avanzar (manual)**
+
+![](images/clipboard-3397222716.png)
+
+## **Verificación del ISS**
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+# 1. Los estados usan StateTag y no quedó una utilidad duplicada
+grep -n "issued\|paid\|in_progress\|completed\|cancelled" src/app/shared/ui/state-tag/state-tag.ts
+ls src/app/features/invoices/invoice-state.ts 2>/dev/null && echo "SOBRA invoice-state.ts: bórralo" || echo "sin invoice-state.ts: correcto"
+grep -rn "p-tag" src/app/features/dashboard src/app/features/invoices/invoice-detail --include=*.html \
+  || echo "estados con app-state-tag: correcto"
+
+# 2. El detalle valida el id de la ruta y encadena con switchMap + forkJoin
+grep -n "paramMap.get('id')\|Number.isInteger\|switchMap\|forkJoin" src/app/features/invoices/invoice-detail/invoice-detail.ts
+
+# 3. El dashboard pide cuatro listas en paralelo y deriva con computed
+grep -n "forkJoin\|computed(" src/app/features/dashboard/dashboard.ts
+grep -c "Api.list()" src/app/features/dashboard/dashboard.ts   # debe imprimir 4
+
+# 4. Plantillas de tabla con la sintaxis de PrimeNG 22
+grep -n "#header\|#body\|#emptymessage" src/app/features/dashboard/dashboard.html src/app/features/invoices/invoice-detail/invoice-detail.html
+grep -n "pTemplate=" src/app/features/dashboard/dashboard.html src/app/features/invoices/invoice-detail/invoice-detail.html || echo "sin pTemplate: correcto"
+
+# 5. Las rutas y el menú existen, y el menú está agrupado
+grep -n "dashboard\|invoices/:id" src/app/app.routes.ts src/app/layout/shell/shell.ts
+grep -c "label: 'Admisiones'\|label: 'Atención clínica'\|label: 'Facturación'\|label: 'Catálogos'" src/app/layout/shell/shell.ts   # debe imprimir 4
+grep -n "closest('a\[href\]')" src/app/layout/aside/aside.ts
+grep -n "Ver detalle de la factura" src/app/features/invoices/invoice-list/invoice-list.html
+
+# 6. Los CSS siguen sin reglas (ninguno contiene llaves)
+for f in src/app/features/dashboard/*.css src/app/features/invoices/invoice-detail/*.css; do
+  grep -q '[{}]' "$f" && echo "REGLAS EN $f"
+done
+
+# 7. Solo lecturas: ni el detalle ni el panel escriben en el backend
+grep -n "\.create(\|\.update(\|\.deactivate(\|\.remove(" \
+  src/app/features/dashboard/dashboard.ts src/app/features/invoices/invoice-detail/invoice-detail.ts \
+  || echo "solo lecturas: correcto"
+
+# 8. Pruebas y build
+npm test -- --watch=false
+ng build
+```
+
+![](images/clipboard-4205912921.png)
+
+## **Cierre de la Fase I**
+
+``` bash
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+# A. Las once entidades de negocio responden 200 sin token (AUTH_ENABLED=false)
+for path in patients specialties doctors doctor-specialties services agendas appointments clinical-records authorizations encounters invoices; do
+  printf "%-20s" "$path"
+  curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:4000/api/$path"
+done
+
+# B. Cada pantalla tiene su ruta en el frontend
+for r in patients specialties doctors doctor-specialties services agendas appointments clinical-records authorizations encounters invoices dashboard; do
+  grep -q "path: '$r'" src/app/app.routes.ts && echo "ok     $r" || echo "FALTA  $r"
+done
+
+# C. No hay piezas de Fase II en el código
+grep -rn "withInterceptors\|canActivate\|appHasPermission\|SessionStore\|AuthService\|Bearer" src/app --include=*.ts --exclude=*.spec.ts \
+  || echo "sin piezas de Fase II en el código: correcto"
+find src/app/core/guards src/app/core/interceptors -type f ! -name '.gitkeep' 2>/dev/null \
+  | grep . || echo "guards e interceptors vacíos: correcto"
+```
+
+![](images/clipboard-1690772912.png)
+
+## **Cierre del ISS**

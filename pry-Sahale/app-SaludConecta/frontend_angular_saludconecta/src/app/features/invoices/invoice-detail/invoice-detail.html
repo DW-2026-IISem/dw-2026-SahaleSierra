@@ -1,0 +1,124 @@
+<app-page-header
+  [title]="title()"
+  subtitle="Detalle de la factura y de las atenciones que agrupa."
+>
+  <button pButton type="button" severity="secondary" outlined (click)="back()">
+    <i pButtonIcon class="pi pi-arrow-left"></i>
+    <span pButtonLabel>Volver</span>
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+@if (loading()) {
+  <div class="grid gap-4 lg:grid-cols-3">
+    <p-skeleton height="9rem" borderRadius="1rem" styleClass="lg:col-span-2" />
+    <p-skeleton height="9rem" borderRadius="1rem" />
+  </div>
+} @else if (invoice(); as current) {
+  <div class="grid gap-4 lg:grid-cols-3">
+    <p-card class="lg:col-span-2">
+      <dl class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-slate-400">Número</dt>
+          <dd class="mt-1 text-lg font-semibold text-slate-900" data-testid="invoice-number">
+            {{ current.number }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-slate-400">Estado</dt>
+          <dd class="mt-1">
+            <app-state-tag [state]="current.state" />
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-slate-400">Fecha de emisión</dt>
+          <dd class="mt-1 text-sm text-slate-700">
+            {{ current.invoice_date | date: 'dd/MM/yyyy HH:mm' }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-slate-400">Paciente</dt>
+          <dd class="mt-1 text-sm text-slate-700" data-testid="invoice-patient">
+            {{ patientLabel() ?? '—' }}
+          </dd>
+        </div>
+      </dl>
+    </p-card>
+
+    <p-card>
+      <dl class="space-y-2 text-sm">
+        <div class="flex items-center justify-between">
+          <dt class="text-slate-500">Subtotal</dt>
+          <dd class="text-slate-800" data-testid="invoice-subtotal">
+            {{ subtotal() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          </dd>
+        </div>
+        <div class="flex items-center justify-between">
+          <dt class="text-slate-500">Impuesto</dt>
+          <dd class="text-slate-800" data-testid="invoice-tax">
+            {{ tax() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          </dd>
+        </div>
+        <div class="flex items-center justify-between border-t border-slate-100 pt-2">
+          <dt class="font-semibold text-slate-700">Total</dt>
+          <dd class="text-lg font-semibold text-slate-900" data-testid="invoice-total">
+            {{ total() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          </dd>
+        </div>
+        <div class="flex items-center justify-between pt-1 text-xs text-slate-400">
+          <dt>Suma de las atenciones listadas</dt>
+          <dd data-testid="invoice-lines-total">
+            {{ linesTotal() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          </dd>
+        </div>
+      </dl>
+    </p-card>
+  </div>
+
+  <div class="mt-4 rounded-xl border border-slate-200 bg-white">
+    <p-table [value]="lines()" dataKey="id" tableStyleClass="min-w-3xl">
+      <ng-template #header>
+        <tr>
+          <th>Atención</th>
+          <th>Servicio</th>
+          <th>Inicio</th>
+          <th>Estado</th>
+          <th>Observaciones</th>
+          <th class="text-right">Total</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-line>
+        <tr>
+          <td class="text-sm text-slate-500">#{{ line.id }}</td>
+          <td class="font-medium text-slate-800">{{ serviceName()(line.service_id) }}</td>
+          <td class="text-sm text-slate-600">{{ line.start_date | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td>
+            <app-state-tag [state]="line.state" />
+          </td>
+          <td class="text-sm text-slate-600">{{ line.observations || '—' }}</td>
+          <td class="text-right text-sm text-slate-800">
+            {{ line.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6">
+            <app-empty-state
+              icon="pi pi-clipboard"
+              title="Sin atenciones"
+              message="El backend no devolvió atenciones activas asociadas a esta factura."
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}

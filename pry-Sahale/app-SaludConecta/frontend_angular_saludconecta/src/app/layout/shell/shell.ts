@@ -42,19 +42,47 @@ export class Shell {
    * permisos.
    */
   readonly items: MenuItem[] = [
-    { label: 'Pacientes', icon: 'pi pi-users', routerLink: '/patients' },
-    { label: 'Especialidades', icon: 'pi pi-heart', routerLink: '/specialties' },
-    { label: 'Servicios', icon: 'pi pi-briefcase', routerLink: '/services' },
-    { label: 'Médicos', icon: 'pi pi-user', routerLink: '/doctors' },
-    { label: 'Médicos y especialidades', icon: 'pi pi-link', routerLink: '/doctor-specialties' },
-    { label: 'Agendas', icon: 'pi pi-calendar', routerLink: '/agendas' },
-    { label: 'Historias clínicas', icon: 'pi pi-file-edit', routerLink: '/clinical-records' },
-    { label: 'Citas', icon: 'pi pi-calendar', routerLink: '/appointments' },
-    { label: 'Autorizaciones', icon: 'pi pi-check-circle', routerLink: '/authorizations' },
-    { label: 'Atenciones', icon: 'pi pi-clipboard', routerLink: '/encounters' },
-    { label: 'Facturas', icon: 'pi pi-receipt', routerLink: '/invoices' },
-    { label: 'Prototipo', icon: 'pi pi-desktop', routerLink: '/prototype' },
+    { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/dashboard' },
+    {
+      label: 'Admisiones',
+      icon: 'pi pi-id-card',
+      expanded: true,
+      items: [
+        { label: 'Pacientes', icon: 'pi pi-users', routerLink: '/patients' },
+        { label: 'Citas', icon: 'pi pi-calendar', routerLink: '/appointments' },
+        { label: 'Autorizaciones', icon: 'pi pi-check-circle', routerLink: '/authorizations' },
+      ],
+    },
+    {
+      label: 'Atención clínica',
+      icon: 'pi pi-heart',
+      expanded: true,
+      items: [
+        { label: 'Historias clínicas', icon: 'pi pi-file-edit', routerLink: '/clinical-records' },
+        { label: 'Atenciones', icon: 'pi pi-clipboard', routerLink: '/encounters' },
+      ],
+    },
+    {
+      label: 'Facturación',
+      icon: 'pi pi-wallet',
+      expanded: true,
+      items: [{ label: 'Facturas', icon: 'pi pi-receipt', routerLink: '/invoices' }],
+    },
+    {
+      label: 'Catálogos',
+      icon: 'pi pi-book',
+      expanded: true,
+      items: [
+        { label: 'Especialidades', icon: 'pi pi-heart', routerLink: '/specialties' },
+        { label: 'Servicios', icon: 'pi pi-briefcase', routerLink: '/services' },
+        { label: 'Médicos', icon: 'pi pi-user', routerLink: '/doctors' },
+        { label: 'Médicos y especialidades', icon: 'pi pi-link', routerLink: '/doctor-specialties' },
+        { label: 'Agendas', icon: 'pi pi-calendar-plus', routerLink: '/agendas' },
+      ],
+    },
+   
   ];
+
 
   /**
    * Un solo botón, dos disposiciones: en escritorio alterna el Aside fijo; por

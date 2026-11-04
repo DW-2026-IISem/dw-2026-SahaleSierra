@@ -81,6 +81,16 @@
         <td><app-state-tag [state]="invoice.state" /></td>
         <td>
           <div class="flex justify-end gap-1">
+            <a
+             pButton
+             text
+             rounded
+             severity="secondary"
+             icon="pi pi-eye"
+             aria-label="Ver detalle de la factura"
+             pTooltip="Ver detalle"
+             [routerLink]="['/invoices', invoice.id]"
+            ></a>
             <button
               pButton
               type="button"

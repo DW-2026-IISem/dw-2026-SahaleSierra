@@ -38,9 +38,14 @@ export class Aside {
    * Un clic dentro del menú puede caer en el propio ítem o en un hijo suyo.
    * `closest` resuelve ambos casos con un solo listener en el `<nav>`.
    */
+    /**
+   * Solo un enlace real (`<a href>`) es navegación. El encabezado de un grupo del
+   * PanelMenu no tiene `href`: abre y cierra su sección y no debe cerrar el Drawer.
+   */
   onNavigationClick(event: Event): void {
-    if ((event.target as HTMLElement).closest('a, button, [role="button"]')) {
+    if ((event.target as HTMLElement).closest('a[href]')) {
       this.navigated.emit();
     }
   }
+
 }

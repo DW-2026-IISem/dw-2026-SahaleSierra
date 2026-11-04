@@ -1,0 +1,170 @@
+<app-page-header
+  title="Panel"
+  subtitle="Resumen de pacientes, citas, atenciones por facturar e ingresos."
+>
+  <button pButton type="button" severity="secondary" outlined [loading]="loading()" (click)="load()">
+    <i pButtonIcon class="pi pi-refresh"></i>
+    <span pButtonLabel>Actualizar</span>
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p-message severity="error" styleClass="mb-4 w-full">
+    {{ error() }}
+  </p-message>
+}
+
+@if (loading()) {
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    @for (item of [1, 2, 3, 4]; track item) {
+      <p-skeleton height="6rem" borderRadius="1rem" />
+    }
+  </div>
+} @else if (!error()) {
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <p-card>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm text-slate-500">Pacientes activos</p>
+          <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-patients">
+            {{ activePatients() }}
+          </p>
+        </div>
+        <i class="pi pi-users text-xl text-slate-400"></i>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm text-slate-500">Citas programadas</p>
+          <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-scheduled">
+            {{ scheduledAppointments().length }}
+          </p>
+        </div>
+        <i class="pi pi-calendar text-xl text-slate-400"></i>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm text-slate-500">Atenciones por facturar</p>
+          <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-pending">
+            {{ pendingEncounters().length }}
+          </p>
+          <p class="mt-1 text-xs text-slate-400" data-testid="kpi-pending-amount">
+            {{ pendingAmount() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} sin facturar
+          </p>
+        </div>
+        <i class="pi pi-clipboard text-xl text-slate-400"></i>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm text-slate-500">Ingresos facturados</p>
+          <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-revenue">
+            {{ revenue() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          </p>
+          <p class="mt-1 text-xs text-slate-400">
+            {{ billedInvoices().length }} facturas no anuladas
+          </p>
+        </div>
+        <i class="pi pi-wallet text-xl text-slate-400"></i>
+      </div>
+    </p-card>
+  </div>
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <section>
+      <h2 class="mb-2 text-sm font-semibold text-slate-700">Próximas citas programadas</h2>
+      <div class="rounded-xl border border-slate-200 bg-white">
+        <p-table [value]="upcoming()" dataKey="id" tableStyleClass="min-w-xl">
+          <ng-template #header>
+            <tr>
+              <th>Fecha</th>
+              <th>Paciente</th>
+              <th>Motivo</th>
+            </tr>
+          </ng-template>
+
+          <ng-template #body let-appointment>
+            <tr>
+              <td class="text-sm text-slate-600">
+                {{ appointment.start_date | date: 'dd/MM/yyyy HH:mm' }}
+              </td>
+              <td class="font-medium text-slate-800">
+                {{ patientName()(appointment.patient_id) }}
+              </td>
+              <td class="text-sm text-slate-600">{{ appointment.reason || '—' }}</td>
+            </tr>
+          </ng-template>
+
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="3">
+                <app-empty-state
+                  icon="pi pi-calendar"
+                  title="Sin citas próximas"
+                  message="No hay citas programadas a partir de este momento."
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-sm font-semibold text-slate-700">Últimas facturas</h2>
+      <div class="rounded-xl border border-slate-200 bg-white">
+        <p-table [value]="latestInvoices()" dataKey="id" tableStyleClass="min-w-xl">
+          <ng-template #header>
+            <tr>
+              <th>Número</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </ng-template>
+
+          <ng-template #body let-invoice>
+            <tr>
+              <td>
+                <a
+                  [routerLink]="['/invoices', invoice.id]"
+                  class="font-medium text-sky-700 hover:underline"
+                >
+                  {{ invoice.number }}
+                </a>
+              </td>
+              <td class="text-sm text-slate-600">
+                {{ invoice.invoice_date | date: 'dd/MM/yyyy HH:mm' }}
+              </td>
+              <td>
+                <app-state-tag [state]="invoice.state" />
+              </td>
+              <td class="text-right text-sm text-slate-800">
+                {{ invoice.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="4">
+                <app-empty-state
+                  icon="pi pi-wallet"
+                  title="Sin facturas"
+                  message="Todavía no hay facturas activas para mostrar."
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+  </div>
+}

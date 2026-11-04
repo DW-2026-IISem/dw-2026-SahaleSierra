@@ -12,7 +12,7 @@ export const routes: Routes = [
     children: [
           // La primera pantalla de negocio es la redirección por defecto.
       // ISS-14 la cambiará por el dashboard.
-      { path: '', pathMatch: 'full', redirectTo: 'patients' },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
         path: 'patients',
         title: 'Pacientes · SaludConecta',
@@ -100,6 +100,7 @@ export const routes: Routes = [
             (m) => m.InvoiceList,
           ),
       },
+      
       {
         path: 'invoices/new',
         title: 'Nueva factura · SaludConecta',
@@ -107,6 +108,22 @@ export const routes: Routes = [
           import('./features/invoices/invoice-form/invoice-form').then(
             (m) => m.InvoiceForm,
           ),
+      },
+      
+      {
+        path: 'invoices/:id',
+        title: 'Detalle de factura · SaludConecta',
+        loadComponent: () =>
+          import('./features/invoices/invoice-detail/invoice-detail').then(
+            (m) => m.InvoiceDetail,
+          ),
+      },
+
+      {
+        path: 'dashboard',
+        title: 'Panel · SaludConecta',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
 
     ],
