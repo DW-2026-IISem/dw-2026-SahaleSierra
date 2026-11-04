@@ -17,7 +17,7 @@ import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { PatientApi } from '../patient-api';
 import { PatientForm } from '../patient-form/patient-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de pacientes con todas las operaciones del CRUD.
  *
@@ -40,6 +40,7 @@ import { PatientForm } from '../patient-form/patient-form';
     TagModule,
     TooltipModule,
     PatientForm,
+    HasPermissionDirective, 
   ],
   templateUrl: './patient-list.html',
   styleUrl: './patient-list.css',

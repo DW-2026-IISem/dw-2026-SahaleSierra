@@ -16,7 +16,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { StateTag } from '../../../shared/ui/state-tag/state-tag';
 import { InvoiceApi } from '../invoice-api';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de facturas. Crear una factura es otra pantalla (`/invoices/new`):
  * armar el borrador necesita más espacio que un diálogo.
@@ -41,6 +41,7 @@ import { InvoiceApi } from '../invoice-api';
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective, 
   ],
   templateUrl: './invoice-list.html',
   styleUrl: './invoice-list.css',

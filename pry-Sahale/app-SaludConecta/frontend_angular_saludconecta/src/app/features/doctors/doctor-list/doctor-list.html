@@ -3,10 +3,12 @@
   subtitle="Médicos del centro. El backend solo lista los activos."
 >
   <p-tag [value]="rows().length + ' activos'" severity="info" [rounded]="true" />
-  <button pButton type="button" (click)="openCreate()">
+  <ng-container *appHasPermission="'POST /api/doctors'">
+<button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Nuevo médico</span>
   </button>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -65,7 +67,8 @@
         <td><app-status-tag [status]="doctor.status" /></td>
         <td>
           <div class="flex justify-end gap-1">
-            <button
+            <ng-container *appHasPermission="'PATCH /api/doctors/:id'">
+<button
               pButton
               type="button"
               text
@@ -76,7 +79,9 @@
               pTooltip="Editar"
               (click)="openEdit(doctor)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/doctors/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -87,7 +92,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(doctor)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/doctors/:id'">
+<button
               pButton
               type="button"
               text
@@ -98,6 +105,7 @@
               pTooltip="Eliminar"
               (click)="remove(doctor)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>

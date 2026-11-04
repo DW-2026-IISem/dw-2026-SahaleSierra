@@ -3,10 +3,12 @@
   subtitle="Agendas de atención de cada médico. El backend solo lista las activas."
 >
   <p-tag [value]="rows().length + ' activas'" severity="info" [rounded]="true" />
-  <button pButton type="button" (click)="openCreate()">
+  <ng-container *appHasPermission="'POST /api/agendas'">
+<button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Nueva agenda</span>
   </button>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -73,7 +75,8 @@
         <td><app-status-tag [status]="agenda.status" /></td>
         <td>
           <div class="flex justify-end gap-1">
-            <button
+            <ng-container *appHasPermission="'PATCH /api/agendas/:id'">
+<button
               pButton
               type="button"
               text
@@ -84,7 +87,9 @@
               pTooltip="Editar"
               (click)="openEdit(agenda)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/agendas/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -95,7 +100,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(agenda)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/agendas/:id'">
+<button
               pButton
               type="button"
               text
@@ -106,6 +113,7 @@
               pTooltip="Eliminar"
               (click)="remove(agenda)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>

@@ -11,6 +11,7 @@ import { ClinicalRecord } from '../../../core/models/clinical-record.model';
 import { Encounter } from '../../../core/models/encounter.model';
 import { Patient } from '../../../core/models/patient.model';
 import { Service } from '../../../core/models/service.model';
+import { SessionStore } from '../../../core/services/session-store';
 import { EncounterList } from './encounter-list';
 
 const ENCOUNTERS_URL = `${environment.apiUrl}/encounters`;
@@ -112,6 +113,27 @@ describe('EncounterList', () => {
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
+
+    // Sesión completa: la prueba verifica `disabled` por factura, no autorización.
+    const store = TestBed.inject(SessionStore);
+    store.setTokens({
+      access_token: 'A',
+      token_type: 'Bearer',
+      expires_in: 900,
+      refresh_token: 'R',
+      refresh_expires_in: 604800,
+    });
+    store.setAccess({
+      user: { id: 1, username: 'test', email: 't@b', avatar: null, status: 'active' },
+      permissions: [
+        { resource_id: 1, method: 'GET', path: '/api/encounters', description: null, role_id: 1, role_name: 'TEST' },
+        { resource_id: 2, method: 'POST', path: '/api/encounters', description: null, role_id: 1, role_name: 'TEST' },
+        { resource_id: 3, method: 'PATCH', path: '/api/encounters/:id', description: null, role_id: 1, role_name: 'TEST' },
+        { resource_id: 4, method: 'PATCH', path: '/api/encounters/:id/deactivate', description: null, role_id: 1, role_name: 'TEST' },
+        { resource_id: 5, method: 'DELETE', path: '/api/encounters/:id', description: null, role_id: 1, role_name: 'TEST' },
+      ],
+    });
+
     confirmation = TestBed.inject(ConfirmationService);
     messages = TestBed.inject(MessageService);
   });

@@ -3,10 +3,12 @@
   subtitle="Cada factura agrupa atenciones completadas de un mismo paciente. El backend solo lista las activas."
 >
   <p-tag [value]="rows().length + ' facturas'" severity="info" [rounded]="true" />
-  <a pButton routerLink="/invoices/new">
+  <ng-container *appHasPermission="'POST /api/invoices'">
+<a pButton routerLink="/invoices/new">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Nueva factura</span>
   </a>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -91,7 +93,8 @@
              pTooltip="Ver detalle"
              [routerLink]="['/invoices', invoice.id]"
             ></a>
-            <button
+            <ng-container *appHasPermission="'PATCH /api/invoices/:id'">
+<button
               pButton
               type="button"
               text
@@ -103,6 +106,7 @@
               [disabled]="!canPay(invoice)"
               (click)="markPaid(invoice)"
             ></button>
+            </ng-container>
             <button
               pButton
               type="button"
@@ -115,7 +119,8 @@
               [disabled]="!canCancel(invoice)"
               (click)="cancel(invoice)"
             ></button>
-            <button
+            <ng-container *appHasPermission="'PATCH /api/invoices/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -126,7 +131,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(invoice)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/invoices/:id'">
+<button
               pButton
               type="button"
               text
@@ -137,6 +144,7 @@
               pTooltip="Eliminar"
               (click)="remove(invoice)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>

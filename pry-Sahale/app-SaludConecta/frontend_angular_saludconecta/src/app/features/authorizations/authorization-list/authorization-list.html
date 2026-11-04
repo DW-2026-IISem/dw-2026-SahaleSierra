@@ -8,10 +8,12 @@
     severity="warn"
     [rounded]="true"
   />
-  <button pButton type="button" (click)="openCreate()">
+  <ng-container *appHasPermission="'POST /api/authorizations'">
+<button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Nueva autorización</span>
   </button>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -77,7 +79,8 @@
         <td><app-status-tag [status]="authorization.status" /></td>
         <td>
           <div class="flex justify-end gap-1">
-            <button
+            <ng-container *appHasPermission="'PATCH /api/authorizations/:id'">
+<button
               pButton
               type="button"
               text
@@ -88,7 +91,9 @@
               pTooltip="Editar"
               (click)="openEdit(authorization)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/authorizations/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -99,7 +104,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(authorization)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/authorizations/:id'">
+<button
               pButton
               type="button"
               text
@@ -110,6 +117,7 @@
               pTooltip="Eliminar"
               (click)="remove(authorization)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>

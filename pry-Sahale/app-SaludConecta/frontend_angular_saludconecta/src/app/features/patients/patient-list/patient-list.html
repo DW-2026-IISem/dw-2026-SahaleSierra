@@ -3,10 +3,12 @@
   subtitle="El backend solo lista los pacientes activos; la baja lógica cambia su estado."
 >
   <p-tag [value]="rows().length + ' activos'" severity="info" [rounded]="true" />
-  <button pButton type="button" (click)="openCreate()">
+  <ng-container *appHasPermission="'POST /api/patients'">
+<button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Nuevo paciente</span>
   </button>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -76,7 +78,8 @@
         <td><app-status-tag [status]="patient.status" /></td>
         <td>
           <div class="flex justify-end gap-1">
-            <button
+            <ng-container *appHasPermission="'PATCH /api/patients/:id'">
+<button
               pButton
               type="button"
               text
@@ -87,7 +90,9 @@
               pTooltip="Editar"
               (click)="openEdit(patient)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/patients/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -98,7 +103,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(patient)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/patients/:id'">
+<button
               pButton
               type="button"
               text
@@ -109,6 +116,7 @@
               pTooltip="Eliminar"
               (click)="remove(patient)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>

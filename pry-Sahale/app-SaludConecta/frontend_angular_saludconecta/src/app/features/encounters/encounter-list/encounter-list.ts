@@ -35,7 +35,7 @@ import { PatientApi } from '../../patients/patient-api';
 import { ServiceApi } from '../../services/service-api';
 import { EncounterApi } from '../encounter-api';
 import { EncounterAppointmentOption, EncounterForm } from '../encounter-form/encounter-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de atenciones y «Atender cita» (la regla central del enunciado).
  *
@@ -62,6 +62,7 @@ import { EncounterAppointmentOption, EncounterForm } from '../encounter-form/enc
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective, 
   ],
   templateUrl: './encounter-list.html',
   styleUrl: './encounter-list.css',

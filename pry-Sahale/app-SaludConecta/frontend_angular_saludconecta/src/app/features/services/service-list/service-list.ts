@@ -16,7 +16,7 @@ import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { ServiceApi } from '../service-api';
 import { ServiceForm } from '../service-form/service-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de servicios con todas las operaciones del CRUD.
  *
@@ -38,6 +38,7 @@ import { ServiceForm } from '../service-form/service-form';
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective,  
   ],
   templateUrl: './service-list.html',
   styleUrl: './service-list.css',

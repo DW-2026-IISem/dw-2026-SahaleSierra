@@ -16,7 +16,7 @@ import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { DoctorApi } from '../doctor-api';
 import { DoctorForm } from '../doctor-form/doctor-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de médicos con todas las operaciones del CRUD.
  *
@@ -38,6 +38,7 @@ import { DoctorForm } from '../doctor-form/doctor-form';
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective,
   ],
   templateUrl: './doctor-list.html',
   styleUrl: './doctor-list.css',

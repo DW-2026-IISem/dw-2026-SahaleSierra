@@ -24,7 +24,7 @@ import { DoctorApi } from '../../doctors/doctor-api';
 import { SpecialtyApi } from '../../specialties/specialty-api';
 import { DoctorSpecialtyForm } from '../doctor-specialty-form/doctor-specialty-form';
 import { DoctorSpecialtyApi } from '../doctor-specialty-api';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Asignaciones médico ↔ especialidad (pivote N:M).
  *
@@ -47,6 +47,7 @@ import { DoctorSpecialtyApi } from '../doctor-specialty-api';
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective, 
   ],
   templateUrl: './doctor-specialty-list.html',
   styleUrl: './doctor-specialty-list.css',

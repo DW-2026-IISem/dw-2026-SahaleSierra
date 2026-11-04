@@ -3,10 +3,12 @@
   subtitle="Programa, edita y cancela citas. Una agenda no admite dos citas que se crucen."
 >
   <p-tag [value]="scheduledCount() + ' programadas'" severity="info" [rounded]="true" />
-  <button pButton type="button" (click)="openCreate()">
+  <ng-container *appHasPermission="'POST /api/appointments'">
+<button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Programar cita</span>
   </button>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -89,7 +91,8 @@
         <td><app-state-tag [state]="appointment.state" /></td>
         <td>
           <div class="flex justify-end gap-1">
-            <button
+            <ng-container *appHasPermission="'PATCH /api/appointments/:id'">
+<button
               pButton
               type="button"
               text
@@ -101,7 +104,9 @@
               [disabled]="!canChange(appointment)"
               (click)="openEdit(appointment)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/appointments/:id'">
+<button
               pButton
               type="button"
               text
@@ -113,7 +118,9 @@
               [disabled]="!canChange(appointment)"
               (click)="cancelAppointment(appointment)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/appointments/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -124,7 +131,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(appointment)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/appointments/:id'">
+<button
               pButton
               type="button"
               text
@@ -135,6 +144,7 @@
               pTooltip="Eliminar"
               (click)="remove(appointment)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>

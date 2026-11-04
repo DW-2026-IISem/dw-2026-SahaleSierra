@@ -8,10 +8,12 @@
     severity="warn"
     [rounded]="true"
   />
-  <button pButton type="button" (click)="openCreate()">
+  <ng-container *appHasPermission="'POST /api/clinical-records'">
+<button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Nueva historia</span>
   </button>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -108,7 +110,8 @@
         <td><app-status-tag [status]="record.status" /></td>
         <td>
           <div class="flex justify-end gap-1">
-            <button
+            <ng-container *appHasPermission="'PATCH /api/clinical-records/:id'">
+<button
               pButton
               type="button"
               text
@@ -119,7 +122,9 @@
               pTooltip="Editar"
               (click)="openEdit(record)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/clinical-records/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -130,7 +135,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(record)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/clinical-records/:id'">
+<button
               pButton
               type="button"
               text
@@ -141,6 +148,7 @@
               pTooltip="Eliminar"
               (click)="remove(record)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>

@@ -16,7 +16,7 @@ import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { SpecialtyApi } from '../specialty-api';
 import { SpecialtyForm } from '../specialty-form/specialty-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de especialidades con todas las operaciones del CRUD.
  *
@@ -38,6 +38,7 @@ import { SpecialtyForm } from '../specialty-form/specialty-form';
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective,  
   ],
   templateUrl: './specialty-list.html',
   styleUrl: './specialty-list.css',

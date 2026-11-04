@@ -26,7 +26,7 @@ import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { PatientApi } from '../../patients/patient-api';
 import { ClinicalRecordApi } from '../clinical-record-api';
 import { ClinicalRecordForm } from '../clinical-record-form/clinical-record-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de historias clínicas con todas las operaciones del CRUD.
  *
@@ -51,6 +51,7 @@ import { ClinicalRecordForm } from '../clinical-record-form/clinical-record-form
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective,    
   ],
   templateUrl: './clinical-record-list.html',
   styleUrl: './clinical-record-list.css',

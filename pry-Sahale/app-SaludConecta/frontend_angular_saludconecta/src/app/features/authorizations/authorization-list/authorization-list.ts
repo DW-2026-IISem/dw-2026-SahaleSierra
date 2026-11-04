@@ -29,7 +29,7 @@ import { AppointmentApi } from '../../appointments/appointment-api';
 import { PatientApi } from '../../patients/patient-api';
 import { AuthorizationApi } from '../authorization-api';
 import { AppointmentOption, AuthorizationForm } from '../authorization-form/authorization-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de autorizaciones con todas las operaciones del CRUD.
  *
@@ -52,6 +52,7 @@ import { AppointmentOption, AuthorizationForm } from '../authorization-form/auth
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective,    
   ],
   templateUrl: './authorization-list.html',
   styleUrl: './authorization-list.css',

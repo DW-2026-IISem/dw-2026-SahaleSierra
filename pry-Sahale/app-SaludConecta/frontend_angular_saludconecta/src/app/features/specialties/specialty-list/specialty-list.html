@@ -3,10 +3,12 @@
   subtitle="Catálogo de especialidades médicas. El backend solo lista las activas."
 >
   <p-tag [value]="rows().length + ' activas'" severity="info" [rounded]="true" />
-  <button pButton type="button" (click)="openCreate()">
+  <ng-container *appHasPermission="'POST /api/specialties'">
+<button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Nueva especialidad</span>
   </button>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -65,7 +67,8 @@
         <td><app-status-tag [status]="specialty.status" /></td>
         <td>
           <div class="flex justify-end gap-1">
-            <button
+            <ng-container *appHasPermission="'PATCH /api/specialties/:id'">
+<button
               pButton
               type="button"
               text
@@ -76,7 +79,9 @@
               pTooltip="Editar"
               (click)="openEdit(specialty)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/specialties/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -87,7 +92,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(specialty)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/specialties/:id'">
+<button
               pButton
               type="button"
               text
@@ -98,6 +105,7 @@
               pTooltip="Eliminar"
               (click)="remove(specialty)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>

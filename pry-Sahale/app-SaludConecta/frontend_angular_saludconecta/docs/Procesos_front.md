@@ -2399,3 +2399,251 @@ ng build
 ![](images/clipboard-2212153779.png)
 
 ## Cierre del ISS
+
+![](images/clipboard-480857057.png)
+
+![](images/clipboard-2394920593.png)
+
+# Fase II: Frontend — ISS-16A — Envolver botones de escritura con `*appHasPermission`
+
+## 16A.3 Los 11 `.ts` de lista de entidad
+
+Cada archivo recibe **un único cambio**: añadir `HasPermissionDirective` al `imports` del `@Component` y agregar el `import` correspondiente arriba. El resto del archivo no cambia.
+
+Los 11 archivos son:
+
+1.  `src/app/features/patients/patient-list/patient-list.ts`
+
+2.  `src/app/features/specialties/specialty-list/specialty-list.ts`
+
+3.  `src/app/features/services/service-list/service-list.ts`
+
+4.  `src/app/features/doctors/doctor-list/doctor-list.ts`
+
+5.  `src/app/features/doctor-specialties/doctor-specialty-list/doctor-specialty-list.ts`
+
+6.  `src/app/features/agendas/agenda-list/agenda-list.ts`
+
+7.  `src/app/features/appointments/appointment-list/appointment-list.ts`
+
+8.  `src/app/features/clinical-records/clinical-record-list/clinical-record-list.ts`
+
+9.  `src/app/features/authorizations/authorization-list/authorization-list.ts`
+
+10. `src/app/features/encounters/encounter-list/encounter-list.ts`
+
+11. `src/app/features/invoices/invoice-list/invoice-list.ts`
+
+Para cada uno, la ruta del import es `../../../shared/directives/has-permission` (tres `../` porque está en `src/app/features/<entidad>/<entidad>-list/` → sube a `features/` → sube a `app/` → `src/`… espera, no: `src/app/features/patients/patient-list/` → sube 1 a `features/patients/` → sube 2 a `features/` → sube 3 a `app/` — falta un nivel para llegar a `src/`). La ruta correcta es **`../../../../shared/directives/has-permission`**, cuatro `../`, igual que el `EmptyState` que ya usan esas pantallas. Te lo dejo como parche por pantalla, un `sed` conjunto y una verificación.
+
+### Bloque de parches (uno por archivo)
+
+Para cada pantalla, en su `.ts`, hay **dos** cambios:
+
+**a) Debajo de** `import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';`, **añadí**:
+
+typescript
+
+```         
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission';
+```
+
+**b) Dentro del arreglo `imports: [...]` del `@Component`**, **añadí** `HasPermissionDirective` (en cualquier posición del array; recomiendo ponerlo al final, antes del cierre `],`).
+
+Los 11 `.ts` reciben **exactamente** el mismo par de cambios. No hay variación entre pantallas.
+
+### Script que aplica los 11 parches de `.ts` de una vez
+
+``` python
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+for f in \
+  src/app/features/patients/patient-list/patient-list.ts \
+  src/app/features/specialties/specialty-list/specialty-list.ts \
+  src/app/features/services/service-list/service-list.ts \
+  src/app/features/doctors/doctor-list/doctor-list.ts \
+  src/app/features/doctor-specialties/doctor-specialty-list/doctor-specialty-list.ts \
+  src/app/features/agendas/agenda-list/agenda-list.ts \
+  src/app/features/appointments/appointment-list/appointment-list.ts \
+  src/app/features/clinical-records/clinical-record-list/clinical-record-list.ts \
+  src/app/features/authorizations/authorization-list/authorization-list.ts \
+  src/app/features/encounters/encounter-list/encounter-list.ts \
+  src/app/features/invoices/invoice-list/invoice-list.ts ; do
+
+  python3 - "$f" <<'PY'
+import pathlib, sys, re
+p = pathlib.Path(sys.argv[1])
+s = p.read_text()
+
+# (a) Añade el import de la directiva debajo del import de EmptyState.
+if "import { HasPermissionDirective }" not in s:
+    anchor = "import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';"
+    if anchor not in s:
+        print(f"AVISO: {p} no tiene el import de EmptyState esperado. Revisa el archivo.")
+        sys.exit(0)
+    s = s.replace(
+        anchor,
+        anchor + "\nimport { HasPermissionDirective } from '../../../../shared/directives/has-permission';",
+    )
+
+# (b) Añade HasPermissionDirective al array de imports del @Component.
+# Encuentra el bloque `imports: [` … `],` del decorador y añade al final del array.
+m = re.search(r"imports:\s*\[([^\]]*?)\]", s, re.S)
+if not m:
+    print(f"AVISO: {p} no tiene un arreglo imports reconocible. Revisa el archivo.")
+    sys.exit(0)
+if "HasPermissionDirective" in m.group(1):
+    print(f"OK (ya estaba): {p}")
+else:
+    inner = m.group(1).rstrip()
+    # Añade con coma si no termina en coma.
+    if not inner.endswith(","):
+        inner += ","
+    new_array = "imports: [" + inner + "\n    HasPermissionDirective,\n  ]"
+    s = s[:m.start()] + new_array + s[m.end():]
+    print(f"OK: {p}")
+
+p.write_text(s)
+PY
+done
+
+npx tsc --noEmit -p tsconfig.app.json
+```
+
+![](images/clipboard-851947317.png)
+
+## 16A.4 Los 11 `.html` con envoltorios
+
+``` python
+cd ~/ia-lab/projects/dw/pry-Sahale/app-SaludConecta/frontend_angular_saludconecta
+
+# Envoltorio de /patients aplicado con sed -E de forma atómica.
+# Antes de ejecutarlo, abre patient-list.html y confirma que los bloques
+# <button …(click)="openCreate()">, "openEdit(patient)", "deactivate(patient)",
+# "remove(patient)" aparecen exactamente así.
+
+python3 - <<'PY'
+import pathlib
+p = pathlib.Path('src/app/features/patients/patient-list/patient-list.html')
+s = p.read_text()
+
+# 1) Nuevo paciente
+s = s.replace(
+    '''<button pButton type="button" (click)="openCreate()">
+    <i pButtonIcon class="pi pi-plus"></i>
+    <span pButtonLabel>Nuevo paciente</span>
+  </button>''',
+    '''<ng-container *appHasPermission="'POST /api/patients'">
+    <button pButton type="button" (click)="openCreate()">
+      <i pButtonIcon class="pi pi-plus"></i>
+      <span pButtonLabel>Nuevo paciente</span>
+    </button>
+  </ng-container>''',
+)
+
+# 2) Editar paciente
+s = s.replace(
+    '''<button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="secondary"
+              icon="pi pi-pencil"
+              aria-label="Editar paciente"
+              pTooltip="Editar"
+              (click)="openEdit(patient)"
+            ></button>''',
+    '''<ng-container *appHasPermission="'PATCH /api/patients/:id'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="secondary"
+                icon="pi pi-pencil"
+                aria-label="Editar paciente"
+                pTooltip="Editar"
+                (click)="openEdit(patient)"
+              ></button>
+            </ng-container>''',
+)
+
+# 3) Baja lógica
+s = s.replace(
+    '''<button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="warn"
+              icon="pi pi-ban"
+              aria-label="Dar de baja al paciente"
+              pTooltip="Baja lógica"
+              (click)="deactivate(patient)"
+            ></button>''',
+    '''<ng-container *appHasPermission="'PATCH /api/patients/:id/deactivate'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="warn"
+                icon="pi pi-ban"
+                aria-label="Dar de baja al paciente"
+                pTooltip="Baja lógica"
+                (click)="deactivate(patient)"
+              ></button>
+            </ng-container>''',
+)
+
+# 4) Eliminar
+s = s.replace(
+    '''<button
+              pButton
+              type="button"
+              text
+              rounded
+              severity="danger"
+              icon="pi pi-trash"
+              aria-label="Eliminar paciente"
+              pTooltip="Eliminar"
+              (click)="remove(patient)"
+            ></button>''',
+    '''<ng-container *appHasPermission="'DELETE /api/patients/:id'">
+              <button
+                pButton
+                type="button"
+                text
+                rounded
+                severity="danger"
+                icon="pi pi-trash"
+                aria-label="Eliminar paciente"
+                pTooltip="Eliminar"
+                (click)="remove(patient)"
+              ></button>
+            </ng-container>''',
+)
+
+p.write_text(s)
+print('patient-list.html envuelto')
+PY
+```
+
+![](images/clipboard-517414207.png)
+
+## 16A.5 Archivo de pruebas `_rbac-buttons.spec.ts`
+
+![](images/clipboard-1325365228.png)
+
+## 16A.6 Comprobar antes de avanzar
+
+![![](images/clipboard-3119731683.png)](images/clipboard-3115292371.png)
+
+![![](images/clipboard-3261186825.png)](images/clipboard-3603120840.png)
+
+## Verificación del ISS
+
+![](images/clipboard-4277368577.png)
+
+## Cierre del ISS

@@ -31,7 +31,7 @@ import { DoctorApi } from '../../doctors/doctor-api';
 import { PatientApi } from '../../patients/patient-api';
 import { AppointmentApi } from '../appointment-api';
 import { AppointmentForm } from '../appointment-form/appointment-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de citas con todas las operaciones del CRUD y la cancelación.
  *
@@ -57,6 +57,7 @@ import { AppointmentForm } from '../appointment-form/appointment-form';
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective,    
   ],
   templateUrl: './appointment-list.html',
   styleUrl: './appointment-list.css',

@@ -19,7 +19,7 @@ import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { DoctorApi } from '../../doctors/doctor-api';
 import { AgendaApi } from '../agenda-api';
 import { AgendaForm } from '../agenda-form/agenda-form';
-
+import { HasPermissionDirective } from '../../../shared/directives/has-permission';
 /**
  * Lista de agendas con todas las operaciones del CRUD.
  *
@@ -42,6 +42,7 @@ import { AgendaForm } from '../agenda-form/agenda-form';
     TableModule,
     TagModule,
     TooltipModule,
+    HasPermissionDirective,  
   ],
   templateUrl: './agenda-list.html',
   styleUrl: './agenda-list.css',

@@ -10,6 +10,7 @@ import { Agenda } from '../../../core/models/agenda.model';
 import { Appointment } from '../../../core/models/appointment.model';
 import { Doctor } from '../../../core/models/doctor.model';
 import { Patient } from '../../../core/models/patient.model';
+import { SessionStore } from '../../../core/services/session-store';
 import { AppointmentList } from './appointment-list';
 
 const APPOINTMENTS_URL = `${environment.apiUrl}/appointments`;
@@ -96,6 +97,28 @@ describe('AppointmentList', () => {
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
+
+    // Sesión completa: la prueba verifica comportamiento (disabled por estado),
+    // no autorización. La autorización está cubierta por _rbac-buttons.spec.ts.
+    const store = TestBed.inject(SessionStore);
+    store.setTokens({
+      access_token: 'A',
+      token_type: 'Bearer',
+      expires_in: 900,
+      refresh_token: 'R',
+      refresh_expires_in: 604800,
+    });
+    store.setAccess({
+      user: { id: 1, username: 'test', email: 't@b', avatar: null, status: 'active' },
+      permissions: [
+        { resource_id: 1, method: 'GET', path: '/api/appointments', description: null, role_id: 1, role_name: 'TEST' },
+        { resource_id: 2, method: 'POST', path: '/api/appointments', description: null, role_id: 1, role_name: 'TEST' },
+        { resource_id: 3, method: 'PATCH', path: '/api/appointments/:id', description: null, role_id: 1, role_name: 'TEST' },
+        { resource_id: 4, method: 'PATCH', path: '/api/appointments/:id/deactivate', description: null, role_id: 1, role_name: 'TEST' },
+        { resource_id: 5, method: 'DELETE', path: '/api/appointments/:id', description: null, role_id: 1, role_name: 'TEST' },
+      ],
+    });
+
     confirmation = TestBed.inject(ConfirmationService);
     messages = TestBed.inject(MessageService);
   });

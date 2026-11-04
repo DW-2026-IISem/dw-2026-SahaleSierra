@@ -8,10 +8,12 @@
     severity="info"
     [rounded]="true"
   />
-  <button pButton type="button" (click)="openCreate()">
+  <ng-container *appHasPermission="'POST /api/encounters'">
+<button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
     <span pButtonLabel>Atender cita</span>
   </button>
+  </ng-container>
 </app-page-header>
 
 @if (error()) {
@@ -97,8 +99,9 @@
         </td>
         <td>
           <div class="flex justify-end gap-1">
-            @if (canComplete(encounter)) {
-              <button
+            <ng-container *appHasPermission="'PATCH /api/encounters/:id'">
+              @if (canComplete(encounter)) {
+<button
                 pButton
                 type="button"
                 text
@@ -109,8 +112,10 @@
                 pTooltip="Completar"
                 (click)="complete(encounter)"
               ></button>
-            }
-            <button
+              }
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/encounters/:id'">
+<button
               pButton
               type="button"
               text
@@ -121,7 +126,9 @@
               pTooltip="Editar"
               (click)="openEdit(encounter)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'PATCH /api/encounters/:id/deactivate'">
+<button
               pButton
               type="button"
               text
@@ -132,7 +139,9 @@
               pTooltip="Baja lógica"
               (click)="deactivate(encounter)"
             ></button>
-            <button
+            </ng-container>
+            <ng-container *appHasPermission="'DELETE /api/encounters/:id'">
+<button
               pButton
               type="button"
               text
@@ -144,6 +153,7 @@
               [disabled]="!canRemove(encounter)"
               (click)="remove(encounter)"
             ></button>
+            </ng-container>
           </div>
         </td>
       </tr>
