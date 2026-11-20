@@ -6,12 +6,13 @@ import { CardModule } from 'primeng/card';
 import { MessageModule } from 'primeng/message';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { toNumber } from '../../core/models/api.model';
 import { Appointment } from '../../core/models/appointment.model';
 import { Encounter } from '../../core/models/encounter.model';
 import { Invoice } from '../../core/models/invoice.model';
 import { Patient } from '../../core/models/patient.model';
+import { SessionStore } from '../../core/services/session-store';
 import { toApiMessage } from '../../core/utils/api-error';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
@@ -20,6 +21,17 @@ import { AppointmentApi } from '../appointments/appointment-api';
 import { EncounterApi } from '../encounters/encounter-api';
 import { InvoiceApi } from '../invoices/invoice-api';
 import { PatientApi } from '../patients/patient-api';
+
+/**
+ * Clases completas del grid de tarjetas según cuántas se ven. Van escritas
+ * enteras (no armadas por partes) para que Tailwind las detecte al compilar.
+ */
+const CARD_GRID: Record<number, string> = {
+  1: 'grid gap-4',
+  2: 'grid gap-4 sm:grid-cols-2',
+  3: 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3',
+  4: 'grid gap-4 sm:grid-cols-2 xl:grid-cols-4',
+};
 
 /**
  * Panel de la Fase I.
@@ -53,6 +65,7 @@ export class Dashboard {
   private readonly appointmentApi = inject(AppointmentApi);
   private readonly encounterApi = inject(EncounterApi);
   private readonly invoiceApi = inject(InvoiceApi);
+  private readonly session = inject(SessionStore);
 
   readonly patients = signal<Patient[]>([]);
   readonly appointments = signal<Appointment[]>([]);
@@ -60,6 +73,38 @@ export class Dashboard {
   readonly invoices = signal<Invoice[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+
+  // ───── Visibilidad según permisos (UX; el backend vuelve a validar) ───────
+
+  /** Tarjeta «Pacientes activos» y nombres de las próximas citas. */
+  readonly showPatients = computed(() => this.session.canPermission('GET /api/patients'));
+  /** Tarjeta «Citas programadas» y tabla «Próximas citas». */
+  readonly showAppointments = computed(() => this.session.canPermission('GET /api/appointments'));
+  /** Tarjeta «Atenciones por facturar». */
+  readonly showEncounters = computed(() => this.session.canPermission('GET /api/encounters'));
+  /** Tarjeta «Ingresos facturados» y tabla «Últimas facturas». */
+  readonly showInvoices = computed(() => this.session.canPermission('GET /api/invoices'));
+
+  /** Cuántas tarjetas se pintan: el grid se ajusta para no dejar huecos. */
+  readonly cardCount = computed(
+    () =>
+      [this.showPatients(), this.showAppointments(), this.showEncounters(), this.showInvoices()]
+        .filter(Boolean).length,
+  );
+  readonly cardGridClass = computed(() => CARD_GRID[this.cardCount()] ?? 'grid gap-4');
+
+  /** Esqueletos de carga: uno por tarjeta visible. */
+  readonly skeletons = computed(() => Array.from({ length: this.cardCount() }, (_, index) => index));
+
+  /** Las dos tablas comparten fila solo si se muestran las dos. */
+  readonly tablesGridClass = computed(() =>
+    this.showAppointments() && this.showInvoices()
+      ? 'mt-6 grid gap-6 xl:grid-cols-2'
+      : 'mt-6 grid gap-6',
+  );
+
+  /** «Próximas citas»: Fecha y Motivo siempre; Paciente según permisos. */
+  readonly upcomingColumnCount = computed(() => 2 + (this.showPatients() ? 1 : 0));
 
   /** Indicador 1: pacientes activos (el `GET` ya filtra por `active`). */
   readonly activePatients = computed(() => this.patients().length);
@@ -125,10 +170,11 @@ export class Dashboard {
     this.error.set(null);
 
     forkJoin({
-      patients: this.patientApi.list(),
-      appointments: this.appointmentApi.list(),
-      encounters: this.encounterApi.list(),
-      invoices: this.invoiceApi.list(),
+      // Solo se pide lo que el usuario puede leer: sin 403 ni toast rojo.
+      patients: this.showPatients() ? this.patientApi.list() : of<Patient[]>([]),
+      appointments: this.showAppointments() ? this.appointmentApi.list() : of<Appointment[]>([]),
+      encounters: this.showEncounters() ? this.encounterApi.list() : of<Encounter[]>([]),
+      invoices: this.showInvoices() ? this.invoiceApi.list() : of<Invoice[]>([]),
     }).subscribe({
       next: ({ patients, appointments, encounters, invoices }) => {
         this.patients.set(patients);

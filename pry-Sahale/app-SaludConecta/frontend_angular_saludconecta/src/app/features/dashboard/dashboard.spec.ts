@@ -7,6 +7,7 @@ import { Appointment } from '../../core/models/appointment.model';
 import { Encounter } from '../../core/models/encounter.model';
 import { Invoice } from '../../core/models/invoice.model';
 import { Patient } from '../../core/models/patient.model';
+import { loginAsAdmin, loginAsRole } from '../../testing/session-fixture';
 import { Dashboard } from './dashboard';
 
 const API = environment.apiUrl;
@@ -101,6 +102,8 @@ describe('Dashboard', () => {
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
+    // Sesión de ADMIN: las pruebas de indicadores usan las cuatro fuentes.
+    loginAsAdmin();
   });
 
   afterEach(() => http.verify());
@@ -232,5 +235,41 @@ describe('Dashboard', () => {
     expect(texto(compilado, 'kpi-patients')).toBe('0');
     expect(compilado.textContent).toContain('Sin citas próximas');
     expect(compilado.textContent).toContain('Sin facturas');
+  });
+
+  it('should hide the revenue card and the latest invoices without GET /api/invoices', async () => {
+    loginAsRole('MEDICO');
+    const fixture = TestBed.createComponent(Dashboard);
+    http.expectOne(`${API}/patients`).flush({ patients: DATOS.patients });
+    http.expectOne(`${API}/appointments`).flush({ appointments: DATOS.appointments });
+    http.expectOne(`${API}/encounters`).flush({ encounters: DATOS.encounters });
+    http.expectNone(`${API}/invoices`);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const panel = fixture.componentInstance;
+    const compilado = fixture.nativeElement as HTMLElement;
+    expect(panel.cardCount()).toBe(3);
+    expect(compilado.querySelector('[data-testid="kpi-revenue"]')).toBeNull();
+    expect(compilado.textContent).not.toContain('Últimas facturas');
+    expect(compilado.textContent).toContain('Próximas citas programadas');
+    expect(compilado.querySelector('[data-testid="kpi-grid"]')?.className).toContain('xl:grid-cols-3');
+  });
+
+  it('should show only the patients and appointments cards for admisiones', async () => {
+    loginAsRole('ADMISIONES');
+    const fixture = TestBed.createComponent(Dashboard);
+    http.expectOne(`${API}/patients`).flush({ patients: DATOS.patients });
+    http.expectOne(`${API}/appointments`).flush({ appointments: DATOS.appointments });
+    http.expectNone(`${API}/encounters`);
+    http.expectNone(`${API}/invoices`);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compilado = fixture.nativeElement as HTMLElement;
+    expect(fixture.componentInstance.cardCount()).toBe(2);
+    expect(compilado.querySelector('[data-testid="kpi-pending"]')).toBeNull();
+    expect(compilado.querySelector('[data-testid="kpi-revenue"]')).toBeNull();
+    expect(compilado.querySelector('[data-testid="kpi-grid"]')?.className).not.toContain('xl:grid-cols');
   });
 });

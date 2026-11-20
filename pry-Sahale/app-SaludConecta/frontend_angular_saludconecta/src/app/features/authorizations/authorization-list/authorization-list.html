@@ -3,11 +3,13 @@
   subtitle="Una autorización por cita. El backend solo lista las activas."
 >
   <p-tag [value]="rows().length + ' activas'" severity="info" [rounded]="true" />
-  <p-tag
-    [value]="availableAppointments().length + ' citas sin autorización'"
-    severity="warn"
-    [rounded]="true"
-  />
+  @if (showAppointmentColumn()) {
+    <p-tag
+      [value]="availableAppointments().length + ' citas sin autorización'"
+      severity="warn"
+      [rounded]="true"
+    />
+  }
   <ng-container *appHasPermission="'POST /api/authorizations'">
 <button pButton type="button" (click)="openCreate()">
     <i pButtonIcon class="pi pi-plus"></i>
@@ -56,7 +58,9 @@
         <th pSortableColumn="name">
           <div class="flex items-center gap-1">Autorización <p-sort-icon field="name" /></div>
         </th>
-        <th>Cita</th>
+        @if (showAppointmentColumn()) {
+          <th>Cita</th>
+        }
         <th>Descripción</th>
         <th>Estado</th>
         <th class="w-40 text-right">Acciones</th>
@@ -69,12 +73,14 @@
           <p class="font-medium text-slate-800">{{ authorization.name }}</p>
           <p class="text-xs text-slate-400">#{{ authorization.id }}</p>
         </td>
-        <td>
-          <p class="text-sm text-slate-800">{{ appointmentLabel()(authorization.appointment_id) }}</p>
-          @if (appointmentState()(authorization.appointment_id)) {
-            <app-state-tag [state]="appointmentState()(authorization.appointment_id)" />
-          }
-        </td>
+        @if (showAppointmentColumn()) {
+          <td>
+            <p class="text-sm text-slate-800">{{ appointmentLabel()(authorization.appointment_id) }}</p>
+            @if (appointmentState()(authorization.appointment_id)) {
+              <app-state-tag [state]="appointmentState()(authorization.appointment_id)" />
+            }
+          </td>
+        }
         <td class="text-sm text-slate-600">{{ authorization.description || '—' }}</td>
         <td><app-status-tag [status]="authorization.status" /></td>
         <td>
@@ -128,7 +134,7 @@
 
     <ng-template #emptymessage>
       <tr>
-        <td colspan="5">
+        <td [attr.colspan]="columnCount()">
           @if (filter()) {
             <app-empty-state
               icon="pi pi-search"

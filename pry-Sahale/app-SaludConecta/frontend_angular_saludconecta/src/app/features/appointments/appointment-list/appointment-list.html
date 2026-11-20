@@ -64,8 +64,12 @@
         <th pSortableColumn="start_date">
           <div class="flex items-center gap-1">Fecha y hora <p-sort-icon field="start_date" /></div>
         </th>
-        <th>Paciente</th>
-        <th>Agenda</th>
+        @if (showPatientColumn()) {
+          <th>Paciente</th>
+        }
+        @if (showAgendaColumn()) {
+          <th>Agenda</th>
+        }
         <th>Motivo</th>
         <th>Estado</th>
         <th class="w-48 text-right">Acciones</th>
@@ -82,11 +86,15 @@
             {{ appointment.start_date | date: 'HH:mm' }} – {{ appointment.end_date | date: 'HH:mm' }}
           </p>
         </td>
-        <td>
-          <p class="font-medium text-slate-800">{{ patientName()(appointment.patient_id) }}</p>
-          <p class="text-xs text-slate-400">{{ patientDocument()(appointment.patient_id) }}</p>
-        </td>
-        <td class="text-sm text-slate-700">{{ agendaLabel()(appointment.agenda_id) }}</td>
+        @if (showPatientColumn()) {
+          <td>
+            <p class="font-medium text-slate-800">{{ patientName()(appointment.patient_id) }}</p>
+            <p class="text-xs text-slate-400">{{ patientDocument()(appointment.patient_id) }}</p>
+          </td>
+        }
+        @if (showAgendaColumn()) {
+          <td class="text-sm text-slate-700">{{ agendaLabel()(appointment.agenda_id) }}</td>
+        }
         <td class="text-sm text-slate-600">{{ appointment.reason || '—' }}</td>
         <td><app-state-tag [state]="appointment.state" /></td>
         <td>
@@ -156,7 +164,7 @@
 
     <ng-template #emptymessage>
       <tr>
-        <td colspan="6">
+        <td [attr.colspan]="columnCount()">
           @if (filter() || stateFilter()) {
             <app-empty-state
               icon="pi pi-search"

@@ -67,8 +67,12 @@
         <th pSortableColumn="start_date">
           <div class="flex items-center gap-1">Atención <p-sort-icon field="start_date" /></div>
         </th>
-        <th>Paciente</th>
-        <th>Servicio</th>
+        @if (showPatientColumn()) {
+          <th>Paciente</th>
+        }
+        @if (showServiceColumn()) {
+          <th>Servicio</th>
+        }
         <th class="text-right">Total</th>
         <th>Estado</th>
         <th>Factura</th>
@@ -82,10 +86,14 @@
           <p class="font-medium text-slate-800">#{{ encounter.id }}</p>
           <p class="text-xs text-slate-500">{{ encounter.start_date | date: 'dd/MM/yyyy HH:mm' }}</p>
         </td>
-        <td class="text-sm font-medium text-slate-800">
-          {{ patientName()(encounter.appointment_id) }}
-        </td>
-        <td class="text-sm text-slate-700">{{ serviceName()(encounter.service_id) }}</td>
+        @if (showPatientColumn()) {
+          <td class="text-sm font-medium text-slate-800">
+            {{ patientName()(encounter.appointment_id) }}
+          </td>
+        }
+        @if (showServiceColumn()) {
+          <td class="text-sm text-slate-700">{{ serviceName()(encounter.service_id) }}</td>
+        }
         <td class="text-right text-sm text-slate-800">
           {{ money(encounter.total) | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
         </td>
@@ -165,7 +173,7 @@
 
     <ng-template #emptymessage>
       <tr>
-        <td colspan="7">
+        <td [attr.colspan]="columnCount()">
           @if (filter() || stateFilter()) {
             <app-empty-state
               icon="pi pi-search"

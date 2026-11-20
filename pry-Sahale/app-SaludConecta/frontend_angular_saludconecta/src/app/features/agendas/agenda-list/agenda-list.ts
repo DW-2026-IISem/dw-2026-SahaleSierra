@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { Agenda, AgendaPayload } from '../../../core/models/agenda.model';
 import { Doctor } from '../../../core/models/doctor.model';
+import { SessionStore } from '../../../core/services/session-store';
 import { NotificationService } from '../../../core/services/notification';
 import { toApiMessage } from '../../../core/utils/api-error';
 import { filterRows } from '../../../core/utils/filter-rows';
@@ -50,6 +51,7 @@ import { HasPermissionDirective } from '../../../shared/directives/has-permissio
 export class AgendaList {
   private readonly api = inject(AgendaApi);
   private readonly doctorApi = inject(DoctorApi);
+  private readonly session = inject(SessionStore);
   private readonly notify = inject(NotificationService);
   private readonly confirmation = inject(ConfirmationService);
 
@@ -63,6 +65,14 @@ export class AgendaList {
   readonly error = signal<string | null>(null);
   readonly filter = signal('');
 
+  // ───── Visibilidad según permisos (UX; el backend vuelve a validar) ───────
+
+  /** Sin `GET /api/doctors` no se piden médicos ni se muestra la columna «Médico». */
+  readonly showDoctorColumn = computed(() => this.session.canPermission('GET /api/doctors'));
+
+  /** Agenda, Descripción, Estado y Acciones siempre; «Médico» según permisos. */
+  readonly columnCount = computed(() => 4 + (this.showDoctorColumn() ? 1 : 0));
+
   /** `Map` id → nombre, reconstruido solo cuando cambian los médicos. */
   readonly doctorName = computed(() => {
     const names = new Map(this.doctors().map((doctor) => [doctor.id, doctor.name]));
@@ -73,7 +83,7 @@ export class AgendaList {
     filterRows(this.rows(), this.filter(), (row) => [
       row.name,
       row.description,
-      this.doctorName()(row.doctor_id),
+      this.showDoctorColumn() ? this.doctorName()(row.doctor_id) : null,
     ]),
   );
 
@@ -94,7 +104,8 @@ export class AgendaList {
 
     forkJoin({
       agendas: this.api.list(),
-      doctors: this.doctorApi.list(),
+            // Solo se pide lo que el usuario puede leer: sin 403 ni toast rojo.
+      doctors: this.showDoctorColumn() ? this.doctorApi.list() : of<Doctor[]>([]),
     }).subscribe({
       next: ({ agendas, doctors }) => {
         this.rows.set(agendas);

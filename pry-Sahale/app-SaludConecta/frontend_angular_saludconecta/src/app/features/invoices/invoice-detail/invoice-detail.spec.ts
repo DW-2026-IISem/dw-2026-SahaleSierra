@@ -8,6 +8,7 @@ import { Encounter } from '../../../core/models/encounter.model';
 import { Invoice } from '../../../core/models/invoice.model';
 import { Patient } from '../../../core/models/patient.model';
 import { Service } from '../../../core/models/service.model';
+import { loginAsAdmin, loginWith } from '../../../testing/session-fixture';
 import { InvoiceDetail } from './invoice-detail';
 
 const API = environment.apiUrl;
@@ -82,6 +83,8 @@ describe('InvoiceDetail', () => {
       ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
+    // Sesión de ADMIN: estas pruebas verifican el detalle, no la autorización.
+    loginAsAdmin();
   }
 
   afterEach(() => http.verify());
@@ -191,5 +194,41 @@ describe('InvoiceDetail', () => {
     expect(fixture.componentInstance.error()).toBe('Invoice not found');
     expect(fixture.componentInstance.invoice()).toBeNull();
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Invoice not found');
+  });
+
+  it('should hide the service column and the patient when the role cannot read them', async () => {
+    await configurar('5');
+    loginWith(['GET /api/invoices', 'GET /api/invoices/:id', 'GET /api/encounters']);
+    const fixture = TestBed.createComponent(InvoiceDetail);
+    http.expectOne(`${API}/invoices/5`).flush({ invoice: factura([atencion(1, 1, '100000.00', 5)]) });
+    http.expectNone(`${API}/services`);
+    http.expectNone(`${API}/appointments`);
+    http.expectNone(`${API}/patients`);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const detalle = fixture.componentInstance;
+    const compilado = fixture.nativeElement as HTMLElement;
+    expect(detalle.showServiceColumn()).toBe(false);
+    expect(detalle.columnCount()).toBe(5);
+    expect(compilado.querySelector('[data-testid="invoice-patient"]')).toBeNull();
+    expect(compilado.textContent).not.toContain('Servicio #');
+    expect(compilado.querySelectorAll('tbody tr').length).toBe(1);
+  });
+
+  it('should hide the encounters table when the invoice has none embedded and they cannot be read', async () => {
+    await configurar('5');
+    loginWith(['GET /api/invoices', 'GET /api/invoices/:id']);
+    const fixture = TestBed.createComponent(InvoiceDetail);
+    http.expectOne(`${API}/invoices/5`).flush({ invoice: factura() });
+    http.expectNone(`${API}/encounters`);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compilado = fixture.nativeElement as HTMLElement;
+    expect(fixture.componentInstance.linesAvailable()).toBe(false);
+    expect(compilado.querySelector('[data-testid="invoice-number"]')).not.toBeNull();
+    expect(compilado.textContent).not.toContain('Sin atenciones');
+    expect(compilado.querySelector('[data-testid="invoice-lines-total"]')).toBeNull();
   });
 });

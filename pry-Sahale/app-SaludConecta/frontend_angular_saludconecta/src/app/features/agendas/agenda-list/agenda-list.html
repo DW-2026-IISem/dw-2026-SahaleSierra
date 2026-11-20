@@ -33,7 +33,7 @@
           pInputText
           type="search"
           aria-label="Buscar agendas"
-          placeholder="Buscar por agenda, descripción o médico…"
+          [placeholder]="showDoctorColumn() ? 'Buscar por agenda, descripción o médico…' : 'Buscar por agenda o descripción…'"
           [value]="filter()"
           (input)="filter.set($any($event.target).value)"
           class="w-full"
@@ -51,7 +51,9 @@
         <th pSortableColumn="name">
           <div class="flex items-center gap-1">Agenda <p-sort-icon field="name" /></div>
         </th>
-        <th>Médico</th>
+          @if (showDoctorColumn()) {
+          <th>Médico</th>
+        }
         <th>Descripción</th>
         <th>Estado</th>
         <th class="w-40 text-right">Acciones</th>
@@ -64,13 +66,15 @@
           <p class="font-medium text-slate-800">{{ agenda.name }}</p>
           <p class="text-xs text-slate-400">#{{ agenda.id }}</p>
         </td>
-        <td>
-          <p-tag
-            [value]="doctorName()(agenda.doctor_id)"
-            severity="secondary"
-            [rounded]="true"
-          />
-        </td>
+        @if (showDoctorColumn()) {
+          <td>
+            <p-tag
+              [value]="doctorName()(agenda.doctor_id)"
+              severity="secondary"
+              [rounded]="true"
+            />
+          </td>
+        }
         <td class="text-sm text-slate-600">{{ agenda.description || '—' }}</td>
         <td><app-status-tag [status]="agenda.status" /></td>
         <td>
@@ -124,7 +128,7 @@
 
     <ng-template #emptymessage>
       <tr>
-        <td colspan="5">
+        <td [attr.colspan]="columnCount()">
           @if (filter()) {
             <app-empty-state
               icon="pi pi-search"

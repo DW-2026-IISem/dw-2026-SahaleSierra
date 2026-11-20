@@ -12,6 +12,7 @@ import { Encounter } from '../../../core/models/encounter.model';
 import { Invoice } from '../../../core/models/invoice.model';
 import { Patient } from '../../../core/models/patient.model';
 import { Service } from '../../../core/models/service.model';
+import { loginAsAdmin, loginWith } from '../../../testing/session-fixture';
 import { InvoiceForm, nextInvoiceNumber } from './invoice-form';
 
 const API = environment.apiUrl;
@@ -142,6 +143,8 @@ describe('InvoiceForm', () => {
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
+    // Sesión de ADMIN: estas pruebas verifican el borrador, no la autorización.
+    loginAsAdmin();
     messages = TestBed.inject(MessageService);
     // Ninguna prueba navega de verdad: el router de prueba no conoce `/invoices`.
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -386,5 +389,20 @@ describe('InvoiceForm', () => {
 
     expect(fixture.componentInstance.error()).toBe('Missing Bearer token');
     expect(fixture.componentInstance.loading()).toBe(false);
+  });
+
+  it('should not request anything and explain it when the role cannot read the billing data', async () => {
+    loginWith(['POST /api/invoices', 'GET /api/invoices', 'GET /api/invoices/:id']);
+    const fixture = TestBed.createComponent(InvoiceForm);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    http.expectNone(`${API}/encounters`);
+    http.expectNone(`${API}/patients`);
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(fixture.componentInstance.canBill()).toBe(false);
+    expect(fixture.componentInstance.loading()).toBe(false);
+    expect(compiled.querySelector('[data-testid="invoice-no-access"]')).not.toBeNull();
+    expect(compiled.textContent).not.toContain('1 · Paciente');
   });
 });

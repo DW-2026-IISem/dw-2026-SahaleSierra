@@ -14,6 +14,7 @@
   </p-message>
 }
 
+@if (canBill()) {
 <div class="grid gap-4 lg:grid-cols-3">
   <div class="space-y-4 lg:col-span-2">
     <p-card header="1 · Paciente">
@@ -70,7 +71,7 @@
           <ng-template #header>
             <tr>
               <th class="w-12"></th>
-              <th>Servicio</th>
+              <th>{{ showServiceName() ? 'Servicio' : 'Atención' }}</th>
               <th>Fecha de la cita</th>
               <th class="text-right">Total</th>
             </tr>
@@ -87,7 +88,9 @@
                 />
               </td>
               <td>
-                <p class="font-medium text-slate-800">{{ row.serviceName }}</p>
+                @if (showServiceName()) {
+                  <p class="font-medium text-slate-800">{{ row.serviceName }}</p>
+                }
                 <p class="text-xs text-slate-400">
                   Atención #{{ row.id }}@if (row.observations) { · {{ row.observations }} }
                 </p>
@@ -188,3 +191,12 @@
     </p-card>
   </div>
 </div>
+} @else {
+  <div class="rounded-xl border border-slate-200 bg-white" data-testid="invoice-no-access">
+    <app-empty-state
+      icon="pi pi-lock"
+      title="No tienes permiso para facturar"
+      message="Para armar una factura se necesita consultar atenciones, citas y pacientes. Pide esos permisos al administrador."
+    />
+  </div>
+}

@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -17,6 +17,7 @@ import {
   ClinicalRecordUpdatePayload,
 } from '../../../core/models/clinical-record.model';
 import { Patient } from '../../../core/models/patient.model';
+import { SessionStore } from '../../../core/services/session-store';
 import { NotificationService } from '../../../core/services/notification';
 import { toApiMessage } from '../../../core/utils/api-error';
 import { filterRows } from '../../../core/utils/filter-rows';
@@ -59,6 +60,7 @@ import { HasPermissionDirective } from '../../../shared/directives/has-permissio
 export class ClinicalRecordList {
   private readonly api = inject(ClinicalRecordApi);
   private readonly patientsApi = inject(PatientApi);
+  private readonly session = inject(SessionStore);
   private readonly notify = inject(NotificationService);
   private readonly confirmation = inject(ConfirmationService);
 
@@ -72,6 +74,21 @@ export class ClinicalRecordList {
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly filter = signal('');
+
+  // ───── Visibilidad según permisos (UX; el backend vuelve a validar) ───────
+
+  /** «Paciente», el aviso de pacientes sin historia y el select de alta dependen de `GET /api/patients`. */
+  readonly showPatientColumn = computed(() => this.session.canPermission('GET /api/patients'));
+
+  /** La búsqueda por paciente necesita los pacientes y la ruta extra del backend. */
+  readonly showLookup = computed(
+    () =>
+      this.showPatientColumn() &&
+      this.session.canPermission('GET /api/clinical-records/patient/:patientId'),
+  );
+
+  /** Historia, Descripción, Estado y Acciones siempre; «Paciente» según permisos. */
+  readonly columnCount = computed(() => 4 + (this.showPatientColumn() ? 1 : 0));
 
   // ───── Relación con pacientes ─────────────────────────────────────────────
 
@@ -112,8 +129,8 @@ export class ClinicalRecordList {
     filterRows(this.rows(), this.filter(), (record) => [
       record.name,
       record.description,
-      this.patientName()(record.patient_id),
-      this.patientDocument()(record.patient_id),
+      this.showPatientColumn() ? this.patientName()(record.patient_id) : null,
+      this.showPatientColumn() ? this.patientDocument()(record.patient_id) : null,
     ]),
   );
 
@@ -161,7 +178,8 @@ export class ClinicalRecordList {
 
     forkJoin({
       records: this.api.list(),
-      patients: this.patientsApi.list(),
+      // Solo se pide lo que el usuario puede leer: sin 403 ni toast rojo.
+      patients: this.showPatientColumn() ? this.patientsApi.list() : of<Patient[]>([]),
     }).subscribe({
       next: ({ records, patients }) => {
         this.rows.set(records);

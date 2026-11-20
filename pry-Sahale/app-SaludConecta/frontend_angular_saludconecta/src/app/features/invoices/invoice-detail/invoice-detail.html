@@ -41,12 +41,14 @@
             {{ current.invoice_date | date: 'dd/MM/yyyy HH:mm' }}
           </dd>
         </div>
-        <div>
-          <dt class="text-xs uppercase tracking-wide text-slate-400">Paciente</dt>
-          <dd class="mt-1 text-sm text-slate-700" data-testid="invoice-patient">
-            {{ patientLabel() ?? '—' }}
-          </dd>
-        </div>
+        @if (showPatient()) {
+          <div>
+            <dt class="text-xs uppercase tracking-wide text-slate-400">Paciente</dt>
+            <dd class="mt-1 text-sm text-slate-700" data-testid="invoice-patient">
+              {{ patientLabel() ?? '—' }}
+            </dd>
+          </div>
+        }
       </dl>
     </p-card>
 
@@ -70,22 +72,27 @@
             {{ total() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
           </dd>
         </div>
-        <div class="flex items-center justify-between pt-1 text-xs text-slate-400">
-          <dt>Suma de las atenciones listadas</dt>
-          <dd data-testid="invoice-lines-total">
-            {{ linesTotal() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
-          </dd>
-        </div>
+        @if (linesAvailable()) {
+          <div class="flex items-center justify-between pt-1 text-xs text-slate-400">
+            <dt>Suma de las atenciones listadas</dt>
+            <dd data-testid="invoice-lines-total">
+              {{ linesTotal() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+            </dd>
+          </div>
+        }
       </dl>
     </p-card>
   </div>
 
+  @if (linesAvailable()) {
   <div class="mt-4 rounded-xl border border-slate-200 bg-white">
     <p-table [value]="lines()" dataKey="id" tableStyleClass="min-w-3xl">
       <ng-template #header>
         <tr>
           <th>Atención</th>
-          <th>Servicio</th>
+          @if (showServiceColumn()) {
+            <th>Servicio</th>
+          }
           <th>Inicio</th>
           <th>Estado</th>
           <th>Observaciones</th>
@@ -96,7 +103,9 @@
       <ng-template #body let-line>
         <tr>
           <td class="text-sm text-slate-500">#{{ line.id }}</td>
-          <td class="font-medium text-slate-800">{{ serviceName()(line.service_id) }}</td>
+          @if (showServiceColumn()) {
+            <td class="font-medium text-slate-800">{{ serviceName()(line.service_id) }}</td>
+          }
           <td class="text-sm text-slate-600">{{ line.start_date | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td>
             <app-state-tag [state]="line.state" />
@@ -110,7 +119,7 @@
 
       <ng-template #emptymessage>
         <tr>
-          <td colspan="6">
+          <td [attr.colspan]="columnCount()">
             <app-empty-state
               icon="pi pi-clipboard"
               title="Sin atenciones"
@@ -121,4 +130,5 @@
       </ng-template>
     </p-table>
   </div>
+  }
 }

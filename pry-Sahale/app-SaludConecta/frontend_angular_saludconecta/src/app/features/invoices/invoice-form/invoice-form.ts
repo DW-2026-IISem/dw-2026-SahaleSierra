@@ -2,7 +2,7 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -17,6 +17,7 @@ import { Encounter } from '../../../core/models/encounter.model';
 import { Invoice } from '../../../core/models/invoice.model';
 import { Patient } from '../../../core/models/patient.model';
 import { Service } from '../../../core/models/service.model';
+import { SessionStore } from '../../../core/services/session-store';
 import { NotificationService } from '../../../core/services/notification';
 import { toApiMessage } from '../../../core/utils/api-error';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
@@ -101,6 +102,7 @@ export class InvoiceForm {
   private readonly appointmentApi = inject(AppointmentApi);
   private readonly patientApi = inject(PatientApi);
   private readonly serviceApi = inject(ServiceApi);
+  private readonly session = inject(SessionStore);
   private readonly notify = inject(NotificationService);
   private readonly router = inject(Router);
 
@@ -120,6 +122,23 @@ export class InvoiceForm {
   readonly selectedIds = signal<number[]>([]);
   readonly invoiceNumber = signal('');
   readonly tax = signal(0);
+
+  // ───── Visibilidad según permisos (UX; el backend vuelve a validar) ───────
+
+  /**
+   * Para armar el borrador hacen falta atenciones, citas (atención → paciente) y
+   * pacientes. Sin alguna de las tres no se muestra el formulario.
+   */
+  readonly canBill = computed(
+    () =>
+      this.session.canPermission('GET /api/encounters') &&
+      this.session.canPermission('GET /api/appointments') &&
+      this.session.canPermission('GET /api/patients'),
+  );
+  /** El nombre del servicio de cada atención depende de `GET /api/services`. */
+  readonly showServiceName = computed(() => this.session.canPermission('GET /api/services'));
+  /** La sugerencia del número sale de las facturas existentes (`GET /api/invoices`). */
+  readonly canSuggestNumber = computed(() => this.session.canPermission('GET /api/invoices'));
 
   private readonly appointmentById = computed(
     () => new Map(this.appointments().map((appointment) => [appointment.id, appointment])),
@@ -174,7 +193,9 @@ export class InvoiceForm {
       .filter((encounter) => this.patientOf(encounter) === patientId)
       .map((encounter) => ({
         id: encounter.id,
-        serviceName: this.serviceNames().get(encounter.service_id) ?? `Servicio #${encounter.service_id}`,
+        serviceName: this.showServiceName()
+          ? (this.serviceNames().get(encounter.service_id) ?? `Servicio #${encounter.service_id}`)
+          : '',
         startDate: this.appointmentById().get(encounter.appointment_id)?.start_date ?? null,
         observations: encounter.observations,
         // DECIMAL llega como string ("85000.00"): sin `toNumber` se concatenaría.
@@ -203,17 +224,24 @@ export class InvoiceForm {
     this.load();
   }
 
-  /** Cinco `GET` en paralelo; ninguno modifica nada. */
+  /** Hasta cinco `GET` en paralelo, solo los que el usuario puede leer. */
   load(): void {
-    this.loading.set(true);
     this.error.set(null);
+
+    // Sin los datos mínimos no se pide nada: la plantilla explica por qué.
+    if (!this.canBill()) {
+      this.loading.set(false);
+      return;
+    }
+
+    this.loading.set(true);
 
     forkJoin({
       encounters: this.encounterApi.list(),
       appointments: this.appointmentApi.list(),
       patients: this.patientApi.list(),
-      services: this.serviceApi.list(),
-      invoices: this.api.list(),
+      services: this.showServiceName() ? this.serviceApi.list() : of<Service[]>([]),
+      invoices: this.canSuggestNumber() ? this.api.list() : of<Invoice[]>([]),
     }).subscribe({
       next: ({ encounters, appointments, patients, services, invoices }) => {
         this.encounters.set(encounters);

@@ -1,7 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -22,6 +22,7 @@ import {
 } from '../../../core/models/encounter.model';
 import { Patient } from '../../../core/models/patient.model';
 import { Service } from '../../../core/models/service.model';
+import { SessionStore } from '../../../core/services/session-store';
 import { NotificationService } from '../../../core/services/notification';
 import { toApiMessage } from '../../../core/utils/api-error';
 import { formatLocal } from '../../../core/utils/datetime';
@@ -73,6 +74,7 @@ export class EncounterList {
   private readonly patientsApi = inject(PatientApi);
   private readonly servicesApi = inject(ServiceApi);
   private readonly recordsApi = inject(ClinicalRecordApi);
+  private readonly session = inject(SessionStore);
   private readonly notify = inject(NotificationService);
   private readonly confirmation = inject(ConfirmationService);
 
@@ -87,6 +89,22 @@ export class EncounterList {
   readonly error = signal<string | null>(null);
   readonly filter = signal('');
   readonly stateFilter = signal<EncounterState | null>(null);
+
+  // ───── Visibilidad según permisos (UX; el backend vuelve a validar) ───────
+
+  /** «Paciente» se llega por la cita: necesita citas y pacientes. */
+  readonly showPatientColumn = computed(
+    () =>
+      this.session.canPermission('GET /api/appointments') &&
+      this.session.canPermission('GET /api/patients'),
+  );
+  /** «Servicio» depende de `GET /api/services`. */
+  readonly showServiceColumn = computed(() => this.session.canPermission('GET /api/services'));
+
+  /** Atención, Total, Estado, Factura y Acciones siempre; Paciente y Servicio según permisos. */
+  readonly columnCount = computed(
+    () => 5 + (this.showPatientColumn() ? 1 : 0) + (this.showServiceColumn() ? 1 : 0),
+  );
 
   /** Para mostrar el total con `toNumber` (puede llegar como texto). */
   readonly money = toNumber;
@@ -164,8 +182,8 @@ export class EncounterList {
     const byState = state ? this.rows().filter((row) => row.state === state) : this.rows();
 
     return filterRows(byState, this.filter(), (encounter) => [
-      this.patientName()(encounter.appointment_id),
-      this.serviceName()(encounter.service_id),
+      this.showPatientColumn() ? this.patientName()(encounter.appointment_id) : null,
+      this.showServiceColumn() ? this.serviceName()(encounter.service_id) : null,
       encounter.observations,
     ]);
   });
@@ -220,10 +238,18 @@ export class EncounterList {
 
     forkJoin({
       encounters: this.api.list(),
-      appointments: this.appointmentsApi.list(),
-      patients: this.patientsApi.list(),
-      services: this.servicesApi.list(),
-      records: this.recordsApi.list(),
+      // Solo se pide lo que el usuario puede leer: sin 403 ni toast rojo.
+      appointments: this.session.canPermission('GET /api/appointments')
+        ? this.appointmentsApi.list()
+        : of<Appointment[]>([]),
+      patients: this.session.canPermission('GET /api/patients')
+        ? this.patientsApi.list()
+        : of<Patient[]>([]),
+      services: this.showServiceColumn() ? this.servicesApi.list() : of<Service[]>([]),
+      // Las historias solo las usa «Atender cita» (aviso de historia faltante).
+      records: this.session.canPermission('GET /api/clinical-records')
+        ? this.recordsApi.list()
+        : of<ClinicalRecord[]>([]),
     }).subscribe({
       next: ({ encounters, appointments, patients, services, records }) => {
         this.rows.set(encounters);

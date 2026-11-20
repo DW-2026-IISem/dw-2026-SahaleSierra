@@ -11,7 +11,7 @@ import { ClinicalRecord } from '../../../core/models/clinical-record.model';
 import { Encounter } from '../../../core/models/encounter.model';
 import { Patient } from '../../../core/models/patient.model';
 import { Service } from '../../../core/models/service.model';
-import { SessionStore } from '../../../core/services/session-store';
+import { loginAsAdmin, loginAsRole, loginWith } from '../../../testing/session-fixture';
 import { EncounterList } from './encounter-list';
 
 const ENCOUNTERS_URL = `${environment.apiUrl}/encounters`;
@@ -114,25 +114,8 @@ describe('EncounterList', () => {
 
     http = TestBed.inject(HttpTestingController);
 
-    // Sesión completa: la prueba verifica `disabled` por factura, no autorización.
-    const store = TestBed.inject(SessionStore);
-    store.setTokens({
-      access_token: 'A',
-      token_type: 'Bearer',
-      expires_in: 900,
-      refresh_token: 'R',
-      refresh_expires_in: 604800,
-    });
-    store.setAccess({
-      user: { id: 1, username: 'test', email: 't@b', avatar: null, status: 'active' },
-      permissions: [
-        { resource_id: 1, method: 'GET', path: '/api/encounters', description: null, role_id: 1, role_name: 'TEST' },
-        { resource_id: 2, method: 'POST', path: '/api/encounters', description: null, role_id: 1, role_name: 'TEST' },
-        { resource_id: 3, method: 'PATCH', path: '/api/encounters/:id', description: null, role_id: 1, role_name: 'TEST' },
-        { resource_id: 4, method: 'PATCH', path: '/api/encounters/:id/deactivate', description: null, role_id: 1, role_name: 'TEST' },
-        { resource_id: 5, method: 'DELETE', path: '/api/encounters/:id', description: null, role_id: 1, role_name: 'TEST' },
-      ],
-    });
+    // Sesión de ADMIN: la prueba verifica `disabled` por factura, no autorización.
+    loginAsAdmin();
 
     confirmation = TestBed.inject(ConfirmationService);
     messages = TestBed.inject(MessageService);
@@ -363,5 +346,43 @@ describe('EncounterList', () => {
     flushLoad(ENCOUNTERS.slice(1));
 
     expect(list.rows().length).toBe(2);
+  });
+
+  it('should load the list without clinical records for a role that cannot read them', async () => {
+    loginAsRole('FACTURACION');
+    const fixture = TestBed.createComponent(EncounterList);
+    http.expectOne(APPOINTMENTS_URL).flush({ appointments: APPOINTMENTS });
+    http.expectOne(PATIENTS_URL).flush({ patients: PATIENTS });
+    http.expectOne(SERVICES_URL).flush({ services: SERVICES });
+    http.expectOne(ENCOUNTERS_URL).flush({ encounters: ENCOUNTERS });
+    http.expectNone(RECORDS_URL);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const list = fixture.componentInstance;
+    expect(list.error()).toBeNull();
+    expect(list.rows()).toEqual(ENCOUNTERS);
+    expect(list.columnCount()).toBe(7);
+  });
+
+  it('should hide the patient and service columns when the role cannot read them', async () => {
+    loginWith(['GET /api/encounters', 'GET /api/encounters/:id']);
+    const fixture = TestBed.createComponent(EncounterList);
+    http.expectOne(ENCOUNTERS_URL).flush({ encounters: ENCOUNTERS });
+    http.expectNone(APPOINTMENTS_URL);
+    http.expectNone(PATIENTS_URL);
+    http.expectNone(SERVICES_URL);
+    http.expectNone(RECORDS_URL);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const list = fixture.componentInstance;
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(list.showPatientColumn()).toBe(false);
+    expect(list.showServiceColumn()).toBe(false);
+    expect(list.columnCount()).toBe(5);
+    expect(compiled.textContent).not.toContain('Cita #');
+    expect(compiled.textContent).not.toContain('Servicio #');
+    expect(compiled.textContent).toContain('Factura #9');
   });
 });

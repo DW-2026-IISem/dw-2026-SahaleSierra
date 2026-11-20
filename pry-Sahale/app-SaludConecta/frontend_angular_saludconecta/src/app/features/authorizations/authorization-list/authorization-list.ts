@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -16,6 +16,7 @@ import {
   AuthorizationUpdatePayload,
 } from '../../../core/models/authorization.model';
 import { Patient } from '../../../core/models/patient.model';
+import { SessionStore } from '../../../core/services/session-store';
 import { NotificationService } from '../../../core/services/notification';
 import { toApiMessage } from '../../../core/utils/api-error';
 import { formatLocal } from '../../../core/utils/datetime';
@@ -62,6 +63,7 @@ export class AuthorizationList {
   private readonly appointmentsApi = inject(AppointmentApi);
   private readonly patientsApi = inject(PatientApi);
   private readonly agendasApi = inject(AgendaApi);
+  private readonly session = inject(SessionStore);
   private readonly notify = inject(NotificationService);
   private readonly confirmation = inject(ConfirmationService);
 
@@ -74,6 +76,20 @@ export class AuthorizationList {
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly filter = signal('');
+
+  // ───── Visibilidad según permisos (UX; el backend vuelve a validar) ───────
+
+  /** «Cita» y el aviso de citas sin autorización dependen de `GET /api/appointments`. */
+  readonly showAppointmentColumn = computed(() =>
+    this.session.canPermission('GET /api/appointments'),
+  );
+  /** El paciente dentro de la cita depende de `GET /api/patients`. */
+  readonly showPatientName = computed(() => this.session.canPermission('GET /api/patients'));
+  /** La agenda en las opciones del alta depende de `GET /api/agendas`. */
+  readonly showAgendaName = computed(() => this.session.canPermission('GET /api/agendas'));
+
+  /** Autorización, Descripción, Estado y Acciones siempre; «Cita» según permisos. */
+  readonly columnCount = computed(() => 4 + (this.showAppointmentColumn() ? 1 : 0));
 
   // ───── Mapas id → dato ────────────────────────────────────────────────────
 
@@ -95,9 +111,13 @@ export class AuthorizationList {
     const byId = this.appointmentById();
     return (id: number) => {
       const appointment = byId.get(id);
-      return appointment
+      if (!appointment) {
+        return `Cita #${id}`;
+      }
+      // Sin permiso sobre pacientes, la cita se identifica solo por su fecha y hora.
+      return this.showPatientName()
         ? `${this.patientNameOf(appointment)} · ${formatLocal(appointment.start_date)}`
-        : `Cita #${id}`;
+        : formatLocal(appointment.start_date);
     };
   });
 
@@ -110,7 +130,7 @@ export class AuthorizationList {
     filterRows(this.rows(), this.filter(), (authorization) => [
       authorization.name,
       authorization.description,
-      this.appointmentLabel()(authorization.appointment_id),
+      this.showAppointmentColumn() ? this.appointmentLabel()(authorization.appointment_id) : null,
     ]),
   );
 
@@ -134,9 +154,10 @@ export class AuthorizationList {
   readonly appointmentOptions = computed<AppointmentOption[]>(() =>
     this.availableAppointments().map((appointment) => ({
       id: appointment.id,
-      label:
-        `${this.appointmentLabel()(appointment.id)} · ` +
-        (this.agendaById().get(appointment.agenda_id)?.name ?? `Agenda #${appointment.agenda_id}`),
+      label: this.showAgendaName()
+        ? `${this.appointmentLabel()(appointment.id)} · ` +
+          (this.agendaById().get(appointment.agenda_id)?.name ?? `Agenda #${appointment.agenda_id}`)
+        : this.appointmentLabel()(appointment.id),
     })),
   );
 
@@ -167,9 +188,12 @@ export class AuthorizationList {
 
     forkJoin({
       authorizations: this.api.list(),
-      appointments: this.appointmentsApi.list(),
-      patients: this.patientsApi.list(),
-      agendas: this.agendasApi.list(),
+      // Solo se pide lo que el usuario puede leer: sin 403 ni toast rojo.
+      appointments: this.showAppointmentColumn()
+        ? this.appointmentsApi.list()
+        : of<Appointment[]>([]),
+      patients: this.showPatientName() ? this.patientsApi.list() : of<Patient[]>([]),
+      agendas: this.showAgendaName() ? this.agendasApi.list() : of<Agenda[]>([]),
     }).subscribe({
       next: ({ authorizations, appointments, patients, agendas }) => {
         this.rows.set(authorizations);

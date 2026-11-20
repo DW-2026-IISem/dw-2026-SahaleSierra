@@ -10,6 +10,7 @@ import { Agenda } from '../../../core/models/agenda.model';
 import { Appointment } from '../../../core/models/appointment.model';
 import { Authorization } from '../../../core/models/authorization.model';
 import { Patient } from '../../../core/models/patient.model';
+import { loginAsAdmin, loginAsRole, loginWith } from '../../../testing/session-fixture';
 import { AuthorizationList } from './authorization-list';
 
 const AUTHORIZATIONS_URL = `${environment.apiUrl}/authorizations`;
@@ -102,6 +103,8 @@ describe('AuthorizationList', () => {
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
+    // Sesión de ADMIN: estas pruebas verifican el CRUD, no la autorización.
+    loginAsAdmin();
     confirmation = TestBed.inject(ConfirmationService);
     messages = TestBed.inject(MessageService);
   });
@@ -280,5 +283,41 @@ describe('AuthorizationList', () => {
     flushLoad([]);
 
     expect(list.rows().length).toBe(0);
+  });
+
+  it('should load without agendas for a role that cannot read them and keep the appointment column', async () => {
+    loginAsRole('FACTURACION');
+    const fixture = TestBed.createComponent(AuthorizationList);
+    http.expectOne(APPOINTMENTS_URL).flush({ appointments: APPOINTMENTS });
+    http.expectOne(PATIENTS_URL).flush({ patients: PATIENTS });
+    http.expectOne(AUTHORIZATIONS_URL).flush({ authorizations: AUTHORIZATIONS });
+    http.expectNone(AGENDAS_URL);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const list = fixture.componentInstance;
+    expect(list.error()).toBeNull();
+    expect(list.showAppointmentColumn()).toBe(true);
+    expect(list.columnCount()).toBe(5);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Laura Gómez');
+  });
+
+  it('should hide the appointment column without GET /api/appointments', async () => {
+    loginWith(['GET /api/authorizations', 'GET /api/authorizations/:id']);
+    const fixture = TestBed.createComponent(AuthorizationList);
+    http.expectOne(AUTHORIZATIONS_URL).flush({ authorizations: AUTHORIZATIONS });
+    http.expectNone(APPOINTMENTS_URL);
+    http.expectNone(PATIENTS_URL);
+    http.expectNone(AGENDAS_URL);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const list = fixture.componentInstance;
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(list.showAppointmentColumn()).toBe(false);
+    expect(list.columnCount()).toBe(4);
+    expect(compiled.textContent).not.toContain('Cita #');
+    expect(compiled.textContent).not.toContain('citas sin autorización');
+    expect(compiled.textContent).toContain('AUT-00012345');
   });
 });

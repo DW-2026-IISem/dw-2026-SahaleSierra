@@ -211,7 +211,10 @@ describe('RBAC · botones de escritura por pantalla', () => {
 
   function flush(screen: ScreenFixture): void {
     for (const step of screen.initial) {
-      http.expectOne(step.url).flush(step.body);
+      // ISS-19: las listas relacionadas solo se piden si el rol puede leerlas.
+      for (const request of http.match(step.url)) {
+        request.flush(step.body);
+      }
     }
   }
 

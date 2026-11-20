@@ -13,6 +13,7 @@ import { Encounter } from '../../../core/models/encounter.model';
 import { Invoice } from '../../../core/models/invoice.model';
 import { Patient } from '../../../core/models/patient.model';
 import { Service } from '../../../core/models/service.model';
+import { SessionStore } from '../../../core/services/session-store';
 import { toApiMessage } from '../../../core/utils/api-error';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
@@ -56,6 +57,7 @@ export class InvoiceDetail {
   private readonly serviceApi = inject(ServiceApi);
   private readonly appointmentApi = inject(AppointmentApi);
   private readonly patientApi = inject(PatientApi);
+  private readonly session = inject(SessionStore);
 
   /** `:id` de la ruta. `Number(null)` es 0 y `Number('abc')` es NaN: ambos inválidos. */
   readonly invoiceId = Number(this.route.snapshot.paramMap.get('id'));
@@ -67,6 +69,22 @@ export class InvoiceDetail {
   readonly patients = signal<Patient[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+
+  /** `false` si la factura no trae atenciones y el usuario no puede pedirlas. */
+  readonly linesAvailable = signal(true);
+
+  // ───── Visibilidad según permisos (UX; el backend vuelve a validar) ───────
+
+  /** «Servicio» depende de `GET /api/services`. */
+  readonly showServiceColumn = computed(() => this.session.canPermission('GET /api/services'));
+  /** El paciente se llega por la cita: necesita citas y pacientes. */
+  readonly showPatient = computed(
+    () =>
+      this.session.canPermission('GET /api/appointments') &&
+      this.session.canPermission('GET /api/patients'),
+  );
+  /** Atención, Inicio, Estado, Observaciones y Total siempre; «Servicio» según permisos. */
+  readonly columnCount = computed(() => 5 + (this.showServiceColumn() ? 1 : 0));
 
   readonly title = computed(() => {
     const current = this.invoice();
@@ -128,22 +146,26 @@ export class InvoiceDetail {
       .pipe(
         switchMap((invoice) =>
           forkJoin({
-            // Si el detalle ya trae las atenciones no se pide `/api/encounters`.
+            // Si el detalle ya trae las atenciones no se pide `/api/encounters`;
+            // si no las trae y el usuario no puede leerlas, la tabla no se muestra.
             encounters: invoice.encounters
               ? of(invoice.encounters)
-              : this.encounterApi
-                  .list()
-                  .pipe(map((all) => all.filter((encounter) => encounter.invoice_id === invoice.id))),
-            services: this.serviceApi.list(),
-            appointments: this.appointmentApi.list(),
-            patients: this.patientApi.list(),
+              : this.session.canPermission('GET /api/encounters')
+                ? this.encounterApi
+                    .list()
+                    .pipe(map((all) => all.filter((encounter) => encounter.invoice_id === invoice.id)))
+                : of<Encounter[] | null>(null),
+            services: this.showServiceColumn() ? this.serviceApi.list() : of<Service[]>([]),
+            appointments: this.showPatient() ? this.appointmentApi.list() : of<Appointment[]>([]),
+            patients: this.showPatient() ? this.patientApi.list() : of<Patient[]>([]),
           }).pipe(map((rest) => ({ invoice, ...rest }))),
         ),
       )
       .subscribe({
         next: ({ invoice, encounters, services, appointments, patients }) => {
           this.invoice.set(invoice);
-          this.lines.set(encounters);
+          this.lines.set(encounters ?? []);
+          this.linesAvailable.set(encounters !== null);
           this.services.set(services);
           this.appointments.set(appointments);
           this.patients.set(patients);

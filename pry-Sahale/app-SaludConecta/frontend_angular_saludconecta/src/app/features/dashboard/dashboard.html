@@ -15,69 +15,78 @@
 }
 
 @if (loading()) {
-  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    @for (item of [1, 2, 3, 4]; track item) {
+  <div [class]="cardGridClass()">
+    @for (item of skeletons(); track item) {
       <p-skeleton height="6rem" borderRadius="1rem" />
     }
   </div>
 } @else if (!error()) {
-  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <p-card>
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-sm text-slate-500">Pacientes activos</p>
-          <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-patients">
-            {{ activePatients() }}
-          </p>
+  <div [class]="cardGridClass()" data-testid="kpi-grid">
+    @if (showPatients()) {
+      <p-card>
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-sm text-slate-500">Pacientes activos</p>
+            <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-patients">
+              {{ activePatients() }}
+            </p>
+          </div>
+          <i class="pi pi-users text-xl text-slate-400"></i>
         </div>
-        <i class="pi pi-users text-xl text-slate-400"></i>
-      </div>
-    </p-card>
+      </p-card>
+    }
 
-    <p-card>
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-sm text-slate-500">Citas programadas</p>
-          <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-scheduled">
-            {{ scheduledAppointments().length }}
-          </p>
+    @if (showAppointments()) {
+      <p-card>
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-sm text-slate-500">Citas programadas</p>
+            <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-scheduled">
+              {{ scheduledAppointments().length }}
+            </p>
+          </div>
+          <i class="pi pi-calendar text-xl text-slate-400"></i>
         </div>
-        <i class="pi pi-calendar text-xl text-slate-400"></i>
-      </div>
-    </p-card>
+      </p-card>
+    }
 
-    <p-card>
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-sm text-slate-500">Atenciones por facturar</p>
-          <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-pending">
-            {{ pendingEncounters().length }}
-          </p>
-          <p class="mt-1 text-xs text-slate-400" data-testid="kpi-pending-amount">
-            {{ pendingAmount() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} sin facturar
-          </p>
+    @if (showEncounters()) {
+      <p-card>
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-sm text-slate-500">Atenciones por facturar</p>
+            <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-pending">
+              {{ pendingEncounters().length }}
+            </p>
+            <p class="mt-1 text-xs text-slate-400" data-testid="kpi-pending-amount">
+              {{ pendingAmount() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} sin facturar
+            </p>
+          </div>
+          <i class="pi pi-clipboard text-xl text-slate-400"></i>
         </div>
-        <i class="pi pi-clipboard text-xl text-slate-400"></i>
-      </div>
-    </p-card>
+      </p-card>
+    }
 
-    <p-card>
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-sm text-slate-500">Ingresos facturados</p>
-          <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-revenue">
-            {{ revenue() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
-          </p>
-          <p class="mt-1 text-xs text-slate-400">
-            {{ billedInvoices().length }} facturas no anuladas
-          </p>
+    @if (showInvoices()) {
+      <p-card>
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-sm text-slate-500">Ingresos facturados</p>
+            <p class="mt-1 text-3xl font-semibold text-slate-900" data-testid="kpi-revenue">
+              {{ revenue() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+            </p>
+            <p class="mt-1 text-xs text-slate-400">
+              {{ billedInvoices().length }} facturas no anuladas
+            </p>
+          </div>
+          <i class="pi pi-wallet text-xl text-slate-400"></i>
         </div>
-        <i class="pi pi-wallet text-xl text-slate-400"></i>
-      </div>
-    </p-card>
+      </p-card>
+    }
   </div>
 
-  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+  <div [class]="tablesGridClass()">
+    @if (showAppointments()) {
     <section>
       <h2 class="mb-2 text-sm font-semibold text-slate-700">Próximas citas programadas</h2>
       <div class="rounded-xl border border-slate-200 bg-white">
@@ -85,7 +94,9 @@
           <ng-template #header>
             <tr>
               <th>Fecha</th>
-              <th>Paciente</th>
+              @if (showPatients()) {
+                <th>Paciente</th>
+              }
               <th>Motivo</th>
             </tr>
           </ng-template>
@@ -95,16 +106,18 @@
               <td class="text-sm text-slate-600">
                 {{ appointment.start_date | date: 'dd/MM/yyyy HH:mm' }}
               </td>
-              <td class="font-medium text-slate-800">
-                {{ patientName()(appointment.patient_id) }}
-              </td>
+              @if (showPatients()) {
+                <td class="font-medium text-slate-800">
+                  {{ patientName()(appointment.patient_id) }}
+                </td>
+              }
               <td class="text-sm text-slate-600">{{ appointment.reason || '—' }}</td>
             </tr>
           </ng-template>
 
           <ng-template #emptymessage>
             <tr>
-              <td colspan="3">
+              <td [attr.colspan]="upcomingColumnCount()">
                 <app-empty-state
                   icon="pi pi-calendar"
                   title="Sin citas próximas"
@@ -116,7 +129,9 @@
         </p-table>
       </div>
     </section>
+    }
 
+    @if (showInvoices()) {
     <section>
       <h2 class="mb-2 text-sm font-semibold text-slate-700">Últimas facturas</h2>
       <div class="rounded-xl border border-slate-200 bg-white">
@@ -166,5 +181,6 @@
         </p-table>
       </div>
     </section>
+    }
   </div>
 }

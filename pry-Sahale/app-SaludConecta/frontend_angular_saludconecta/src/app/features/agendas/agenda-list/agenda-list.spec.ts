@@ -8,6 +8,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { environment } from '../../../../environments/environment';
 import { Agenda } from '../../../core/models/agenda.model';
 import { Doctor } from '../../../core/models/doctor.model';
+import { loginAsAdmin, loginAsRole } from '../../../testing/session-fixture';
 import { AgendaList } from './agenda-list';
 
 const AGENDAS_URL = `${environment.apiUrl}/agendas`;
@@ -52,6 +53,8 @@ describe('AgendaList', () => {
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
+    // Sesión de ADMIN: estas pruebas verifican el CRUD, no la autorización.
+    loginAsAdmin();
     confirmation = TestBed.inject(ConfirmationService);
     messages = TestBed.inject(MessageService);
   });
@@ -229,4 +232,24 @@ describe('AgendaList', () => {
     // No se recarga: la agenda sigue en la tabla.
     expect(list.rows().length).toBe(2);
   });
+  
+  it('should not request the doctors nor show the doctor column when the role cannot read them', async () => {
+    loginAsRole('MEDICO');
+    const fixture = TestBed.createComponent(AgendaList);
+    http.expectOne(AGENDAS_URL).flush({ agendas: AGENDAS });
+    http.expectNone(DOCTORS_URL);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const list = fixture.componentInstance;
+    const compiled = fixture.nativeElement as HTMLElement;
+    const headers = Array.from(compiled.querySelectorAll('thead th'), (th) => th.textContent ?? '');
+    expect(list.showDoctorColumn()).toBe(false);
+    expect(list.columnCount()).toBe(4);
+    expect(headers.some((text) => text.includes('Médico'))).toBe(false);
+    expect(compiled.textContent).not.toContain('Médico #');
+    expect(compiled.textContent).toContain('Cardiología · tarde');
+  });
+
 });
+

@@ -8,6 +8,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { environment } from '../../../../environments/environment';
 import { ClinicalRecord } from '../../../core/models/clinical-record.model';
 import { Patient } from '../../../core/models/patient.model';
+import { loginAsAdmin, loginWith } from '../../../testing/session-fixture';
 import { ClinicalRecordList } from './clinical-record-list';
 
 const RECORDS_URL = `${environment.apiUrl}/clinical-records`;
@@ -65,6 +66,8 @@ describe('ClinicalRecordList', () => {
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
+    // Sesión de ADMIN: estas pruebas verifican el CRUD, no la autorización.
+    loginAsAdmin();
     confirmation = TestBed.inject(ConfirmationService);
     messages = TestBed.inject(MessageService);
   });
@@ -264,5 +267,24 @@ describe('ClinicalRecordList', () => {
     expect(list.dialogVisible()).toBe(true);
     expect(list.presetPatientId()).toBe(3);
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'info' }));
+  });
+
+  it('should hide the patient column, the counter and the lookup without GET /api/patients', async () => {
+    loginWith(['GET /api/clinical-records', 'GET /api/clinical-records/:id']);
+    const fixture = TestBed.createComponent(ClinicalRecordList);
+    http.expectOne(RECORDS_URL).flush({ clinical_records: RECORDS });
+    http.expectNone(PATIENTS_URL);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const list = fixture.componentInstance;
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(list.showPatientColumn()).toBe(false);
+    expect(list.showLookup()).toBe(false);
+    expect(list.columnCount()).toBe(4);
+    expect(compiled.textContent).not.toContain('Paciente #');
+    expect(compiled.textContent).not.toContain('pacientes sin historia');
+    expect(compiled.textContent).not.toContain('Buscar la historia de un paciente');
+    expect(compiled.textContent).toContain('HC-1032456789');
   });
 });
