@@ -3774,3 +3774,79 @@ npm run build
 ![](images/clipboard-2272890988.png)
 
 ### **CR-03.11 Commit del frontend**
+
+![](images/clipboard-590322209.png)
+
+## **ISS-CR-04 — Integración, pruebas y cierre**
+
+### **CR-04.1 PARCHE — `src/app/features/admin/resource-roles/resource-role-api.spec.ts`**
+
+**Cambio 1 — import.** Reemplazar:
+
+``` typescript
+import { ResourceRole } from '../../../core/models/resource-role.model';
+```
+
+por:
+
+``` typescript
+import { ResourceRole, RoleGrantReconciliation } from '../../../core/models/resource-role.model';
+```
+
+![](images/clipboard-3958339284.png)
+
+**Cambio 2 — dos pruebas nuevas.** Ancla (el final de la última prueba y del `describe`):
+
+``` typescript
+    http.expectNone(`${BASE}/1`);
+  });
+});
+```
+
+reemplazar por:
+
+``` typescript
+    http.expectNone(`${BASE}/1`);
+  });
+
+  it('should POST { role_id, resource_ids } and unwrap { result }', () => {
+    const summary: RoleGrantReconciliation = { role_id: 5, activated: 0, deactivated: 13, total_active: 2 };
+    let result: RoleGrantReconciliation | undefined;
+    api.reconcileRole(5, [1, 2]).subscribe((value) => (result = value));
+
+    const request = http.expectOne(BASE);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ role_id: 5, resource_ids: [1, 2] });
+    request.flush({ message: 'Role permissions updated', result: summary });
+
+    expect(result).toEqual(summary);
+  });
+
+  it('should fail when the matrix response has no result', () => {
+    let error: unknown;
+    api.reconcileRole(5, []).subscribe({ error: (e: unknown) => (error = e) });
+
+    http.expectOne(BASE).flush({ message: 'Role permissions updated' });
+
+    expect(error).toBeInstanceOf(Error);
+  });
+});
+```
+
+![](images/clipboard-754338987.png)
+
+### **CR-04.2 Archivo nuevo — `src/app/features/admin/role-permissions/permission-matrix.spec.ts`**
+
+![](images/clipboard-1029219258.png)
+
+### **CR-04.3 Archivo nuevo — `src/app/features/admin/role-permissions/role-permission-matrix/role-permission-matrix.spec.ts`**
+
+![](images/clipboard-3869733431.png)
+
+![](images/clipboard-2384110294.png)
+
+### **CR-04.4 Correr las pruebas y el build**
+
+![](images/clipboard-909414216.png)
+
+### **CR-04.7 Commit de cierre**

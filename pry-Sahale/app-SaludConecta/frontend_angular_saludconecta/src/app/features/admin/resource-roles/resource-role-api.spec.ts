@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../../environments/environment';
-import { ResourceRole } from '../../../core/models/resource-role.model';
+import { ResourceRole, RoleGrantReconciliation } from '../../../core/models/resource-role.model';
 import { ResourceRoleApi } from './resource-role-api';
 
 const BASE = `${environment.apiUrl}/resource-roles`;
@@ -49,4 +49,27 @@ describe('ResourceRoleApi', () => {
 
     http.expectNone(`${BASE}/1`);
   });
+
+  it('should POST { role_id, resource_ids } and unwrap { result }', () => {
+    const summary: RoleGrantReconciliation = { role_id: 5, activated: 0, deactivated: 13, total_active: 2 };
+    let result: RoleGrantReconciliation | undefined;
+    api.reconcileRole(5, [1, 2]).subscribe((value) => (result = value));
+
+    const request = http.expectOne(BASE);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ role_id: 5, resource_ids: [1, 2] });
+    request.flush({ message: 'Role permissions updated', result: summary });
+
+    expect(result).toEqual(summary);
+  });
+
+  it('should fail when the matrix response has no result', () => {
+    let error: unknown;
+    api.reconcileRole(5, []).subscribe({ error: (e: unknown) => (error = e) });
+
+    http.expectOne(BASE).flush({ message: 'Role permissions updated' });
+
+    expect(error).toBeInstanceOf(Error);
+  });
 });
+
