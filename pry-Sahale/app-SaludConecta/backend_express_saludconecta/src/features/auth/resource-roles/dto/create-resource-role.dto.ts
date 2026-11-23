@@ -12,3 +12,16 @@ export interface CreateResourceRoleDto {
   role_id: number;
   resource_id: number;
 }
+
+/**
+ * Datos de entrada del **guardado de la matriz** — el mismo
+ * `POST /api/resource-roles`, pero con `resource_ids` en vez de `resource_id`.
+ *
+ * Es el estado final deseado del rol: lo que no venga en la lista queda
+ * retirado. Ejemplo: `{ role_id: 5, resource_ids: [1, 2] }` deja a
+ * `AUDITOR_CLINICO` solo leyendo pacientes.
+ */
+export interface ReconcileResourceRolesDto {
+  role_id: number;
+  resource_ids: number[];
+}

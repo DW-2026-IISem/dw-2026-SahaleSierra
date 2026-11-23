@@ -1,0 +1,196 @@
+### Feature ResourceRoles — GUARDAR LA MATRIZ COMPLETA DE UN ROL (ISS-CR-02)
+### Mismo endpoint que conceder (`POST /api/resource-roles`), pero con `resource_ids`:
+###   { "role_id": 5, "resource_ids": [1, 2] }  -> 200 { message, result }
+### Lo que no venga en la lista queda retirado (status = inactive).
+### role_id 5 = AUDITOR_CLINICO (15 recursos, solo lectura).
+### resource_id 1 y 2 = GET /api/patients y GET /api/patients/:id
+###   (confírmalo antes en DBeaver: SELECT id, method, path FROM resources WHERE path LIKE '/api/patients%' ORDER BY id;)
+### Al terminar, `npm run db:seed` deja la matriz de los 5 roles como estaba.
+@baseUrl = http://localhost:4000
+
+# @name loginAdmin
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Admin123!"
+}
+
+###
+
+# @name loginAuditor
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "auditor",
+  "password": "Auditor123!"
+}
+
+###
+
+# @name loginFacturacion
+POST {{baseUrl}}/api/session/login
+Content-Type: application/json
+
+{
+  "identifier": "facturacion",
+  "password": "Facturacion123!"
+}
+
+@token = {{loginAdmin.response.body.$.access_token}}
+@auditorToken = {{loginAuditor.response.body.$.access_token}}
+@facturacionToken = 
+@auditorRoleId = 5
+
+### 1. ESTADO INICIAL — concesiones activas del auditor (15)
+GET {{baseUrl}}/api/resource-roles?role_id={{auditorRoleId}}
+Authorization: Bearer {{token}}
+
+### 2. El auditor lee atenciones -> 200
+GET {{baseUrl}}/api/encounters
+Authorization: Bearer {{auditorToken}}
+
+### 3. GUARDAR MATRIZ — el auditor queda solo con leer pacientes -> 200 (activated 0, deactivated 13, total_active 2)
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_ids": [1, 2]
+}
+
+### 4. Persistencia — ahora solo 2 concesiones activas
+GET {{baseUrl}}/api/resource-roles?role_id={{auditorRoleId}}
+Authorization: Bearer {{token}}
+
+### 5. Efecto inmediato — atenciones ya no -> 403
+GET {{baseUrl}}/api/encounters
+Authorization: Bearer {{auditorToken}}
+
+### 6. ...pero pacientes sí -> 200
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{auditorToken}}
+
+### 7. Repetir el mismo guardado -> 200 con activated 0 y deactivated 0 (idempotente)
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_ids": [1, 2]
+}
+
+### 8. 400 — ID duplicado
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_ids": [1, 1]
+}
+
+### 9. 400 — un recurso que no existe mezclado con uno válido (el 3 tampoco se concede)
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_ids": [1, 2, 3, 99999]
+}
+
+### 10. Sin cambios parciales — siguen siendo 2 concesiones (sin POST /api/patients)
+GET {{baseUrl}}/api/resource-roles?role_id={{auditorRoleId}}
+Authorization: Bearer {{token}}
+
+### 11. 400 — role_id como texto
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": "5",
+  "resource_ids": [1]
+}
+
+### 12. 400 — resource_id y resource_ids a la vez (forma ambigua)
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_id": 1,
+  "resource_ids": [1]
+}
+
+### 13. 404 — rol inexistente
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": 999,
+  "resource_ids": [1]
+}
+
+### 14. 409 — ADMIN no se edita desde la matriz
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": 1,
+  "resource_ids": [1]
+}
+
+### 15. 401 — sin token
+POST {{baseUrl}}/api/resource-roles
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_ids": [1, 2]
+}
+
+### 16. 403 — con token, pero FACTURACION no tiene POST /api/resource-roles
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{facturacionToken}}
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_ids": [1, 2]
+}
+
+### 17. Lista vacía — deliberado: el rol queda sin permisos (deactivated 2, total_active 0)
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_ids": []
+}
+
+### 18. El auditor ya no lee ni pacientes -> 403
+GET {{baseUrl}}/api/patients
+Authorization: Bearer {{auditorToken}}
+
+### 19. La concesión individual sigue funcionando igual -> 201 (reactiva GET /api/patients)
+POST {{baseUrl}}/api/resource-roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_id": {{auditorRoleId}},
+  "resource_id": 1
+}
+
+### RESTAURAR — en la terminal del backend: `npm run db:seed`
+### (reconcilia los 5 roles: el auditor vuelve a sus 15 recursos)

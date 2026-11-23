@@ -2,6 +2,7 @@ import {
   CreateResourceRoleDto,
   EffectivePermissionDto,
   ListResourceRolesDto,
+  ReconcileResourceRolesDto,
   ResourceRoleResponseDto,
   toResourceRoleResponse,
 } from "./dto";
@@ -11,6 +12,9 @@ import { RolesRepository } from "../roles/roles.repository";
 import { ResourcesRepository } from "../resources/resources.repository";
 import { AppError } from "../../../shared/errors/app-error";
 import { withTransaction } from "../../../shared/database/with-transaction";
+
+/** Rol que conserva siempre el catálogo completo (lo mantiene el seeder). */
+const ADMIN_ROLE = "ADMIN";
 
 /** Resumen de una reconciliación de concesiones de un rol. */
 export interface ReconcileResult {
@@ -168,7 +172,42 @@ export class ResourceRolesService {
     });
   }
 
-  // ================== HELPERS ==================
+   // ================== MATRIZ (panel «Roles y permisos») ==================
+  /**
+   * Guarda la matriz completa de un rol desde el panel.
+   *
+   * Valida todo **antes** de abrir la transacción:
+   *  - el rol existe y está activo (404);
+   *  - el rol no es `ADMIN` (409): ADMIN tiene siempre el catálogo completo y
+   *    así nadie se queda sin acceso al propio panel;
+   *  - cada `resource_id` existe y está activo (400).
+   *
+   * Si algo falla no se toca ninguna fila. Si todo es válido delega en
+   * `reconcileRole`, que aplica altas, reactivaciones y retiros en una sola
+   * transacción (o queda la matriz nueva completa, o queda la anterior).
+   */
+  public async saveRoleMatrix(body: ReconcileResourceRolesDto): Promise<ReconcileResult> {
+    const role = await this.rolesRepository.findById(body.role_id);
+    if (!role || role.status !== "active") {
+      throw new AppError(404, "Role not found or inactive");
+    }
+    if (role.name === ADMIN_ROLE) {
+      throw new AppError(409, "ADMIN permissions are managed by the seeder and cannot be edited");
+    }
+
+    const found = await this.resourcesRepository.findByIds(body.resource_ids);
+    const usable = new Set(
+      found.filter((resource) => resource.status === "active").map((resource) => resource.id),
+    );
+    const invalid = body.resource_ids.filter((id) => !usable.has(id));
+    if (invalid.length > 0) {
+      throw new AppError(400, `Unknown or inactive resource ids: ${invalid.join(", ")}`);
+    }
+
+    return this.reconcileRole(role.id, body.resource_ids);
+  }
+
+
   private async findOrFail(id: number, onlyActive = true): Promise<ResourceRole> {
     const grant = await this.repository.findById(id);
     if (!grant || (onlyActive && grant.status !== "active")) {

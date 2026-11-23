@@ -1537,7 +1537,7 @@ ng build
 
 ![](images/clipboard-1624287304.png)
 
-## **11.6 `authorization-form.ts`** 
+## **11.6 `authorization-form.ts`**
 
 ![](images/clipboard-948785219.png)
 
@@ -3121,7 +3121,7 @@ Con el commit de cierre, la **Fase II está cerrada** y el proyecto entregado.
 **Estado final del proyecto:**
 
 | **Fase** | **Cobertura** | **ISS** |
-|:---|:---|:---|
+|:-----------------------|:-----------------------|:-----------------------|
 | Fase 0 — Preparación | Entorno + interruptor `AUTH_ENABLED` | ISS-00 |
 | Fase I — Bootstrap | Angular 22, Tailwind, PrimeNG, esqueleto, menú, prototipo | ISS-01, 01A, 01B |
 | Fase I — Núcleo | Modelos, servicios, utilidades, `Shell` | ISS-02 |
@@ -3132,3 +3132,448 @@ Con el commit de cierre, la **Fase II está cerrada** y el proyecto entregado.
 | Fase II — Cierre | Build, calidad y checklist | ISS-18 (este) |
 
 ![](images/clipboard-1647281361.png)
+
+## **ISS-CR-01 — Catálogo y operaciones del backend**
+
+### **CR-01.1 Inspeccionar**
+
+Terminal del backend:
+
+``` bash
+grep -rL "authorize" src/features/business --include=*.routes.ts grep -n "authenticate,\|authorize," src/features/auth/resource-roles/resource-roles.routes.ts 
+```
+
+El primero lista los archivos de rutas de negocio que **no** usan `authorize`: debe salir vacío. El segundo muestra las 5 rutas de concesiones con los dos middlewares. Y en DBeaver, `SELECT COUNT(*) FROM resources;` debe dar **111**.
+
+![](images/clipboard-3013745443.png)
+
+### **CR-01.2 Sin duplicados `method + path`**
+
+En DBeaver (base `backend_express`):
+
+``` sql
+SELECT method, path, COUNT(*) AS n
+FROM resources
+GROUP BY method, path
+HAVING n > 1;
+```
+
+Debe salir **sin filas**. Además, la tabla tiene el índice único sobre `(method, path)`, así que el seeder no puede duplicar.
+
+![](images/clipboard-3318542097.png)
+
+### **CR-01.3 Qué hay en cada fila de la matriz**
+
+En DBeaver:
+
+``` sql
+SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(path, '/', 3), '/', -1) AS entidad,
+       SUM(method = 'POST') AS C,
+       SUM(method = 'GET') AS R,
+       SUM(method IN ('PUT', 'PATCH') AND path NOT LIKE '%/deactivate') AS U,
+       SUM(method = 'DELETE' OR path LIKE '%/deactivate') AS D,
+       COUNT(*) AS total
+FROM resources
+WHERE status = 'active'
+GROUP BY entidad
+ORDER BY MIN(id);
+```
+
+Lo esperado para las 11 entidades de negocio es `C=1, R=2, U=2, D=2` (total 7) y `R=3` en `clinical-records` (total 8). En las de seguridad, `role-users` y `resource-roles` no tienen `PUT` ni `DELETE`: su U es `reactivate` y su D es `deactivate`. La suma de `total` debe dar **111**.
+
+![](images/clipboard-3912171464.png)
+
+## **ISS-CR-02 — Guardado de la matriz en el backend**
+
+### **CR-02.1 PARCHE — `src/features/auth/resource-roles/dto/create-resource-role.dto.ts`**
+
+![](images/clipboard-3959208327.png)
+
+### **CR-02.2 PARCHE — `src/features/auth/resources/resources.repository.ts`**
+
+**Cambio 1.** Reemplazar la primera línea:
+
+``` typescript
+import { CreationAttributes, Transaction } from "sequelize"; 
+```
+
+por:
+
+``` typescript
+import { CreationAttributes, Op, Transaction } from "sequelize"; 
+```
+
+![](images/clipboard-694083043.png)
+
+**Cambio 2.** Debajo del método `findById` (después de su `}`), agregar:
+
+Ancla — buscar:
+
+``` typescript
+  /** Un recurso por PK (o `null`). */
+  public async findById(id: number, transaction?: Transaction): Promise<Resource | null> {
+    return Resource.findByPk(id, { transaction });
+  }
+```
+
+y pegar justo debajo:
+
+``` typescript
+
+  /**
+   * Varios recursos por PK en una sola consulta (`WHERE id IN (...)`).
+   * Los IDs que no existen simplemente no vienen: quien llama compara.
+   */
+  public async findByIds(ids: number[], transaction?: Transaction): Promise<Resource[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    return Resource.findAll({ where: { id: { [Op.in]: ids } }, transaction });
+  }
+```
+
+![](images/clipboard-1406381829.png)
+
+### **CR-02.3 PARCHE — `src/features/auth/resource-roles/resource-roles.service.ts`**
+
+**Cambio 1 — import del DTO.** Reemplazar:
+
+``` typescript
+import {
+  CreateResourceRoleDto,
+  EffectivePermissionDto,
+  ListResourceRolesDto,
+  ResourceRoleResponseDto,
+  toResourceRoleResponse,
+} from "./dto";
+```
+
+por:
+
+``` typescript
+import {
+  CreateResourceRoleDto,
+  EffectivePermissionDto,
+  ListResourceRolesDto,
+  ReconcileResourceRolesDto,
+  ResourceRoleResponseDto,
+  toResourceRoleResponse,
+} from "./dto";
+```
+
+![](images/clipboard-2310133299.png)
+
+**Cambio 2 — constante del rol protegido.** Ancla:
+
+``` typescript
+import { withTransaction } from "../../../shared/database/with-transaction";
+```
+
+pegar justo debajo:
+
+``` typescript
+
+/** Rol que conserva siempre el catálogo completo (lo mantiene el seeder). */
+const ADMIN_ROLE = "ADMIN";
+```
+
+![](images/clipboard-1369191892.png)
+
+**Cambio 3 — método nuevo.** Ancla (la línea que abre la sección de helpers, después de que termina `reconcileRole`):
+
+``` typescript
+  // ================== HELPERS ==================
+```
+
+pegar **encima** de esa línea:
+
+``` typescript
+  // ================== MATRIZ (panel «Roles y permisos») ==================
+  /**
+   * Guarda la matriz completa de un rol desde el panel.
+   *
+   * Valida todo **antes** de abrir la transacción:
+   *  - el rol existe y está activo (404);
+   *  - el rol no es `ADMIN` (409): ADMIN tiene siempre el catálogo completo y
+   *    así nadie se queda sin acceso al propio panel;
+   *  - cada `resource_id` existe y está activo (400).
+   *
+   * Si algo falla no se toca ninguna fila. Si todo es válido delega en
+   * `reconcileRole`, que aplica altas, reactivaciones y retiros en una sola
+   * transacción (o queda la matriz nueva completa, o queda la anterior).
+   */
+  public async saveRoleMatrix(body: ReconcileResourceRolesDto): Promise<ReconcileResult> {
+    const role = await this.rolesRepository.findById(body.role_id);
+    if (!role || role.status !== "active") {
+      throw new AppError(404, "Role not found or inactive");
+    }
+    if (role.name === ADMIN_ROLE) {
+      throw new AppError(409, "ADMIN permissions are managed by the seeder and cannot be edited");
+    }
+
+    const found = await this.resourcesRepository.findByIds(body.resource_ids);
+    const usable = new Set(
+      found.filter((resource) => resource.status === "active").map((resource) => resource.id),
+    );
+    const invalid = body.resource_ids.filter((id) => !usable.has(id));
+    if (invalid.length > 0) {
+      throw new AppError(400, `Unknown or inactive resource ids: ${invalid.join(", ")}`);
+    }
+
+    return this.reconcileRole(role.id, body.resource_ids);
+  }
+
+```
+
+![](images/clipboard-4206707950.png)
+
+### **CR-02.4 PARCHE — `src/features/auth/resource-roles/resource-roles.controller.ts`**
+
+**Cambio 1 — imports.** Reemplazar:
+
+``` typescript
+import { CreateResourceRoleDto } from "./dto";
+```
+
+por:
+
+``` typescript
+import { AppError } from "../../../shared/errors/app-error";
+import { CreateResourceRoleDto, ReconcileResourceRolesDto } from "./dto";
+```
+
+![](images/clipboard-1381595469.png)
+
+**Cambio 2 — el `grant` atiende las dos formas.** Reemplazar el bloque completo:
+
+``` typescript
+  // ================== CREATE (conceder permiso) ==================
+  public async grant(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      const grant = await this.service.grant(req.body as CreateResourceRoleDto);
+      res.status(201).json({ message: "Resource granted to role", grant });
+    });
+  }
+```
+
+por:
+
+``` typescript
+  // ================== CREATE (conceder permiso / guardar matriz) ==================
+  /**
+   * Un mismo `POST /api/resource-roles` atiende dos formas de cuerpo:
+   *  - `{ role_id, resource_id }`  -> concede un recurso (201, como antes).
+   *  - `{ role_id, resource_ids }` -> guarda la matriz completa del rol (200).
+   * Así el panel no necesita un recurso RBAC nuevo en el catálogo.
+   */
+  public async grant(req: Request, res: Response): Promise<void> {
+    await this.run(res, async () => {
+      if (isRecord(req.body) && req.body.resource_ids !== undefined) {
+        const matrix = validateReconcileBody(req.body);
+        const result = await this.service.saveRoleMatrix(matrix);
+        res.status(200).json({ message: "Role permissions updated", result });
+        return;
+      }
+      const grant = await this.service.grant(req.body as CreateResourceRoleDto);
+      res.status(201).json({ message: "Resource granted to role", grant });
+    });
+  }
+```
+
+![](images/clipboard-725749418.png)
+
+**Cambio 3 — validadores.** Al **final** del archivo, debajo de `toOptionalNumber`:
+
+``` typescript
+cat >> src/features/auth/resource-roles/resource-roles.controller.ts << 'EOF'
+
+/** `true` si el valor es un objeto JSON (no `null` ni arreglo). */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** Entero positivo de verdad: rechaza `"3"`, `3.5`, `0` y negativos. */
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+/**
+ * Valida la **forma HTTP** del guardado de matriz. Las reglas de negocio (rol
+ * activo, recursos activos, ADMIN protegido) viven en el service.
+ */
+function validateReconcileBody(body: Record<string, unknown>): ReconcileResourceRolesDto {
+  if (body.resource_id !== undefined) {
+    throw new AppError(400, "Send resource_id or resource_ids, not both");
+  }
+  if (!isPositiveInteger(body.role_id)) {
+    throw new AppError(400, "role_id must be a positive integer");
+  }
+  const ids: unknown = body.resource_ids;
+  if (!Array.isArray(ids) || !ids.every(isPositiveInteger)) {
+    throw new AppError(400, "resource_ids must be an array of positive integers");
+  }
+  if (new Set(ids).size !== ids.length) {
+    throw new AppError(400, "resource_ids must not contain duplicates");
+  }
+  return { role_id: body.role_id, resource_ids: ids };
+}
+EOF
+```
+
+`resource-roles.routes.ts` **no cambia**: el `POST /api/resource-roles` ya está registrado con `authenticate` y `authorize`, y llama a `grant`.
+
+![](images/clipboard-1149471023.png)
+
+### **CR-02.5 PARCHE — `src/features/auth/resource-roles/resource-roles.swagger.ts`**
+
+**Cambio 1 — el `post`.** Reemplazar:
+
+``` typescript
+        summary: "Conceder recurso a rol (crear permiso)",
+        description:
+          "JWT + RBAC — recurso `POST /api/resource-roles`. " +
+          "Cuerpo: `{ role_id, resource_id }`. Idempotente: si la concesión existía retirada, se reactiva. " +
+          "Efecto inmediato y sin despliegue: la siguiente petición del usuario ya consulta la nueva matriz.",
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/ResourceRoleCreate" } },
+          },
+        },
+        responses: {
+          "201": { description: "Permiso concedido (`{ message, grant }`)" },
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
+          "404": { description: "Rol o recurso inexistente o inactivo" },
+          "409": { description: "El rol ya tiene concedido ese recurso" },
+        },
+```
+
+por:
+
+``` typescript
+        summary: "Conceder recurso a rol o guardar la matriz completa del rol",
+        description:
+          "JWT + RBAC — recurso `POST /api/resource-roles`. Acepta dos cuerpos:\n\n" +
+          "- `{ role_id, resource_id }` → **concede un recurso** (`201`). Si la concesión existía retirada, se reactiva.\n" +
+          "- `{ role_id, resource_ids }` → **guarda la matriz completa** (`200`): concede o reactiva lo que viene " +
+          "y retira lo que no viene, en una transacción. `[]` deja al rol sin permisos. `ADMIN` no se edita (`409`).\n\n" +
+          "Efecto inmediato y sin despliegue: la siguiente petición del usuario ya consulta la nueva matriz.",
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                oneOf: [
+                  { $ref: "#/components/schemas/ResourceRoleCreate" },
+                  { $ref: "#/components/schemas/ResourceRoleReconcile" },
+                ],
+              },
+              examples: {
+                grant: {
+                  summary: "Conceder un recurso",
+                  value: { role_id: 3, resource_id: 3 },
+                },
+                matrix: {
+                  summary: "Guardar la matriz del rol",
+                  value: { role_id: 5, resource_ids: [1, 2] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Matriz guardada (`{ message, result }`)",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ResourceRoleReconcileResponse" },
+              },
+            },
+          },
+          "201": { description: "Permiso concedido (`{ message, grant }`)" },
+          "400": {
+            description:
+              "Cuerpo inválido: `role_id` no entero, `resource_ids` con duplicados o no enteros, " +
+              "`resource_id` y `resource_ids` a la vez, o recursos inexistentes/inactivos",
+          },
+          "401": unauthorizedResponse,
+          "403": forbiddenResponse,
+          "404": { description: "Rol o recurso inexistente o inactivo" },
+          "409": { description: "El rol ya tiene concedido ese recurso, o se intentó editar la matriz de ADMIN" },
+        },
+```
+
+![](images/clipboard-4162918208.png)
+
+**Cambio 2 — esquemas nuevos.** Ancla:
+
+``` typescript
+       ResourceRoleCreate: {
+        type: "object",
+        required: ["role_id", "resource_id"],
+        properties: {
+          role_id: { type: "integer", example: 2 },
+          resource_id: { type: "integer", example: 25 },
+        },
+      },
+```
+
+pegar justo debajo:
+
+``` typescript
+      ResourceRoleReconcile: {
+        type: "object",
+        required: ["role_id", "resource_ids"],
+        properties: {
+          role_id: { type: "integer", example: 5 },
+          resource_ids: {
+            type: "array",
+            uniqueItems: true,
+            items: { type: "integer", minimum: 1 },
+            example: [1, 2],
+          },
+        },
+      },
+      ResourceRoleReconcileResponse: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "Role permissions updated" },
+          result: {
+            type: "object",
+            properties: {
+              role_id: { type: "integer", example: 5 },
+              activated: { type: "integer", example: 0 },
+              deactivated: { type: "integer", example: 13 },
+              total_active: { type: "integer", example: 2 },
+            },
+          },
+        },
+      },
+```
+
+![](images/clipboard-1898658945.png)
+
+### **CR-02.6 Archivo nuevo — `src/features/auth/resource-roles/http/resource-roles.matrix.http`**
+
+![](images/clipboard-4010887055.png)
+
+![](images/clipboard-1841326158.png)
+
+### **CR-02.7 Verificación**
+
+![](images/clipboard-1669570798.png)
+
+**6. Restaurar la matriz** (terminal del backend):
+
+```         
+npm run db:seed 
+```
+
+En la salida debe aparecer `✅ resource_roles: AUDITOR_CLINICO -> 15 recursos`. Vuelve a correr la petición 1 del `.http`: 15 `grants`.
+
+![](images/clipboard-2453658485.png)
+
+### **CR-02.8 Commit del backend**

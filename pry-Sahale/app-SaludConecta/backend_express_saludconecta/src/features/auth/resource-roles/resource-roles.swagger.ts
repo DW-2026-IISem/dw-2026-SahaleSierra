@@ -44,24 +44,56 @@ export const resourceRolesSwagger = {
       },
       post: {
         tags: ["ResourceRoles"],
-        summary: "Conceder recurso a rol (crear permiso)",
+        summary: "Conceder recurso a rol o guardar la matriz completa del rol",
         description:
-          "JWT + RBAC — recurso `POST /api/resource-roles`. " +
-          "Cuerpo: `{ role_id, resource_id }`. Idempotente: si la concesión existía retirada, se reactiva. " +
+          "JWT + RBAC — recurso `POST /api/resource-roles`. Acepta dos cuerpos:\n\n" +
+          "- `{ role_id, resource_id }` → **concede un recurso** (`201`). Si la concesión existía retirada, se reactiva.\n" +
+          "- `{ role_id, resource_ids }` → **guarda la matriz completa** (`200`): concede o reactiva lo que viene " +
+          "y retira lo que no viene, en una transacción. `[]` deja al rol sin permisos. `ADMIN` no se edita (`409`).\n\n" +
           "Efecto inmediato y sin despliegue: la siguiente petición del usuario ya consulta la nueva matriz.",
         security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/ResourceRoleCreate" } },
+            "application/json": {
+              schema: {
+                oneOf: [
+                  { $ref: "#/components/schemas/ResourceRoleCreate" },
+                  { $ref: "#/components/schemas/ResourceRoleReconcile" },
+                ],
+              },
+              examples: {
+                grant: {
+                  summary: "Conceder un recurso",
+                  value: { role_id: 3, resource_id: 3 },
+                },
+                matrix: {
+                  summary: "Guardar la matriz del rol",
+                  value: { role_id: 5, resource_ids: [1, 2] },
+                },
+              },
+            },
           },
         },
         responses: {
+          "200": {
+            description: "Matriz guardada (`{ message, result }`)",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ResourceRoleReconcileResponse" },
+              },
+            },
+          },
           "201": { description: "Permiso concedido (`{ message, grant }`)" },
+          "400": {
+            description:
+              "Cuerpo inválido: `role_id` no entero, `resource_ids` con duplicados o no enteros, " +
+              "`resource_id` y `resource_ids` a la vez, o recursos inexistentes/inactivos",
+          },
           "401": unauthorizedResponse,
           "403": forbiddenResponse,
           "404": { description: "Rol o recurso inexistente o inactivo" },
-          "409": { description: "El rol ya tiene concedido ese recurso" },
+          "409": { description: "El rol ya tiene concedido ese recurso, o se intentó editar la matriz de ADMIN" },
         },
       },
     },
@@ -149,6 +181,34 @@ export const resourceRolesSwagger = {
         properties: {
           role_id: { type: "integer", example: 2 },
           resource_id: { type: "integer", example: 25 },
+        },
+      },
+            ResourceRoleReconcile: {
+        type: "object",
+        required: ["role_id", "resource_ids"],
+        properties: {
+          role_id: { type: "integer", example: 5 },
+          resource_ids: {
+            type: "array",
+            uniqueItems: true,
+            items: { type: "integer", minimum: 1 },
+            example: [1, 2],
+          },
+        },
+      },
+      ResourceRoleReconcileResponse: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "Role permissions updated" },
+          result: {
+            type: "object",
+            properties: {
+              role_id: { type: "integer", example: 5 },
+              activated: { type: "integer", example: 0 },
+              deactivated: { type: "integer", example: 13 },
+              total_active: { type: "integer", example: 2 },
+            },
+          },
         },
       },
     },
