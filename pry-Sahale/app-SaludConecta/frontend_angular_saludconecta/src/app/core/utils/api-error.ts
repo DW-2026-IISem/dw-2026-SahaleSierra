@@ -54,6 +54,15 @@ export function toApiMessage(error: unknown): string {
         return `Solo se puede atender una cita programada (estado actual: ${notScheduled[1]}).`;
       }
 
+      // Matriz «Roles y permisos».
+      const unknownResources = /Unknown or inactive resource ids: (.+)/.exec(body.error);
+      if (unknownResources) {
+        return `Estos recursos no existen o están inactivos: ${unknownResources[1]}. Recarga la página y vuelve a intentarlo.`;
+      }
+      if (body.error.includes('ADMIN permissions are managed by the seeder')) {
+        return 'Los permisos de ADMIN no se editan desde la matriz: siempre tiene el catálogo completo.';
+      }
+
       const detail = body.detail ?? '';
       if (detail.includes('UniqueConstraint')) {
         return UNIQUE_MESSAGE;

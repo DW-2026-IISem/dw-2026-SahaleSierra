@@ -3577,3 +3577,200 @@ En la salida debe aparecer `✅ resource_roles: AUDITOR_CLINICO -> 15 recursos`.
 ![](images/clipboard-2453658485.png)
 
 ### **CR-02.8 Commit del backend**
+
+![](images/clipboard-1272171178.png)
+
+## **ISS-CR-03 — Cliente HTTP y panel de matriz**
+
+### **CR-03.1 PARCHE — `src/app/core/models/resource-role.model.ts`**
+
+![](images/clipboard-1870115437.png)
+
+### **CR-03.2 PARCHE — `src/app/features/admin/resource-roles/resource-role-api.ts`**
+
+**Cambio 1 — import.** Reemplazar:
+
+``` typescript
+import {
+  ResourceRole,
+  ResourceRolePayload,
+} from '../../../core/models/resource-role.model';
+```
+
+por:
+
+``` typescript
+import {
+  PermissionMatrixPayload,
+  ResourceRole,
+  ResourceRolePayload,
+  RoleGrantReconciliation,
+} from '../../../core/models/resource-role.model';
+```
+
+![](images/clipboard-1529713479.png)
+
+**Cambio 2 — método nuevo.** Ancla (el método `create`):
+
+``` typescript
+  create(payload: ResourceRolePayload): Observable<ResourceRole> {
+    return this.http
+      .post<{ grant: ResourceRole }>(this.base, payload)
+      .pipe(map((r) => r.grant));
+  }
+```
+
+pegar justo debajo:
+
+``` typescript
+
+  /**
+   * Guarda la matriz completa del rol: `{ role_id, resource_ids }` → `{ result }`.
+   * Lo que no venga en `resource_ids` queda retirado en el backend.
+   */
+  reconcileRole(role_id: number, resource_ids: number[]): Observable<RoleGrantReconciliation> {
+    const payload: PermissionMatrixPayload = { role_id, resource_ids };
+    return this.http
+      .post<{ message?: string; result?: RoleGrantReconciliation } | null>(this.base, payload)
+      .pipe(map((r) => requiredResult(r)));
+  }
+```
+
+![](images/clipboard-1243670123.png)
+
+**Cambio 3 — helper.** Al **final** del archivo:
+
+``` bash
+cat >> src/app/features/admin/resource-roles/resource-role-api.ts << 'EOF'
+
+/** La matriz solo se da por guardada si el backend devolvió `result` con los conteos. */
+function requiredResult(
+  response: { result?: RoleGrantReconciliation } | null,
+): RoleGrantReconciliation {
+  const result = response?.result;
+  if (!result || typeof result.total_active !== 'number') {
+    throw new Error('Respuesta inesperada del backend: falta «result» al guardar la matriz.');
+  }
+  return result;
+}
+EOF
+```
+
+![](images/clipboard-3752937197.png)
+
+### **CR-03.3 PARCHE — `src/app/core/utils/api-error.ts`**
+
+Traduce los dos errores nuevos del backend. Ancla:
+
+``` typescript
+      const detail = body.detail ?? '';
+```
+
+pegar **encima** de esa línea:
+
+``` typescript
+      // Matriz «Roles y permisos».
+      const unknownResources = /Unknown or inactive resource ids: (.+)/.exec(body.error);
+      if (unknownResources) {
+        return `Estos recursos no existen o están inactivos: ${unknownResources[1]}. Recarga la página y vuelve a intentarlo.`;
+      }
+      if (body.error.includes('ADMIN permissions are managed by the seeder')) {
+        return 'Los permisos de ADMIN no se editan desde la matriz: siempre tiene el catálogo completo.';
+      }
+```
+
+![](images/clipboard-206706225.png)
+
+### **CR-03.4 Archivo nuevo — `src/app/features/admin/role-permissions/permission-matrix.ts`**
+
+![](images/clipboard-1775126586.png)
+
+### **CR-03.5 Archivo nuevo — `src/app/features/admin/role-permissions/role-permission-matrix/role-permission-matrix.ts`**
+
+![](images/clipboard-1102878151.png)
+
+![](images/clipboard-3887913235.png)
+
+### **CR-03.6 Archivo nuevo — `src/app/features/admin/role-permissions/role-permission-matrix/role-permission-matrix.html`**
+
+![](images/clipboard-3009490503.png)
+
+### **CR-03.7 Archivo nuevo — `src/app/features/admin/role-permissions/role-permission-matrix/role-permission-matrix.css`**
+
+![](images/clipboard-3098265221.png)
+
+### **CR-03.8 PARCHE — `src/app/app.routes.ts`**
+
+Ancla (la ruta de concesiones, dentro de las rutas hijas del shell):
+
+``` typescript
+        loadComponent: () =>
+          import('./features/admin/resource-roles/resource-role-list/resource-role-list').then(
+            (m) => m.ResourceRoleList,
+          ),
+      },
+```
+
+> En tu archivo, la línea `},` que cierra esa ruta tiene espacios al final (`},`). Da igual: pega lo nuevo en la línea siguiente, antes del `],` que cierra los `children`.
+
+pegar justo debajo:
+
+``` typescript
+       {
+        path: 'admin/role-permissions',
+        title: 'Roles y permisos · SaludConecta',
+        canActivate: [authOnlyGuard, permissionGuard],
+        data: { permission: 'GET /api/resource-roles' },
+        loadComponent: () =>
+          import('./features/admin/role-permissions/role-permission-matrix/role-permission-matrix').then(
+            (m) => m.RolePermissionMatrix,
+          ),
+      },
+```
+
+![](images/clipboard-1538720823.png)
+
+### **CR-03.9 PARCHE — `src/app/layout/shell/nav.config.ts`**
+
+Ancla (último ítem del grupo **Seguridad**):
+
+``` typescript
+       {
+        label: 'Concesiones',
+        icon: 'pi pi-lock',
+        routerLink: '/admin/resource-roles',
+        permission: 'GET /api/resource-roles',
+      },
+```
+
+pegar justo debajo:
+
+``` typescript
+      {
+        label: 'Roles y permisos',
+        icon: 'pi pi-th-large',
+        routerLink: '/admin/role-permissions',
+        permission: 'GET /api/resource-roles',
+      },
+```
+
+![](images/clipboard-3050933238.png)
+
+### **CR-03.10 Verificación**
+
+Terminal del frontend:
+
+``` bash
+npx tsc --noEmit -p tsconfig.app.json
+npm run build
+```
+
+![](images/clipboard-221553604.png)
+
+![](images/clipboard-1146320906.png)
+
+![](images/clipboard-4088374118.png)
+
+![](images/clipboard-2272890988.png)
+
+### **CR-03.11 Commit del frontend**

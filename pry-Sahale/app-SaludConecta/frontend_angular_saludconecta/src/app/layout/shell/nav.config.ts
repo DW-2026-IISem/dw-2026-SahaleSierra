@@ -154,6 +154,13 @@ export const NAV: NavGroup[] = [
         routerLink: '/admin/resource-roles',
         permission: 'GET /api/resource-roles',
       },
+      {
+        label: 'Roles y permisos',
+        icon: 'pi pi-th-large',
+        routerLink: '/admin/role-permissions',
+        permission: 'GET /api/resource-roles',
+      },
+
     ],
   },
 ];

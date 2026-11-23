@@ -221,7 +221,18 @@ export const routes: Routes = [
           import('./features/admin/resource-roles/resource-role-list/resource-role-list').then(
             (m) => m.ResourceRoleList,
           ),
-      },      
+       },  
+      {
+        path: 'admin/role-permissions',
+        title: 'Roles y permisos · SaludConecta',
+        canActivate: [authOnlyGuard, permissionGuard],
+        data: { permission: 'GET /api/resource-roles' },
+        loadComponent: () =>
+          import('./features/admin/role-permissions/role-permission-matrix/role-permission-matrix').then(
+            (m) => m.RolePermissionMatrix,
+          ),
+      },
+
     ],
   },
   { path: '**', redirectTo: 'login' },

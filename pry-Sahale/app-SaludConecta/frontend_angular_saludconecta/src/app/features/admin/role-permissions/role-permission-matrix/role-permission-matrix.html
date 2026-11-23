@@ -1,0 +1,142 @@
+<app-page-header
+  title="Roles y permisos"
+  subtitle="Elige un rol y marca qué puede hacer en cada entidad. Guardar reemplaza toda la matriz del rol."
+>
+  <p-tag [value]="selectedCount() + ' recursos marcados'" severity="info" [rounded]="true" />
+</app-page-header>
+
+<div class="mb-3 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 lg:flex-row lg:items-end">
+  <div class="flex-1">
+    <label for="matrix-role" class="mb-1 block text-sm font-medium text-slate-700">Rol</label>
+    <p-select
+      inputId="matrix-role"
+      [options]="roleOptions()"
+      optionLabel="label"
+      optionValue="id"
+      placeholder="Selecciona un rol"
+      [ngModel]="selectedRoleId()"
+      (ngModelChange)="selectRole($event)"
+      [disabled]="loading() || saving()"
+      [fluid]="true"
+    />
+  </div>
+
+  @if (!readOnly()) {
+    <div class="flex flex-wrap gap-2">
+      <button pButton type="button" severity="secondary" outlined [disabled]="busy()" (click)="markAll()">
+        <i pButtonIcon class="pi pi-check-square"></i>
+        <span pButtonLabel>Marcar todo</span>
+      </button>
+      <button pButton type="button" severity="secondary" outlined [disabled]="busy()" (click)="clearAll()">
+        <i pButtonIcon class="pi pi-stop"></i>
+        <span pButtonLabel>Desmarcar todo</span>
+      </button>
+      <button pButton type="button" severity="secondary" text [disabled]="busy() || !dirty()" (click)="discard()">
+        <i pButtonIcon class="pi pi-undo"></i>
+        <span pButtonLabel>Descartar cambios</span>
+      </button>
+      <button
+        pButton
+        type="button"
+        data-testid="save-matrix"
+        [loading]="saving()"
+        [disabled]="busy() || !dirty() || selectedRoleId() === null"
+        (click)="save()"
+      >
+        <i pButtonIcon class="pi pi-save"></i>
+        <span pButtonLabel>{{ saving() ? 'Guardando…' : 'Guardar permisos' }}</span>
+      </button>
+    </div>
+  }
+</div>
+
+<div aria-live="polite">
+  @if (error()) {
+    <p-message severity="error" styleClass="mb-3 w-full">{{ error() }}</p-message>
+  }
+  @if (saveMessage()) {
+    <p-message severity="success" styleClass="mb-3 w-full">{{ saveMessage() }}</p-message>
+  }
+  @if (isAdminRole()) {
+    <p-message severity="info" styleClass="mb-3 w-full">
+      ADMIN tiene siempre el catálogo completo y no se edita desde aquí. Su matriz la mantiene el seeder.
+    </p-message>
+  } @else if (!canSave() && selectedRoleId() !== null) {
+    <p-message severity="warn" styleClass="mb-3 w-full">
+      Puedes consultar la matriz, pero tu rol no tiene permiso para guardarla (POST /api/resource-roles).
+    </p-message>
+  }
+</div>
+
+<div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+  @if (loading()) {
+    <p class="p-6 text-sm text-slate-500">Cargando roles y recursos…</p>
+  } @else if (!rows().length) {
+    <app-empty-state
+      icon="pi pi-list"
+      title="Sin recursos"
+      message="El catálogo de recursos activos está vacío; no hay nada que conceder."
+    />
+  } @else {
+    <table class="matrix w-full min-w-2xl text-sm" [class.opacity-60]="loadingGrants()" [attr.aria-busy]="loadingGrants()">
+      <caption class="sr-only">
+        Permisos C/R/U/D del rol {{ selectedRole()?.name ?? '' }}
+      </caption>
+      <thead>
+        <tr class="border-b border-slate-200 bg-slate-50 text-left text-slate-600">
+          <th scope="col" class="px-4 py-3">Entidad</th>
+          @for (column of columns; track column.key) {
+            <th scope="col" class="w-32 px-2 py-3 text-center">
+              {{ column.label }} <span class="text-xs text-slate-400">({{ column.short }})</span>
+            </th>
+          }
+        </tr>
+      </thead>
+      @for (group of groups(); track group.name) {
+        <tbody>
+          <tr class="bg-slate-100/70">
+            <th scope="colgroup" [attr.colspan]="columns.length + 1" class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {{ group.name }}
+            </th>
+          </tr>
+          @for (row of group.rows; track row.entity) {
+            <tr class="border-b border-slate-100" [attr.data-entity]="row.entity">
+              <th scope="row" class="px-4 py-2 text-left font-medium text-slate-800">
+                {{ row.label }}
+                <code class="ml-1 text-xs font-normal text-slate-400">{{ row.entity }}</code>
+              </th>
+              @for (column of columns; track column.key) {
+                <td class="px-2 py-2 text-center">
+                  @if (row.operations[column.key].length) {
+                    <label class="inline-flex cursor-pointer items-center gap-1" [title]="cellTitle(row, column.key)">
+                      <input
+                        type="checkbox"
+                        class="size-4 accent-sky-600"
+                        [attr.data-cell]="row.entity + ':' + column.key"
+                        [attr.aria-label]="column.label + ' ' + row.label"
+                        [checked]="isGranted(row, column.key)"
+                        [indeterminate]="isPartial(row, column.key)"
+                        [disabled]="readOnly() || busy()"
+                        (change)="toggleOperation(row, column.key, $event)"
+                      />
+                      @if (row.operations[column.key].length > 1) {
+                        <span class="text-xs text-slate-400">×{{ row.operations[column.key].length }}</span>
+                      }
+                    </label>
+                  } @else {
+                    <span class="text-xs text-slate-400" [attr.data-cell]="row.entity + ':' + column.key">No disponible</span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      }
+    </table>
+  }
+</div>
+
+<p class="mt-2 text-xs text-slate-500">
+  Una casilla puede agrupar varios endpoints (el número ×N). Si solo algunos están concedidos, se ve en estado parcial.
+  Leer incluye listado y detalle; Actualizar agrupa PUT y PATCH; Eliminar agrupa DELETE y la baja lógica (/deactivate).
+</p>

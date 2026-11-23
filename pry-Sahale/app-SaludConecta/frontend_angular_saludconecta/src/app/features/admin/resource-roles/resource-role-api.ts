@@ -3,9 +3,12 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
+  PermissionMatrixPayload,
   ResourceRole,
   ResourceRolePayload,
+  RoleGrantReconciliation,
 } from '../../../core/models/resource-role.model';
+
 
 /**
  * /api/resource-roles — la tabla es `resource_roles`, pero la respuesta usa
@@ -40,6 +43,18 @@ export class ResourceRoleApi {
       .post<{ grant: ResourceRole }>(this.base, payload)
       .pipe(map((r) => r.grant));
   }
+  
+  /**
+   * Guarda la matriz completa del rol: `{ role_id, resource_ids }` → `{ result }`.
+   * Lo que no venga en `resource_ids` queda retirado en el backend.
+   */
+  reconcileRole(role_id: number, resource_ids: number[]): Observable<RoleGrantReconciliation> {
+    const payload: PermissionMatrixPayload = { role_id, resource_ids };
+    return this.http
+      .post<{ message?: string; result?: RoleGrantReconciliation } | null>(this.base, payload)
+      .pipe(map((r) => requiredResult(r)));
+  }
+
 
   deactivate(id: number): Observable<unknown> {
     return this.http.patch(`${this.base}/${id}/deactivate`, {});
@@ -48,4 +63,15 @@ export class ResourceRoleApi {
   reactivate(id: number): Observable<unknown> {
     return this.http.patch(`${this.base}/${id}/reactivate`, {});
   }
+}
+
+/** La matriz solo se da por guardada si el backend devolvió `result` con los conteos. */
+function requiredResult(
+  response: { result?: RoleGrantReconciliation } | null,
+): RoleGrantReconciliation {
+  const result = response?.result;
+  if (!result || typeof result.total_active !== 'number') {
+    throw new Error('Respuesta inesperada del backend: falta «result» al guardar la matriz.');
+  }
+  return result;
 }

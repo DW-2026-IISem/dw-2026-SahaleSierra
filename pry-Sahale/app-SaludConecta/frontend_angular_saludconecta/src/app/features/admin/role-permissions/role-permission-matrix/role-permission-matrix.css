@@ -1,0 +1,10 @@
+/*
+ * Estilos de la matriz «Roles y permisos».
+ *
+ * Casi todo se resuelve con utilidades Tailwind en `role-permission-matrix.html`.
+ * Aquí solo se resalta la fila bajo el cursor para no perder la entidad al recorrer
+ * las cuatro columnas.
+ */
+.matrix tbody tr[data-entity]:hover {
+  background-color: rgb(248 250 252);
+}

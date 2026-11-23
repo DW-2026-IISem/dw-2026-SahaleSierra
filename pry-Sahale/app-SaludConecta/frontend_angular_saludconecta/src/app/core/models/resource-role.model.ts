@@ -20,3 +20,17 @@ export interface ResourceRolePayload {
   role_id: number;
   resource_id: number;
 }
+
+/** Cuerpo de `POST /api/resource-roles` para guardar la matriz completa de un rol. */
+export interface PermissionMatrixPayload {
+  role_id: number;
+  resource_ids: number[];
+}
+
+/** `result` de la respuesta del guardado: cuántas concesiones cambiaron. */
+export interface RoleGrantReconciliation {
+  role_id: number;
+  activated: number;
+  deactivated: number;
+  total_active: number;
+}
