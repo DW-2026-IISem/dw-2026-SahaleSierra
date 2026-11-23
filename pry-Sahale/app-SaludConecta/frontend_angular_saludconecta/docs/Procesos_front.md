@@ -3850,3 +3850,5 @@ reemplazar por:
 ![](images/clipboard-909414216.png)
 
 ### **CR-04.7 Commit de cierre**
+
+![](images/clipboard-2580809769.png)
